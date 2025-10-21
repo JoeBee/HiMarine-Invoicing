@@ -1,0 +1,62 @@
+<div class="invoice-container">
+    <h1>Invoice</h1>
+
+    <div class="action-section">
+        <button class="primary" [disabled]="!hasDataToInvoice" (click)="generateInvoice()">
+            Generate Invoice
+        </button>
+    </div>
+
+    <div *ngIf="processedData.length > 0" class="preview-section">
+        <h2>Invoice Preview</h2>
+        <p class="info-text">
+            Items with the "Include" checkbox checked will be included in the generated invoice.
+        </p>
+
+        <div class="summary-card">
+            <div class="summary-item">
+                <span class="label">Total Items Processed:</span>
+                <span class="value">{{ processedData.length }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="label">Items Selected for Invoice:</span>
+                <span class="value highlight">{{ includedItemsCount }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="label">Total Amount:</span>
+                <span class="value highlight">
+                    {{ totalAmount | currency }}
+                </span>
+            </div>
+        </div>
+
+        <div *ngIf="includedItemsCount > 0" class="preview-table">
+            <h3>Selected Items</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>File Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let row of includedItems">
+                        <td>{{ row.fileName }}</td>
+                        <td>{{ row.description }}</td>
+                        <td>{{ row.price | currency }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div *ngIf="processedData.length === 0" class="empty-state">
+        <p>No data processed yet. Please process supplier files on the Process Data tab first.</p>
+    </div>
+
+    <div *ngIf="processedData.length > 0 && !hasDataToInvoice" class="warning-state">
+        <p>⚠️ No items selected for invoice. Please go to the Process Data tab and check the "Include" checkbox for
+            items you want to invoice.</p>
+    </div>
+</div>

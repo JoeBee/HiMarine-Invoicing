@@ -1,0 +1,48 @@
+.app-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-tabs {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+
+    a {
+        flex: 1;
+        text-align: center;
+        padding: 20px;
+        text-decoration: none;
+        color: #666;
+        font-weight: 500;
+        font-size: 16px;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+
+        &:hover {
+            color: #0066cc;
+            background-color: #f8f9fa;
+        }
+
+        &.active {
+            color: #0066cc;
+            border-bottom-color: #0066cc;
+            background-color: #f0f7ff;
+        }
+    }
+}
+
+main {
+    flex: 1;
+    padding-top: 40px;
+    padding-bottom: 40px;
+}

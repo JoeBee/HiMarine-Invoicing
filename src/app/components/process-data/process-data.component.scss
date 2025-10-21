@@ -1,0 +1,51 @@
+.process-data-container {
+    h1 {
+        color: #0066cc;
+        margin-bottom: 30px;
+        font-size: 32px;
+    }
+
+    h2 {
+        color: #333;
+        margin-bottom: 20px;
+        margin-top: 40px;
+        font-size: 24px;
+    }
+}
+
+.action-section {
+    margin-bottom: 30px;
+}
+
+.processing-message {
+    text-align: center;
+    padding: 20px;
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    border-radius: 8px;
+    margin-bottom: 20px;
+
+    p {
+        color: #0c5460;
+        font-weight: 500;
+        margin: 0;
+    }
+}
+
+.data-table {
+    margin-top: 30px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    margin-top: 30px;
+
+    p {
+        color: #666;
+        font-size: 18px;
+        margin: 0;
+    }
+}

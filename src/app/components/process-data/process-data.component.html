@@ -1,0 +1,45 @@
+<div class="process-data-container">
+    <h1>Process Data</h1>
+
+    <div class="action-section">
+        <button class="primary" [disabled]="!hasSupplierFiles || isProcessing" (click)="processSupplierFiles()">
+            {{ isProcessing ? 'Processing...' : 'Process Supplier Files' }}
+        </button>
+    </div>
+
+    <div *ngIf="isProcessing" class="processing-message">
+        <p>Processing supplier files, please wait...</p>
+    </div>
+
+    <div *ngIf="processedData.length > 0" class="data-table">
+        <h2>Processed Data</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Include</th>
+                    <th>File Name</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let row of processedData; let i = index">
+                    <td>
+                        <input type="checkbox" [checked]="row.include" (change)="onIncludeChange(i, $event)">
+                    </td>
+                    <td>{{ row.fileName }}</td>
+                    <td>{{ row.description }}</td>
+                    <td>{{ row.price | currency }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div *ngIf="!hasSupplierFiles && processedData.length === 0" class="empty-state">
+        <p>No supplier files uploaded yet. Please upload files on the Suppliers tab first.</p>
+    </div>
+
+    <div *ngIf="hasSupplierFiles && processedData.length === 0 && !isProcessing" class="empty-state">
+        <p>Click "Process Supplier Files" to begin processing the uploaded files.</p>
+    </div>
+</div>

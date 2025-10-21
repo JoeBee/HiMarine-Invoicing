@@ -1,0 +1,50 @@
+.suppliers-container {
+    h1 {
+        color: #0066cc;
+        margin-bottom: 30px;
+        font-size: 32px;
+    }
+
+    h2 {
+        color: #333;
+        margin-bottom: 20px;
+        margin-top: 40px;
+        font-size: 24px;
+    }
+}
+
+.action-buttons {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-end;
+
+    .clear-button {
+        background-color: #dc3545;
+        color: white;
+
+        &:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        }
+    }
+}
+
+.processing-message {
+    text-align: center;
+    padding: 20px;
+    background-color: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    margin-bottom: 20px;
+
+    p {
+        color: #856404;
+        font-weight: 500;
+        margin: 0;
+    }
+}
+
+.files-table {
+    margin-top: 30px;
+}

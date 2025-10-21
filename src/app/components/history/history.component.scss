@@ -1,0 +1,42 @@
+.history-container {
+    h1 {
+        color: #0066cc;
+        margin-bottom: 30px;
+        font-size: 32px;
+    }
+}
+
+.placeholder-content {
+    text-align: center;
+    padding: 40px 20px;
+
+    .placeholder-text {
+        color: #666;
+        font-size: 20px;
+        font-style: italic;
+        margin-bottom: 40px;
+    }
+}
+
+.historical-image {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+
+    svg {
+        width: 100%;
+        height: auto;
+        border: 3px solid #d4af37;
+        border-radius: 8px;
+    }
+}
+
+.caption {
+    margin-top: 20px;
+    color: #555;
+    font-size: 16px;
+    font-style: italic;
+}

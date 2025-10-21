@@ -1,0 +1,62 @@
+<div class="app-container">
+    <header>
+        <nav class="nav-tabs">
+            <a routerLink="/suppliers" routerLinkActive="active">Suppliers</a>
+            <a routerLink="/process-data" routerLinkActive="active">Process Data</a>
+            <a routerLink="/invoice" routerLinkActive="active">Invoice</a>
+            <a routerLink="/history" routerLinkActive="active">History</a>
+        </nav>
+    </header>
+
+    <div class="info-icon" (click)="openInfoModal()">
+        &#9432;
+    </div>
+
+    <div class="modal-overlay" *ngIf="showInfoModal" (click)="closeInfoModal()">
+        <div class="modal" (click)="$event.stopPropagation()">
+            <h2>User Instructions</h2>
+
+            <h3>Suppliers Tab</h3>
+            <ul>
+                <li>Drag and drop XLSX files into the drop zone to upload them</li>
+                <li>You can upload files individually or multiple files at once</li>
+                <li>The system will automatically read each file and extract:
+                    <ul>
+                        <li>File name (without extension)</li>
+                        <li>Top left cell where the data table starts</li>
+                        <li>Column letter containing the description data</li>
+                        <li>Column letter containing the price data</li>
+                    </ul>
+                </li>
+                <li>All uploaded files will be displayed in a table for review</li>
+            </ul>
+
+            <h3>Process Data Tab</h3>
+            <ul>
+                <li>Click the "Process Supplier Files" button once files are uploaded</li>
+                <li>The system will read all Excel files and extract description and price data</li>
+                <li>Data will be sorted by description first, then by price (low to high)</li>
+                <li>Review the processed data in the table</li>
+                <li>Check the "Include" checkbox for each row you want to include in the invoice</li>
+            </ul>
+
+            <h3>Invoice Tab</h3>
+            <ul>
+                <li>Click "Generate Invoice" to create an Excel workbook</li>
+                <li>Only rows with the "Include" checkbox checked will be included</li>
+                <li>The generated Excel file will be downloaded to your computer</li>
+            </ul>
+
+            <h3>History Tab</h3>
+            <ul>
+                <li>This tab is a placeholder for future functionality</li>
+            </ul>
+
+            <button class="primary close-button" (click)="closeInfoModal()">Close</button>
+        </div>
+    </div>
+
+    <main class="container">
+        <router-outlet></router-outlet>
+    </main>
+</div>
