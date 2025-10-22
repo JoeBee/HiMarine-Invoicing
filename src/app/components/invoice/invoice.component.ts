@@ -20,12 +20,12 @@ export class InvoiceComponent implements OnInit {
     ngOnInit(): void {
         this.dataService.processedData$.subscribe(data => {
             this.processedData = data;
-            this.hasDataToInvoice = data.some(row => row.include);
+            this.hasDataToInvoice = data.some(row => row.count > 0);
         });
     }
 
     get includedItems(): ProcessedDataRow[] {
-        return this.processedData.filter(row => row.include);
+        return this.processedData.filter(row => row.count > 0);
     }
 
     get includedItemsCount(): number {
@@ -33,24 +33,26 @@ export class InvoiceComponent implements OnInit {
     }
 
     get totalAmount(): number {
-        return this.includedItems.reduce((sum, row) => sum + row.price, 0);
+        return this.includedItems.reduce((sum, row) => sum + (row.count * row.price), 0);
     }
 
     generateInvoice(): void {
-        const includedData = this.processedData.filter(row => row.include);
+        const includedData = this.processedData.filter(row => row.count > 0);
 
         if (includedData.length === 0) {
-            alert('No items selected for invoice. Please check the "Include" checkbox for items you want to invoice.');
+            alert('No items selected for invoice. Please set a count greater than 0 for items you want to invoice.');
             return;
         }
 
         // Prepare data for Excel
         const worksheetData = [
-            ['File Name', 'Description', 'Price'],
+            ['File Name', 'Description', 'Count', 'Unit Price', 'Total Price'],
             ...includedData.map(row => [
                 row.fileName,
                 row.description,
-                row.price
+                row.count,
+                row.price,
+                row.count * row.price
             ])
         ];
 
@@ -61,15 +63,23 @@ export class InvoiceComponent implements OnInit {
         worksheet['!cols'] = [
             { wch: 30 },
             { wch: 50 },
+            { wch: 10 },
+            { wch: 15 },
             { wch: 15 }
         ];
 
-        // Format price column as currency
-        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:C1');
+        // Format price columns as currency
+        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:E1');
         for (let row = 1; row <= range.e.r; row++) {
-            const cellAddress = XLSX.utils.encode_cell({ r: row, c: 2 });
-            if (worksheet[cellAddress]) {
-                worksheet[cellAddress].z = '"$"#,##0.00';
+            // Format unit price column (column 3, index 3)
+            const unitPriceAddress = XLSX.utils.encode_cell({ r: row, c: 3 });
+            if (worksheet[unitPriceAddress]) {
+                worksheet[unitPriceAddress].z = '"$"#,##0.00';
+            }
+            // Format total price column (column 4, index 4)
+            const totalPriceAddress = XLSX.utils.encode_cell({ r: row, c: 4 });
+            if (worksheet[totalPriceAddress]) {
+                worksheet[totalPriceAddress].z = '"$"#,##0.00';
             }
         }
 

@@ -16,7 +16,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>Include</th>
+                    <th>#</th>
                     <th>File Name</th>
                     <th>Description</th>
                     <th>Price</th>
@@ -25,7 +25,19 @@
             <tbody>
                 <tr *ngFor="let row of processedData; let i = index">
                     <td>
-                        <input type="checkbox" [checked]="row.include" (change)="onIncludeChange(i, $event)">
+                        <select [value]="row.count" (change)="onCountChange(i, $event)" class="count-dropdown">
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
                     </td>
                     <td>{{ row.fileName }}</td>
                     <td>{{ row.description }}</td>

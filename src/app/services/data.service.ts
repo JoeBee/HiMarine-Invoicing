@@ -17,7 +17,7 @@ export interface ProcessedDataRow {
     fileName: string;
     description: string;
     price: number;
-    include: boolean;
+    count: number;
 }
 
 @Injectable({
@@ -78,8 +78,13 @@ export class DataService {
                         if (cell && cell.v) {
                             const cellValue = String(cell.v).toLowerCase();
 
-                            // Check if this cell contains our target keywords
-                            if (cellValue.includes('description') ||
+
+                            if (cellValue.length > 25) {
+                                console.log("cellValue", cellValue);
+                                // skip rows with less than 25 characters
+                                // continue;
+                            }
+                            else if (cellValue.includes('description') ||
                                 cellValue.includes('descrption') ||
                                 cellValue.includes('product') ||
                                 cellValue.includes('item')) {
@@ -218,7 +223,7 @@ export class DataService {
                             fileName: fileInfo.fileName,
                             description: String(descCell.v),
                             price: Number(priceCell.v),
-                            include: false
+                            count: 0
                         });
                     }
                 }
@@ -234,10 +239,10 @@ export class DataService {
         return this.processedDataSubject.value;
     }
 
-    updateRowInclusion(index: number, include: boolean): void {
+    updateRowCount(index: number, count: number): void {
         const currentData = this.processedDataSubject.value;
         if (index >= 0 && index < currentData.length) {
-            currentData[index].include = include;
+            currentData[index].count = count;
             this.processedDataSubject.next([...currentData]);
         }
     }

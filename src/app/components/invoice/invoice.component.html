@@ -10,7 +10,7 @@
     <div *ngIf="processedData.length > 0" class="preview-section">
         <h2>Invoice Preview</h2>
         <p class="info-text">
-            Items with the "Include" checkbox checked will be included in the generated invoice.
+            Items with a count greater than 0 will be included in the generated invoice.
         </p>
 
         <div class="summary-card">
@@ -37,6 +37,7 @@
                     <tr>
                         <th>File Name</th>
                         <th>Description</th>
+                        <th>Count</th>
                         <th>Price</th>
                     </tr>
                 </thead>
@@ -44,7 +45,8 @@
                     <tr *ngFor="let row of includedItems">
                         <td>{{ row.fileName }}</td>
                         <td>{{ row.description }}</td>
-                        <td>{{ row.price | currency }}</td>
+                        <td>{{ row.count }}</td>
+                        <td>{{ (row.count * row.price) | currency }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -56,7 +58,7 @@
     </div>
 
     <div *ngIf="processedData.length > 0 && !hasDataToInvoice" class="warning-state">
-        <p>⚠️ No items selected for invoice. Please go to the Process Data tab and check the "Include" checkbox for
+        <p>⚠️ No items selected for invoice. Please go to the Process Data tab and set a count greater than 0 for
             items you want to invoice.</p>
     </div>
 </div>

@@ -35,9 +35,10 @@ export class ProcessDataComponent implements OnInit {
         this.isProcessing = false;
     }
 
-    onIncludeChange(index: number, event: Event): void {
-        const checkbox = event.target as HTMLInputElement;
-        this.dataService.updateRowInclusion(index, checkbox.checked);
+    onCountChange(index: number, event: Event): void {
+        const select = event.target as HTMLSelectElement;
+        const count = parseInt(select.value, 10);
+        this.dataService.updateRowCount(index, count);
     }
 }
 
