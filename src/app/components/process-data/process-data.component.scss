@@ -7,8 +7,7 @@
 
     h2 {
         color: #333;
-        margin-bottom: 20px;
-        margin-top: 40px;
+        margin: 40px 0 20px;
         font-size: 24px;
     }
 }
@@ -20,10 +19,10 @@
 .processing-message {
     text-align: center;
     padding: 20px;
+    margin-bottom: 20px;
     background-color: #d1ecf1;
     border: 1px solid #bee5eb;
     border-radius: 8px;
-    margin-bottom: 20px;
 
     p {
         color: #0c5460;
@@ -71,13 +70,10 @@
                     font-size: 14px;
                     width: 100%;
                     appearance: none;
-                    -webkit-appearance: none;
-                    -moz-appearance: none;
 
                     &:focus {
                         outline: none;
                         border-color: #0066cc;
-                        box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
                     }
                 }
 
@@ -94,17 +90,12 @@
                     padding: 2px 4px;
                     line-height: 1;
                     border-radius: 2px;
-                    transition: all 0.2s ease;
 
-                    &:hover {
-                        color: #dc3545;
-                        background-color: #f8f9fa;
-                    }
-
+                    &:hover,
                     &:focus {
-                        outline: none;
                         color: #dc3545;
                         background-color: #f8f9fa;
+                        outline: none;
                     }
                 }
             }
@@ -120,7 +111,6 @@
                 &:focus {
                     outline: none;
                     border-color: #0066cc;
-                    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
                 }
             }
         }
@@ -137,11 +127,6 @@
 
             &:hover {
                 background-color: #5a6268;
-            }
-
-            &:focus {
-                outline: none;
-                box-shadow: 0 0 0 2px rgba(108, 117, 125, 0.2);
             }
         }
     }
@@ -254,10 +239,6 @@
                 td {
                     background-color: white;
                     color: #212529;
-                }
-
-                tr:nth-child(even) td {
-                    background-color: #f8f9fa;
                 }
             }
         }

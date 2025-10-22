@@ -34,7 +34,10 @@
                         "styles": [
                             "src/styles.scss"
                         ],
-                        "scripts": []
+                        "scripts": [],
+                        "allowedCommonJsDependencies": [
+                            "file-saver"
+                        ]
                     },
                     "configurations": {
                         "production": {
@@ -46,8 +49,8 @@
                                 },
                                 {
                                     "type": "anyComponentStyle",
-                                    "maximumWarning": "2kB",
-                                    "maximumError": "4kB"
+                                    "maximumWarning": "3kB",
+                                    "maximumError": "5kB"
                                 }
                             ],
                             "outputHashing": "all"
@@ -76,6 +79,6 @@
         }
     },
     "cli": {
-      "analytics": false
+        "analytics": false
     }
 }

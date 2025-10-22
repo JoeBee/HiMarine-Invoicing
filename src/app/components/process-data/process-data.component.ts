@@ -27,7 +27,7 @@ export class ProcessDataComponent implements OnInit, OnDestroy {
     selectedDescription = '';
     descriptionTextFilter = '';
     availableFileNames: string[] = [];
-    commonDescriptions = ['Beer', 'Cheese', 'Ice'];
+    commonDescriptions = ['Beer', 'Cheese', 'Ice', 'Provision'];
 
     // Row expansion properties
     expandedRowIndex: number | null = null;
@@ -137,9 +137,9 @@ export class ProcessDataComponent implements OnInit, OnDestroy {
     }
 
     updateCommonDescriptions(): void {
-        // Keep the predefined list: Beer, Cheese, Ice
+        // Keep the predefined list: Beer, Cheese, Ice, Provision
         // No need to dynamically update since we want only these specific options
-        this.commonDescriptions = ['Beer', 'Cheese', 'Ice'];
+        this.commonDescriptions = ['Beer', 'Cheese', 'Ice', 'Provision'];
     }
 
     onFileNameFilterChange(): void {
@@ -162,10 +162,11 @@ export class ProcessDataComponent implements OnInit, OnDestroy {
             filtered = filtered.filter(row => row.fileName === this.selectedFileName);
         }
 
-        // Filter by description
+        // Filter by description (searches both Description and File Name columns)
         if (this.selectedDescription) {
             filtered = filtered.filter(row =>
-                row.description.toLowerCase().includes(this.selectedDescription.toLowerCase())
+                row.description.toLowerCase().includes(this.selectedDescription.toLowerCase()) ||
+                row.fileName.toLowerCase().includes(this.selectedDescription.toLowerCase())
             );
         }
 
