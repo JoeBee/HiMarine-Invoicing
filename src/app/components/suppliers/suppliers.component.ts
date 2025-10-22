@@ -118,6 +118,20 @@ export class SuppliersComponent implements OnInit {
                     aValue = a.rowCount;
                     bValue = b.rowCount;
                     break;
+                case 'status':
+                    // Sort by status: success (true) > pending (undefined) > error (false)
+                    let statusA = 0; // error (false)
+                    let statusB = 0; // error (false)
+
+                    if (a.hasData === true) statusA = 2; // success
+                    else if (a.hasData === undefined) statusA = 1; // pending
+
+                    if (b.hasData === true) statusB = 2; // success
+                    else if (b.hasData === undefined) statusB = 1; // pending
+
+                    aValue = statusA;
+                    bValue = statusB;
+                    break;
                 default:
                     return 0;
             }
@@ -137,6 +151,17 @@ export class SuppliersComponent implements OnInit {
             return '↕️';
         }
         return this.sortState.direction === 'asc' ? '↑' : '↓';
+    }
+
+    openFile(fileInfo: SupplierFileInfo): void {
+        // Create a URL for the file and open it in a new tab
+        const url = URL.createObjectURL(fileInfo.file);
+        window.open(url, '_blank');
+
+        // Clean up the URL after a short delay to free memory
+        setTimeout(() => {
+            URL.revokeObjectURL(url);
+        }, 1000);
     }
 }
 

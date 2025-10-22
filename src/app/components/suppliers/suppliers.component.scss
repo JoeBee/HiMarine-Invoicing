@@ -104,4 +104,22 @@
             color: #333;
         }
     }
+
+    .clickable-filename {
+        cursor: pointer;
+        color: #0066cc;
+        text-decoration: underline;
+        transition: all 0.2s ease;
+
+        &:hover {
+            color: #004499;
+            background-color: #f0f8ff;
+            text-decoration: none;
+        }
+
+        &:active {
+            color: #003366;
+            background-color: #e6f3ff;
+        }
+    }
 }

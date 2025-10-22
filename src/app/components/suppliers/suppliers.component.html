@@ -43,14 +43,14 @@
                     <th class="sortable-header" (click)="sortData('rowCount')">
                         Row Count {{ getSortIcon('rowCount') }}
                     </th>
-                    <th class="status-header">
-                        Status
+                    <th class="sortable-header status-header" (click)="sortData('status')">
+                        Status {{ getSortIcon('status') }}
                     </th>
                 </tr>
             </thead>
             <tbody>
                 <tr *ngFor="let file of supplierFiles">
-                    <td>{{ file.fileName }}</td>
+                    <td class="clickable-filename" (click)="openFile(file)">{{ file.fileName }}</td>
                     <td [class.not-found]="file.topLeftCell === 'NOT FOUND'">{{ file.topLeftCell }}</td>
                     <td [class.not-found]="file.descriptionColumn === 'NOT FOUND'">{{
                         file.descriptionHeader || file.descriptionColumn }}</td>
