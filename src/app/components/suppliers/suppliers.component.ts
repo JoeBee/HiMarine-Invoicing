@@ -19,6 +19,7 @@ export class SuppliersComponent implements OnInit {
     isDragging = false;
     isProcessing = false;
     sortState: SortState = { column: '', direction: 'asc' };
+    showConfirmDialog = false;
 
     constructor(private dataService: DataService) { }
 
@@ -76,9 +77,16 @@ export class SuppliersComponent implements OnInit {
     }
 
     clearAllFiles(): void {
-        if (confirm('Are you sure you want to clear all uploaded files? This will also clear all processed data.')) {
-            this.dataService.clearAll();
-        }
+        this.showConfirmDialog = true;
+    }
+
+    confirmClearAll(): void {
+        this.dataService.clearAll();
+        this.showConfirmDialog = false;
+    }
+
+    cancelClearAll(): void {
+        this.showConfirmDialog = false;
     }
 
     sortData(column: string): void {

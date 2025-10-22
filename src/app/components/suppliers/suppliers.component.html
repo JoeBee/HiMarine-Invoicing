@@ -1,12 +1,6 @@
 <div class="suppliers-container">
     <h1>Suppliers</h1>
 
-    <div class="action-buttons" *ngIf="supplierFiles.length > 0">
-        <button class="secondary clear-button" (click)="clearAllFiles()">
-            Clear All Files
-        </button>
-    </div>
-
     <div class="drop-zone" [class.drag-over]="isDragging" (dragover)="onDragOver($event)"
         (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="triggerFileInput()">
         <div class="icon">📁</div>
@@ -21,7 +15,12 @@
     </div>
 
     <div *ngIf="supplierFiles.length > 0" class="files-table">
-        <h2>Uploaded Files ({{ supplierFiles.length }})</h2>
+        <div class="files-header">
+            <h2>Uploaded Files ({{ supplierFiles.length }})</h2>
+            <button class="secondary clear-button" (click)="clearAllFiles()">
+                Clear All Files
+            </button>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -67,5 +66,26 @@
                 </tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- Custom Confirmation Dialog -->
+    <div *ngIf="showConfirmDialog" class="modal-overlay" (click)="cancelClearAll()">
+        <div class="confirmation-dialog" (click)="$event.stopPropagation()">
+            <div class="dialog-header">
+                <h3>⚠️ Confirm Clear All Files</h3>
+            </div>
+            <div class="dialog-content">
+                <p>Are you sure you want to clear all uploaded files?</p>
+                <p class="warning-text">This will also clear all processed data and cannot be undone.</p>
+            </div>
+            <div class="dialog-actions">
+                <button class="secondary cancel-button" (click)="cancelClearAll()">
+                    Cancel
+                </button>
+                <button class="danger confirm-button" (click)="confirmClearAll()">
+                    Clear All Files
+                </button>
+            </div>
+        </div>
     </div>
 </div>
