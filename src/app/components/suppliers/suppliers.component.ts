@@ -61,7 +61,7 @@ export class SuppliersComponent implements OnInit {
     async processFiles(fileList: FileList): Promise<void> {
         this.isProcessing = true;
         const files = Array.from(fileList).filter(f =>
-            f.name.endsWith('.xlsx') || f.name.endsWith('.xls')
+            f.name.toLowerCase().endsWith('.xlsx') || f.name.toLowerCase().endsWith('.xls')
         );
 
         if (files.length > 0) {

@@ -17,7 +17,7 @@
         <!-- Filter Controls -->
         <div class="filter-controls">
             <div class="filter-group">
-                <label for="fileNameFilter">Filter by File Name:</label>
+                <label for="fileNameFilter">Filter by File Name ({{ availableFileNames.length }}):</label>
                 <div class="dropdown-container">
                     <select id="fileNameFilter" [(ngModel)]="selectedFileName" (change)="onFileNameFilterChange()"
                         class="filter-dropdown">
