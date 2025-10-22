@@ -1,7 +1,6 @@
 <div class="process-data-container">
-    <h1>Process Data</h1>
 
-    <div class="action-section">
+    <div class="action-section" *ngIf="!hasProcessedFiles">
         <button class="primary" [disabled]="!hasSupplierFiles || isProcessing" (click)="processSupplierFiles()">
             {{ isProcessing ? 'Processing...' : 'Process Supplier Files' }}
         </button>

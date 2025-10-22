@@ -20,6 +20,8 @@ export class ProcessDataComponent implements OnInit, OnDestroy {
     filteredData: ProcessedDataRow[] = [];
     hasSupplierFiles = false;
     isProcessing = false;
+    hasProcessedFiles = false; // Track if files have been processed
+    previousFileCount = 0; // Track previous file count to detect new files
     sortState: SortState = { column: '', direction: 'asc' };
 
     // Filter properties
@@ -37,8 +39,16 @@ export class ProcessDataComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.hasSupplierFiles = this.dataService.hasSupplierFiles();
 
-        this.dataService.supplierFiles$.subscribe(() => {
+        this.dataService.supplierFiles$.subscribe((files) => {
+            const currentFileCount = files.length;
             this.hasSupplierFiles = this.dataService.hasSupplierFiles();
+
+            // If new files are added (file count increased) and we had previously processed files, show the button again
+            if (currentFileCount > this.previousFileCount && this.hasProcessedFiles) {
+                this.hasProcessedFiles = false;
+            }
+
+            this.previousFileCount = currentFileCount;
         });
 
         this.dataService.processedData$.subscribe(data => {
@@ -57,6 +67,7 @@ export class ProcessDataComponent implements OnInit, OnDestroy {
         this.isProcessing = true;
         await this.dataService.processSupplierFiles();
         this.isProcessing = false;
+        this.hasProcessedFiles = true; // Mark that files have been processed
     }
 
     onCountChange(index: number, event: Event): void {
