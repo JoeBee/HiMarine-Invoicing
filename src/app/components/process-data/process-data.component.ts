@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, ProcessedDataRow } from '../../services/data.service';
@@ -15,7 +15,7 @@ interface SortState {
     templateUrl: './process-data.component.html',
     styleUrls: ['./process-data.component.scss']
 })
-export class ProcessDataComponent implements OnInit {
+export class ProcessDataComponent implements OnInit, OnDestroy {
     processedData: ProcessedDataRow[] = [];
     filteredData: ProcessedDataRow[] = [];
     hasSupplierFiles = false;
@@ -28,6 +28,9 @@ export class ProcessDataComponent implements OnInit {
     descriptionTextFilter = '';
     availableFileNames: string[] = [];
     commonDescriptions = ['Beer', 'Cheese', 'Ice'];
+
+    // Row expansion properties
+    expandedRowIndex: number | null = null;
 
     constructor(private dataService: DataService) { }
 
@@ -45,6 +48,9 @@ export class ProcessDataComponent implements OnInit {
             this.updateCommonDescriptions();
             this.applyFilters();
         });
+
+        // Add document click listener to close expanded rows when clicking outside
+        document.addEventListener('click', this.onDocumentClick.bind(this));
     }
 
     async processSupplierFiles(): Promise<void> {
@@ -189,6 +195,35 @@ export class ProcessDataComponent implements OnInit {
     clearDescriptionFilter(): void {
         this.selectedDescription = '';
         this.applyFilters();
+    }
+
+    toggleRowExpansion(index: number): void {
+        if (this.expandedRowIndex === index) {
+            this.expandedRowIndex = null;
+        } else {
+            this.expandedRowIndex = index;
+        }
+    }
+
+    isRowExpanded(index: number): boolean {
+        return this.expandedRowIndex === index;
+    }
+
+    onRowClick(index: number): void {
+        this.toggleRowExpansion(index);
+    }
+
+    onDocumentClick(event: Event): void {
+        // Close expanded row when clicking outside
+        const target = event.target as HTMLElement;
+        if (!target.closest('.data-table')) {
+            this.expandedRowIndex = null;
+        }
+    }
+
+    ngOnDestroy(): void {
+        // Remove event listener when component is destroyed
+        document.removeEventListener('click', this.onDocumentClick.bind(this));
     }
 }
 

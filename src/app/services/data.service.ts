@@ -21,6 +21,8 @@ export interface ProcessedDataRow {
     price: number;
     unit: string;
     count: number;
+    originalData?: any[]; // Store original row data from XLSX
+    originalHeaders?: string[]; // Store original column headers
 }
 
 @Injectable({
@@ -229,6 +231,14 @@ export class DataService {
 
                 const rows: ProcessedDataRow[] = [];
 
+                // Extract original headers from the header row
+                const originalHeaders: string[] = [];
+                for (let col = range.s.c; col <= range.e.c; col++) {
+                    const headerAddress = XLSX.utils.encode_cell({ r: topLeftCellRef.r, c: col });
+                    const headerCell = worksheet[headerAddress];
+                    originalHeaders.push(headerCell && headerCell.v ? String(headerCell.v) : '');
+                }
+
                 // Start from the row after the header
                 for (let row = topLeftCellRef.r + 1; row <= range.e.r; row++) {
                     const descAddress = XLSX.utils.encode_cell({ r: row, c: descColIndex });
@@ -240,12 +250,22 @@ export class DataService {
                     const unitCell = worksheet[unitAddress];
 
                     if (descCell && descCell.v && priceCell && priceCell.v) {
+                        // Extract original row data
+                        const originalRowData: any[] = [];
+                        for (let col = range.s.c; col <= range.e.c; col++) {
+                            const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+                            const cell = worksheet[cellAddress];
+                            originalRowData.push(cell && cell.v ? cell.v : '');
+                        }
+
                         rows.push({
                             fileName: fileInfo.fileName,
                             description: String(descCell.v),
                             price: Number(priceCell.v),
                             unit: unitCell && unitCell.v ? String(unitCell.v) : '',
-                            count: 0
+                            count: 0,
+                            originalData: originalRowData,
+                            originalHeaders: originalHeaders
                         });
                     }
                 }

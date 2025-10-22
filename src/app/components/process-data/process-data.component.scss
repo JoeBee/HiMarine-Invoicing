@@ -190,6 +190,85 @@
             box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
         }
     }
+
+    .data-row {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background-color: rgba(0, 102, 204, 0.05);
+        }
+
+        &.expanded {
+            background-color: rgba(0, 102, 204, 0.1);
+        }
+    }
+
+    .expanded-row {
+        background-color: #f8f9fa;
+        border-top: 2px solid #0066cc;
+
+        .expanded-content {
+            padding: 0;
+            border: none;
+        }
+    }
+
+    .original-data-container {
+        padding: 20px;
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        margin: 10px;
+
+        h4 {
+            color: #0066cc;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .original-data-table {
+            overflow-x: auto;
+            margin-top: 15px;
+
+            .original-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 14px;
+                background-color: white;
+
+                th,
+                td {
+                    border: 1px solid #dee2e6;
+                    padding: 8px 12px;
+                    text-align: left;
+                }
+
+                th {
+                    background-color: #e9ecef;
+                    font-weight: 600;
+                    color: #495057;
+                }
+
+                td {
+                    background-color: white;
+                    color: #212529;
+                }
+
+                tr:nth-child(even) td {
+                    background-color: #f8f9fa;
+                }
+            }
+        }
+
+        .no-original-data {
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+    }
 }
 
 .empty-state {

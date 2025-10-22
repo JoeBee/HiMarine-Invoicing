@@ -77,27 +77,56 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let row of filteredData; let i = index">
-                    <td>
-                        <select [value]="row.count" (change)="onCountChange(i, $event)" class="count-dropdown">
-                            <option value="0">0</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                        </select>
-                    </td>
-                    <td>{{ row.fileName }}</td>
-                    <td>{{ row.description }}</td>
-                    <td>{{ row.unit }}</td>
-                    <td>{{ row.price | currency }}</td>
-                </tr>
+                <ng-container *ngFor="let row of filteredData; let i = index">
+                    <tr class="data-row" (click)="onRowClick(i)" [class.expanded]="isRowExpanded(i)">
+                        <td>
+                            <select [value]="row.count" (change)="onCountChange(i, $event)" class="count-dropdown"
+                                (click)="$event.stopPropagation()">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                            </select>
+                        </td>
+                        <td>{{ row.fileName }}</td>
+                        <td>{{ row.description }}</td>
+                        <td>{{ row.unit }}</td>
+                        <td>{{ row.price | currency }}</td>
+                    </tr>
+
+                    <!-- Expanded row showing original XLSX data -->
+                    <tr *ngIf="isRowExpanded(i)" class="expanded-row">
+                        <td colspan="5" class="expanded-content">
+                            <div class="original-data-container">
+                                <h4>Original Data from {{ row.fileName }}</h4>
+                                <div class="original-data-table" *ngIf="row.originalData && row.originalHeaders">
+                                    <table class="original-table">
+                                        <thead>
+                                            <tr>
+                                                <th *ngFor="let header of row.originalHeaders">{{ header }}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td *ngFor="let cellData of row.originalData">{{ cellData }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div *ngIf="!row.originalData || !row.originalHeaders" class="no-original-data">
+                                    <p>Original data not available for this row.</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-container>
             </tbody>
         </table>
     </div>

@@ -37,19 +37,38 @@
                 <li>The system will read all Excel files and extract description and price data</li>
                 <li>Data will be sorted by description first, then by price (low to high)</li>
                 <li>Review the processed data in the table</li>
-                <li>Check the "Include" checkbox for each row you want to include in the invoice</li>
+                <li><strong>Click on any row</strong> to view the original data from the Excel file with all column
+                    headers</li>
+                <li>Click away from the table to close the expanded view</li>
+                <li>Use the count dropdown to select quantities for each item</li>
+                <li>Use the filter controls to narrow down results by file name, description, or search text</li>
+                <li>Sort columns by clicking on the column headers</li>
             </ul>
 
             <h3>Invoice Tab</h3>
             <ul>
                 <li>Click "Generate Invoice" to create an Excel workbook</li>
-                <li>Only rows with the "Include" checkbox checked will be included</li>
+                <li>Only items with a count greater than 0 will be included in the invoice</li>
                 <li>The generated Excel file will be downloaded to your computer</li>
+                <li>Review the invoice summary before generating</li>
             </ul>
 
             <h3>History Tab</h3>
             <ul>
                 <li>This tab is a placeholder for future functionality</li>
+            </ul>
+
+            <h3>New Features</h3>
+            <ul>
+                <li><strong>Expandable Rows:</strong> Click on any row in the Process Data table to view the complete
+                    original data from the Excel file</li>
+                <li><strong>Original Data View:</strong> See all columns and headers exactly as they appear in the
+                    source Excel file</li>
+                <li><strong>Enhanced Filtering:</strong> Filter by file name, description, or search for specific text
+                </li>
+                <li><strong>Column Sorting:</strong> Click column headers to sort data in ascending or descending order
+                </li>
+                <li><strong>Quantity Selection:</strong> Use dropdown menus to select quantities for each item</li>
             </ul>
 
             <button class="primary close-button" (click)="closeInfoModal()">Close</button>
