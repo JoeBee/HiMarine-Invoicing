@@ -53,9 +53,10 @@
         user-select: none;
         transition: background-color 0.2s ease;
         position: relative;
+        background-color: #0066cc !important;
 
         &:hover {
-            background-color: #f8f9fa;
+            background-color: #1a7ce8 !important;
         }
 
         &:active {
