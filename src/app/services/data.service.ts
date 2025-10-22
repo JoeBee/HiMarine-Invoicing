@@ -7,6 +7,9 @@ export interface SupplierFileInfo {
     topLeftCell: string;
     descriptionColumn: string;
     priceColumn: string;
+    descriptionHeader: string;
+    priceHeader: string;
+    rowCount: number;
     file: File;
 }
 
@@ -56,43 +59,95 @@ export class DataService {
 
                 // Find the top-left cell of the data table
                 const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
-                let topLeftCell = 'A1';
-                let descriptionColumn = 'A';
-                let priceColumn = 'B';
+                let topLeftCell = 'NOT FOUND';
+                let descriptionColumn = 'NOT FOUND';
+                let priceColumn = 'NOT FOUND';
+                let descriptionHeader = '';
+                let priceHeader = '';
+                let rowCount = 0;
 
-                // Look for the first row with data (headers)
+                // Look for the first row containing "description", "descrption", or "item"
                 for (let row = range.s.r; row <= range.e.r; row++) {
+                    let foundHeaderRow = false;
+
+                    // Check all cells in this row for header keywords
                     for (let col = range.s.c; col <= range.e.c; col++) {
                         const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
                         const cell = worksheet[cellAddress];
 
                         if (cell && cell.v) {
-                            topLeftCell = cellAddress;
+                            const cellValue = String(cell.v).toLowerCase();
 
-                            // Look for description and price columns
-                            for (let searchCol = col; searchCol <= range.e.c; searchCol++) {
-                                const headerAddress = XLSX.utils.encode_cell({ r: row, c: searchCol });
-                                const headerCell = worksheet[headerAddress];
+                            // Check if this cell contains our target keywords
+                            if (cellValue.includes('description') ||
+                                cellValue.includes('descrption') ||
+                                cellValue.includes('product') ||
+                                cellValue.includes('item')) {
 
-                                if (headerCell && headerCell.v) {
-                                    const headerValue = String(headerCell.v).toLowerCase();
+                                console.log("cellValue", cellValue);
 
-                                    if (headerValue.includes('description') || headerValue.includes('item') ||
-                                        headerValue.includes('product') || headerValue.includes('name')) {
-                                        descriptionColumn = XLSX.utils.encode_col(searchCol);
-                                    }
+                                // This is our header row - find the top left corner
+                                topLeftCell = XLSX.utils.encode_cell({ r: row, c: range.s.c });
+                                foundHeaderRow = true;
 
-                                    if (headerValue.includes('price') || headerValue.includes('cost') ||
-                                        headerValue.includes('amount') || headerValue.includes('value')) {
-                                        priceColumn = XLSX.utils.encode_col(searchCol);
+                                // Look for description and price columns in this header row
+                                for (let searchCol = range.s.c; searchCol <= range.e.c; searchCol++) {
+                                    const headerAddress = XLSX.utils.encode_cell({ r: row, c: searchCol });
+                                    const headerCell = worksheet[headerAddress];
+
+                                    if (headerCell && headerCell.v) {
+                                        const headerValue = String(headerCell.v).toLowerCase();
+                                        const headerText = String(headerCell.v);
+
+                                        if (headerValue.includes('description') || headerValue.includes('descrption') ||
+                                            headerValue.includes('item') || headerValue.includes('product') ||
+                                            headerValue.includes('name')) {
+                                            descriptionColumn = XLSX.utils.encode_col(searchCol);
+                                            descriptionHeader = headerText;
+                                        }
+
+                                        if (headerValue.includes('price') || headerValue.includes('cost') ||
+                                            headerValue.includes('amount') || headerValue.includes('value')) {
+                                            priceColumn = XLSX.utils.encode_col(searchCol);
+                                            priceHeader = headerText;
+                                        }
                                     }
                                 }
-                            }
 
-                            // Exit after finding first data
-                            row = range.e.r + 1;
-                            break;
+                                // If columns were not found, set them to "NOT FOUND"
+                                if (descriptionColumn === 'NOT FOUND') {
+                                    descriptionHeader = 'NOT FOUND';
+                                }
+                                if (priceColumn === 'NOT FOUND') {
+                                    priceHeader = 'NOT FOUND';
+                                }
+
+                                // Count data rows (excluding header row) - only if columns were found
+                                if (descriptionColumn !== 'NOT FOUND' && priceColumn !== 'NOT FOUND') {
+                                    const descColIndex = XLSX.utils.decode_col(descriptionColumn);
+                                    const priceColIndex = XLSX.utils.decode_col(priceColumn);
+
+                                    for (let dataRow = row + 1; dataRow <= range.e.r; dataRow++) {
+                                        const descAddress = XLSX.utils.encode_cell({ r: dataRow, c: descColIndex });
+                                        const priceAddress = XLSX.utils.encode_cell({ r: dataRow, c: priceColIndex });
+
+                                        const descCell = worksheet[descAddress];
+                                        const priceCell = worksheet[priceAddress];
+
+                                        // Count rows that have both description and price data
+                                        if (descCell && descCell.v && priceCell && priceCell.v) {
+                                            rowCount++;
+                                        }
+                                    }
+                                }
+
+                                break;
+                            }
                         }
+                    }
+
+                    if (foundHeaderRow) {
+                        break;
                     }
                 }
 
@@ -103,6 +158,9 @@ export class DataService {
                     topLeftCell,
                     descriptionColumn,
                     priceColumn,
+                    descriptionHeader,
+                    priceHeader,
+                    rowCount,
                     file
                 });
             };

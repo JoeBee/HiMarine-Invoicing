@@ -29,14 +29,18 @@
                     <th>Top Left Cell</th>
                     <th>Description Column</th>
                     <th>Price Column</th>
+                    <th>Row Count</th>
                 </tr>
             </thead>
             <tbody>
                 <tr *ngFor="let file of supplierFiles">
                     <td>{{ file.fileName }}</td>
-                    <td>{{ file.topLeftCell }}</td>
-                    <td>{{ file.descriptionColumn }}</td>
-                    <td>{{ file.priceColumn }}</td>
+                    <td [class.not-found]="file.topLeftCell === 'NOT FOUND'">{{ file.topLeftCell }}</td>
+                    <td [class.not-found]="file.descriptionColumn === 'NOT FOUND'">{{
+                        file.descriptionHeader || file.descriptionColumn }}</td>
+                    <td [class.not-found]="file.priceColumn === 'NOT FOUND'">{{ file.priceHeader
+                        || file.priceColumn }}</td>
+                    <td>{{ file.rowCount }}</td>
                 </tr>
             </tbody>
         </table>
