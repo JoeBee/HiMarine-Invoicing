@@ -25,10 +25,16 @@
                 <span class="label">Items Selected for Invoice:</span>
                 <span class="value highlight">{{ includedItemsCount }}</span>
             </div>
+            <div class="summary-item subtotal">
+                <span class="label">Subtotal:</span>
+                <span class="value highlight">
+                    {{ totalAmount | currency }}
+                </span>
+            </div>
             <div class="summary-item">
                 <span class="label">Total Amount:</span>
                 <span class="value highlight">
-                    {{ totalAmount | currency }}
+                    {{ finalTotalAmount | currency }}
                 </span>
             </div>
         </div>
