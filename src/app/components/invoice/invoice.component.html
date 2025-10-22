@@ -3,7 +3,10 @@
 
     <div class="action-section">
         <button class="primary" [disabled]="!hasDataToInvoice" (click)="generateInvoice()">
-            Generate Invoice
+            Generate Invoice - Excel File
+        </button>
+        <button class="primary" [disabled]="!hasDataToInvoice" (click)="generateInvoicePDF()">
+            Generate Invoice - PDF
         </button>
     </div>
 
