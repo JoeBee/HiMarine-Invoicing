@@ -43,6 +43,9 @@
                     <th class="sortable-header" (click)="sortData('rowCount')">
                         Row Count {{ getSortIcon('rowCount') }}
                     </th>
+                    <th class="status-header">
+                        Status
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -56,6 +59,11 @@
                     <td [class.not-found]="file.unitColumn === 'NOT FOUND'">{{ file.unitHeader
                         || file.unitColumn }}</td>
                     <td>{{ file.rowCount }}</td>
+                    <td class="status-cell">
+                        <span *ngIf="file.hasData === true" class="status-icon success">✓</span>
+                        <span *ngIf="file.hasData === false" class="status-icon error">✗</span>
+                        <span *ngIf="file.hasData === undefined" class="status-icon pending">-</span>
+                    </td>
                 </tr>
             </tbody>
         </table>

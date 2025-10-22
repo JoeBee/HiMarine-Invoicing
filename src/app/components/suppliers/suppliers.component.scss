@@ -68,4 +68,40 @@
         color: #c62828;
         font-weight: bold;
     }
+
+    .status-header {
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .status-cell {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .status-icon {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        font-size: 16px;
+        font-weight: bold;
+        line-height: 24px;
+        text-align: center;
+
+        &.success {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        &.error {
+            background-color: #f44336;
+            color: white;
+        }
+
+        &.pending {
+            background-color: #ffc107;
+            color: #333;
+        }
+    }
 }

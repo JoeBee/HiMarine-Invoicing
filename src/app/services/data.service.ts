@@ -13,6 +13,7 @@ export interface SupplierFileInfo {
     unitHeader: string;
     rowCount: number;
     file: File;
+    hasData?: boolean; // Track if file has data after processing
 }
 
 export interface ProcessedDataRow {
@@ -197,11 +198,22 @@ export class DataService {
     async processSupplierFiles(): Promise<void> {
         const supplierFiles = this.supplierFilesSubject.value;
         const allData: ProcessedDataRow[] = [];
+        const updatedSupplierFiles: SupplierFileInfo[] = [];
 
         for (const fileInfo of supplierFiles) {
             const rowData = await this.extractDataFromFile(fileInfo);
             allData.push(...rowData);
+
+            // Update the file info to track if it has data
+            const updatedFileInfo: SupplierFileInfo = {
+                ...fileInfo,
+                hasData: rowData.length > 0
+            };
+            updatedSupplierFiles.push(updatedFileInfo);
         }
+
+        // Update supplier files with processing status
+        this.supplierFilesSubject.next(updatedSupplierFiles);
 
         // Sort by description, then by price
         allData.sort((a, b) => {
