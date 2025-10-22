@@ -2,6 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService, SupplierFileInfo } from '../../services/data.service';
 
+interface SortState {
+    column: string;
+    direction: 'asc' | 'desc';
+}
+
 @Component({
     selector: 'app-suppliers',
     standalone: true,
@@ -13,6 +18,7 @@ export class SuppliersComponent implements OnInit {
     supplierFiles: SupplierFileInfo[] = [];
     isDragging = false;
     isProcessing = false;
+    sortState: SortState = { column: '', direction: 'asc' };
 
     constructor(private dataService: DataService) { }
 
@@ -73,6 +79,60 @@ export class SuppliersComponent implements OnInit {
         if (confirm('Are you sure you want to clear all uploaded files? This will also clear all processed data.')) {
             this.dataService.clearAll();
         }
+    }
+
+    sortData(column: string): void {
+        if (this.sortState.column === column) {
+            this.sortState.direction = this.sortState.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.sortState.column = column;
+            this.sortState.direction = 'asc';
+        }
+
+        this.supplierFiles.sort((a, b) => {
+            let aValue: any;
+            let bValue: any;
+
+            switch (column) {
+                case 'fileName':
+                    aValue = a.fileName.toLowerCase();
+                    bValue = b.fileName.toLowerCase();
+                    break;
+                case 'topLeftCell':
+                    aValue = a.topLeftCell.toLowerCase();
+                    bValue = b.topLeftCell.toLowerCase();
+                    break;
+                case 'descriptionColumn':
+                    aValue = (a.descriptionHeader || a.descriptionColumn).toLowerCase();
+                    bValue = (b.descriptionHeader || b.descriptionColumn).toLowerCase();
+                    break;
+                case 'priceColumn':
+                    aValue = (a.priceHeader || a.priceColumn).toLowerCase();
+                    bValue = (b.priceHeader || b.priceColumn).toLowerCase();
+                    break;
+                case 'rowCount':
+                    aValue = a.rowCount;
+                    bValue = b.rowCount;
+                    break;
+                default:
+                    return 0;
+            }
+
+            if (aValue < bValue) {
+                return this.sortState.direction === 'asc' ? -1 : 1;
+            }
+            if (aValue > bValue) {
+                return this.sortState.direction === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+    }
+
+    getSortIcon(column: string): string {
+        if (this.sortState.column !== column) {
+            return '↕️';
+        }
+        return this.sortState.direction === 'asc' ? '↑' : '↓';
     }
 }
 

@@ -16,10 +16,18 @@
         <table>
             <thead>
                 <tr>
-                    <th>#</th>
-                    <th>File Name</th>
-                    <th>Description</th>
-                    <th>Price</th>
+                    <th class="sortable-header" (click)="sortData('count')">
+                        # {{ getSortIcon('count') }}
+                    </th>
+                    <th class="sortable-header" (click)="sortData('fileName')">
+                        File Name {{ getSortIcon('fileName') }}
+                    </th>
+                    <th class="sortable-header" (click)="sortData('description')">
+                        Description {{ getSortIcon('description') }}
+                    </th>
+                    <th class="sortable-header" (click)="sortData('price')">
+                        Price {{ getSortIcon('price') }}
+                    </th>
                 </tr>
             </thead>
             <tbody>

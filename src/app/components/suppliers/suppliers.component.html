@@ -25,11 +25,21 @@
         <table>
             <thead>
                 <tr>
-                    <th>File Name</th>
-                    <th>Top Left Cell</th>
-                    <th>Description Column</th>
-                    <th>Price Column</th>
-                    <th>Row Count</th>
+                    <th class="sortable-header" (click)="sortData('fileName')">
+                        File Name {{ getSortIcon('fileName') }}
+                    </th>
+                    <th class="sortable-header" (click)="sortData('topLeftCell')">
+                        Top Left Cell {{ getSortIcon('topLeftCell') }}
+                    </th>
+                    <th class="sortable-header" (click)="sortData('descriptionColumn')">
+                        Description Column {{ getSortIcon('descriptionColumn') }}
+                    </th>
+                    <th class="sortable-header" (click)="sortData('priceColumn')">
+                        Price Column {{ getSortIcon('priceColumn') }}
+                    </th>
+                    <th class="sortable-header" (click)="sortData('rowCount')">
+                        Row Count {{ getSortIcon('rowCount') }}
+                    </th>
                 </tr>
             </thead>
             <tbody>

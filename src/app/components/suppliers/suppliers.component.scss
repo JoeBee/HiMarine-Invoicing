@@ -48,6 +48,21 @@
 .files-table {
     margin-top: 30px;
 
+    .sortable-header {
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.2s ease;
+        position: relative;
+
+        &:hover {
+            background-color: #f8f9fa;
+        }
+
+        &:active {
+            background-color: #e9ecef;
+        }
+    }
+
     .not-found {
         background-color: #ffebee;
         color: #c62828;
