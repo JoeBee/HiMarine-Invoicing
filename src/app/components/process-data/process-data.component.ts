@@ -17,9 +17,17 @@ interface SortState {
 })
 export class ProcessDataComponent implements OnInit {
     processedData: ProcessedDataRow[] = [];
+    filteredData: ProcessedDataRow[] = [];
     hasSupplierFiles = false;
     isProcessing = false;
     sortState: SortState = { column: '', direction: 'asc' };
+
+    // Filter properties
+    selectedFileName = '';
+    selectedDescription = '';
+    descriptionTextFilter = '';
+    availableFileNames: string[] = [];
+    commonDescriptions = ['Beer', 'Cheese', 'Ice'];
 
     constructor(private dataService: DataService) { }
 
@@ -32,6 +40,10 @@ export class ProcessDataComponent implements OnInit {
 
         this.dataService.processedData$.subscribe(data => {
             this.processedData = data;
+            this.filteredData = [...data]; // Initialize filtered data
+            this.updateAvailableFileNames();
+            this.updateCommonDescriptions();
+            this.applyFilters();
         });
     }
 
@@ -44,7 +56,19 @@ export class ProcessDataComponent implements OnInit {
     onCountChange(index: number, event: Event): void {
         const select = event.target as HTMLSelectElement;
         const count = parseInt(select.value, 10);
-        this.dataService.updateRowCount(index, count);
+
+        // Find the original index in processedData
+        const filteredRow = this.filteredData[index];
+        const originalIndex = this.processedData.findIndex(row =>
+            row.fileName === filteredRow.fileName &&
+            row.description === filteredRow.description &&
+            row.price === filteredRow.price &&
+            row.unit === filteredRow.unit
+        );
+
+        if (originalIndex !== -1) {
+            this.dataService.updateRowCount(originalIndex, count);
+        }
     }
 
     sortData(column: string): void {
@@ -55,7 +79,7 @@ export class ProcessDataComponent implements OnInit {
             this.sortState.direction = 'asc';
         }
 
-        this.processedData.sort((a, b) => {
+        this.filteredData.sort((a, b) => {
             let aValue: any;
             let bValue: any;
 
@@ -99,6 +123,72 @@ export class ProcessDataComponent implements OnInit {
             return '↕️';
         }
         return this.sortState.direction === 'asc' ? '↑' : '↓';
+    }
+
+    updateAvailableFileNames(): void {
+        const uniqueFileNames = [...new Set(this.processedData.map(row => row.fileName))];
+        this.availableFileNames = uniqueFileNames.sort();
+    }
+
+    updateCommonDescriptions(): void {
+        // Keep the predefined list: Beer, Cheese, Ice
+        // No need to dynamically update since we want only these specific options
+        this.commonDescriptions = ['Beer', 'Cheese', 'Ice'];
+    }
+
+    onFileNameFilterChange(): void {
+        this.applyFilters();
+    }
+
+    onDescriptionFilterChange(): void {
+        this.applyFilters();
+    }
+
+    onDescriptionTextFilterChange(): void {
+        this.applyFilters();
+    }
+
+    applyFilters(): void {
+        let filtered = [...this.processedData];
+
+        // Filter by file name
+        if (this.selectedFileName) {
+            filtered = filtered.filter(row => row.fileName === this.selectedFileName);
+        }
+
+        // Filter by description
+        if (this.selectedDescription) {
+            filtered = filtered.filter(row =>
+                row.description.toLowerCase().includes(this.selectedDescription.toLowerCase())
+            );
+        }
+
+        // Filter by description text
+        if (this.descriptionTextFilter.trim()) {
+            const searchText = this.descriptionTextFilter.toLowerCase().trim();
+            filtered = filtered.filter(row =>
+                row.description.toLowerCase().includes(searchText)
+            );
+        }
+
+        this.filteredData = filtered;
+    }
+
+    clearFilters(): void {
+        this.selectedFileName = '';
+        this.selectedDescription = '';
+        this.descriptionTextFilter = '';
+        this.applyFilters();
+    }
+
+    clearFileNameFilter(): void {
+        this.selectedFileName = '';
+        this.applyFilters();
+    }
+
+    clearDescriptionFilter(): void {
+        this.selectedDescription = '';
+        this.applyFilters();
     }
 }
 

@@ -13,6 +13,49 @@
 
     <div *ngIf="processedData.length > 0" class="data-table">
         <h2>Processed Data</h2>
+
+        <!-- Filter Controls -->
+        <div class="filter-controls">
+            <div class="filter-group">
+                <label for="fileNameFilter">Filter by File Name:</label>
+                <div class="dropdown-container">
+                    <select id="fileNameFilter" [(ngModel)]="selectedFileName" (change)="onFileNameFilterChange()"
+                        class="filter-dropdown">
+                        <option value="">All Files</option>
+                        <option *ngFor="let fileName of availableFileNames" [value]="fileName">{{ fileName }}</option>
+                    </select>
+                    <button type="button" *ngIf="selectedFileName" (click)="clearFileNameFilter()"
+                        class="clear-dropdown-btn" title="Clear selection">×</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label for="descriptionFilter">Filter by Description:</label>
+                <div class="dropdown-container">
+                    <select id="descriptionFilter" [(ngModel)]="selectedDescription"
+                        (change)="onDescriptionFilterChange()" class="filter-dropdown">
+                        <option value="">All Descriptions</option>
+                        <option *ngFor="let desc of commonDescriptions" [value]="desc">{{ desc }}</option>
+                    </select>
+                    <button type="button" *ngIf="selectedDescription" (click)="clearDescriptionFilter()"
+                        class="clear-dropdown-btn" title="Clear selection">×</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label for="descriptionTextFilter">Search Description:</label>
+                <input type="text" id="descriptionTextFilter" [(ngModel)]="descriptionTextFilter"
+                    (input)="onDescriptionTextFilterChange()" placeholder="Enter text to search..."
+                    class="filter-input">
+            </div>
+
+            <button type="button" (click)="clearFilters()" class="clear-filters-btn">Clear Filters</button>
+        </div>
+
+        <div class="results-info" *ngIf="filteredData.length > 0">
+            <p>Showing {{ filteredData.length }} of {{ processedData.length }} results</p>
+        </div>
+
         <table>
             <thead>
                 <tr>
@@ -34,7 +77,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let row of processedData; let i = index">
+                <tr *ngFor="let row of filteredData; let i = index">
                     <td>
                         <select [value]="row.count" (change)="onCountChange(i, $event)" class="count-dropdown">
                             <option value="0">0</option>
@@ -65,5 +108,9 @@
 
     <div *ngIf="hasSupplierFiles && processedData.length === 0 && !isProcessing" class="empty-state">
         <p>Click "Process Supplier Files" to begin processing the uploaded files.</p>
+    </div>
+
+    <div *ngIf="processedData.length > 0 && filteredData.length === 0" class="empty-state">
+        <p>No results match the current filters. Try adjusting your filter criteria.</p>
     </div>
 </div>
