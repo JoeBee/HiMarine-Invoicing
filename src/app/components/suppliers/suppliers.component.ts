@@ -110,6 +110,10 @@ export class SuppliersComponent implements OnInit {
                     aValue = (a.priceHeader || a.priceColumn).toLowerCase();
                     bValue = (b.priceHeader || b.priceColumn).toLowerCase();
                     break;
+                case 'unitColumn':
+                    aValue = (a.unitHeader || a.unitColumn).toLowerCase();
+                    bValue = (b.unitHeader || b.unitColumn).toLowerCase();
+                    break;
                 case 'rowCount':
                     aValue = a.rowCount;
                     bValue = b.rowCount;

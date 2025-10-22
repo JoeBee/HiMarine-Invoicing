@@ -7,8 +7,10 @@ export interface SupplierFileInfo {
     topLeftCell: string;
     descriptionColumn: string;
     priceColumn: string;
+    unitColumn: string;
     descriptionHeader: string;
     priceHeader: string;
+    unitHeader: string;
     rowCount: number;
     file: File;
 }
@@ -17,6 +19,7 @@ export interface ProcessedDataRow {
     fileName: string;
     description: string;
     price: number;
+    unit: string;
     count: number;
 }
 
@@ -62,8 +65,10 @@ export class DataService {
                 let topLeftCell = 'NOT FOUND';
                 let descriptionColumn = 'NOT FOUND';
                 let priceColumn = 'NOT FOUND';
+                let unitColumn = 'NOT FOUND';
                 let descriptionHeader = '';
                 let priceHeader = '';
+                let unitHeader = '';
                 let rowCount = 0;
 
                 // Look for the first row containing "description", "descrption", or "item"
@@ -101,8 +106,10 @@ export class DataService {
                                     const headerCell = worksheet[headerAddress];
 
                                     if (headerCell && headerCell.v) {
-                                        const headerValue = String(headerCell.v).toLowerCase();
+                                        const headerValue = String(headerCell.v)
+                                            .toLowerCase().trim();
                                         const headerText = String(headerCell.v);
+
 
                                         if (headerValue.includes('description') || headerValue.includes('descrption') ||
                                             headerValue.includes('item') || headerValue.includes('product') ||
@@ -116,6 +123,12 @@ export class DataService {
                                             priceColumn = XLSX.utils.encode_col(searchCol);
                                             priceHeader = headerText;
                                         }
+
+                                        if (headerValue === 'unit' ||
+                                            headerValue === 'units') {
+                                            unitColumn = XLSX.utils.encode_col(searchCol);
+                                            unitHeader = headerText;
+                                        }
                                     }
                                 }
 
@@ -125,6 +138,9 @@ export class DataService {
                                 }
                                 if (priceColumn === 'NOT FOUND') {
                                     priceHeader = 'NOT FOUND';
+                                }
+                                if (unitColumn === 'NOT FOUND') {
+                                    unitHeader = 'NOT FOUND';
                                 }
 
                                 // Count data rows (excluding header row) - only if columns were found
@@ -163,8 +179,10 @@ export class DataService {
                     topLeftCell,
                     descriptionColumn,
                     priceColumn,
+                    unitColumn,
                     descriptionHeader,
                     priceHeader,
+                    unitHeader,
                     rowCount,
                     file
                 });
@@ -207,6 +225,7 @@ export class DataService {
                 const topLeftCellRef = XLSX.utils.decode_cell(fileInfo.topLeftCell);
                 const descColIndex = XLSX.utils.decode_col(fileInfo.descriptionColumn);
                 const priceColIndex = XLSX.utils.decode_col(fileInfo.priceColumn);
+                const unitColIndex = XLSX.utils.decode_col(fileInfo.unitColumn);
 
                 const rows: ProcessedDataRow[] = [];
 
@@ -214,15 +233,18 @@ export class DataService {
                 for (let row = topLeftCellRef.r + 1; row <= range.e.r; row++) {
                     const descAddress = XLSX.utils.encode_cell({ r: row, c: descColIndex });
                     const priceAddress = XLSX.utils.encode_cell({ r: row, c: priceColIndex });
+                    const unitAddress = XLSX.utils.encode_cell({ r: row, c: unitColIndex });
 
                     const descCell = worksheet[descAddress];
                     const priceCell = worksheet[priceAddress];
+                    const unitCell = worksheet[unitAddress];
 
                     if (descCell && descCell.v && priceCell && priceCell.v) {
                         rows.push({
                             fileName: fileInfo.fileName,
                             description: String(descCell.v),
                             price: Number(priceCell.v),
+                            unit: unitCell && unitCell.v ? String(unitCell.v) : '',
                             count: 0
                         });
                     }

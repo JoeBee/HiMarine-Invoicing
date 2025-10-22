@@ -68,6 +68,10 @@ export class ProcessDataComponent implements OnInit {
                     aValue = a.description.toLowerCase();
                     bValue = b.description.toLowerCase();
                     break;
+                case 'unit':
+                    aValue = a.unit.toLowerCase();
+                    bValue = b.unit.toLowerCase();
+                    break;
                 case 'price':
                     aValue = a.price;
                     bValue = b.price;

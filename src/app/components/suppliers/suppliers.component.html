@@ -37,6 +37,9 @@
                     <th class="sortable-header" (click)="sortData('priceColumn')">
                         Price Column {{ getSortIcon('priceColumn') }}
                     </th>
+                    <th class="sortable-header" (click)="sortData('unitColumn')">
+                        Unit Column {{ getSortIcon('unitColumn') }}
+                    </th>
                     <th class="sortable-header" (click)="sortData('rowCount')">
                         Row Count {{ getSortIcon('rowCount') }}
                     </th>
@@ -50,6 +53,8 @@
                         file.descriptionHeader || file.descriptionColumn }}</td>
                     <td [class.not-found]="file.priceColumn === 'NOT FOUND'">{{ file.priceHeader
                         || file.priceColumn }}</td>
+                    <td [class.not-found]="file.unitColumn === 'NOT FOUND'">{{ file.unitHeader
+                        || file.unitColumn }}</td>
                     <td>{{ file.rowCount }}</td>
                 </tr>
             </tbody>

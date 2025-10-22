@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
     styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-    title = 'HiMarine Invoicing';
+    title = 'HI Marine Invoicing';
     showInfoModal = false;
 
     openInfoModal(): void {

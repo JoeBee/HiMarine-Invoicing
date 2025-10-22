@@ -25,6 +25,9 @@
                     <th class="sortable-header" (click)="sortData('description')">
                         Description {{ getSortIcon('description') }}
                     </th>
+                    <th class="sortable-header" (click)="sortData('unit')">
+                        Unit {{ getSortIcon('unit') }}
+                    </th>
                     <th class="sortable-header" (click)="sortData('price')">
                         Price {{ getSortIcon('price') }}
                     </th>
@@ -49,6 +52,7 @@
                     </td>
                     <td>{{ row.fileName }}</td>
                     <td>{{ row.description }}</td>
+                    <td>{{ row.unit }}</td>
                     <td>{{ row.price | currency }}</td>
                 </tr>
             </tbody>
