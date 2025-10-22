@@ -88,7 +88,7 @@ export class DataService {
 
 
                             if (cellValue.length > 25) {
-                                console.log("cellValue", cellValue);
+                                // console.log("cellValue", cellValue);
                                 // skip rows with less than 25 characters
                                 // continue;
                             }
@@ -97,7 +97,7 @@ export class DataService {
                                 cellValue.includes('product') ||
                                 cellValue.includes('item')) {
 
-                                console.log("cellValue", cellValue);
+                                // console.log("cellValue", cellValue);
 
                                 // This is our header row - find the top left corner
                                 topLeftCell = XLSX.utils.encode_cell({ r: row, c: range.s.c });

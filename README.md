@@ -27,7 +27,7 @@ npm start
 
 ### Step 1: Upload Supplier Files
 - Navigate to the "Suppliers" tab
-- Drag and drop XLSX files or click to browse
+- Drag and drop Excel files or click to browse
 - The system will automatically analyze each file and detect:
   - File name
   - Data table location

@@ -17,7 +17,7 @@
 **Steps:**
 1. Navigate to the "Suppliers" tab (first tab)
 2. Either:
-   - Drag and drop XLSX files into the drop zone
+   - Drag and drop Excel files into the drop zone
    - Click the drop zone to browse and select files
 3. You can upload multiple files at once
 4. The system automatically analyzes each file and detects:

@@ -11,10 +11,10 @@
     </div>
 
     <div *ngIf="processedData.length > 0" class="preview-section">
-        <h2>Invoice Preview</h2>
-        <p class="info-text">
+        <!-- <h2>Invoice Preview</h2> -->
+        <!-- <p class="info-text">
             Items with a count greater than 0 will be included in the generated invoice.
-        </p>
+        </p> -->
 
         <div class="summary-card">
             <div class="summary-item">
@@ -48,6 +48,7 @@
                         <th>Description</th>
                         <th>Count</th>
                         <th>Price</th>
+                        <th>Adjusted Price</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -56,6 +57,7 @@
                         <td>{{ row.description }}</td>
                         <td>{{ row.count }}</td>
                         <td>{{ (row.count * row.price) | currency }}</td>
+                        <td>{{ ((row.count * row.price) * 1.1 / 0.9) | currency }}</td>
                     </tr>
                 </tbody>
             </table>
