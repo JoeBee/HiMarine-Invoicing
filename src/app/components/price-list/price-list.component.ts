@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, ProcessedDataRow } from '../../services/data.service';
+import * as ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 interface SortState {
     column: string;
@@ -250,4 +252,435 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Remove event listener when component is destroyed
         document.removeEventListener('click', this.onDocumentClick.bind(this));
     }
+
+    async exportToExcel(): Promise<void> {
+        const workbook = new ExcelJS.Workbook();
+
+        // Create Cover Sheet
+        this.createCoverSheet(workbook);
+
+        // Create Provisions sheet
+        this.createProvisionsSheet(workbook);
+
+        // Create Fresh Provisions sheet
+        this.createFreshProvisionsSheet(workbook);
+
+        // Create Bond sheet
+        this.createBondSheet(workbook);
+
+        // Generate Excel file
+        const buffer = await workbook.xlsx.writeBuffer();
+        const data = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(data, 'Marine_Provisions_Price_List.xlsx');
+    }
+
+    private createCoverSheet(workbook: ExcelJS.Workbook): void {
+        const worksheet = workbook.addWorksheet('COVER SHEET');
+
+        // Remove grid lines from the worksheet
+        worksheet.properties.showGridLines = false;
+
+        // Set column widths to show all content properly
+        worksheet.getColumn('A').width = 20;  // Column A
+        worksheet.getColumn('B').width = 30;  // Column B (for email and labels)
+        worksheet.getColumn('C').width = 8;   // Column C (for '$')
+        worksheet.getColumn('D').width = 8;   // Column D (for '-')
+
+        // Add title (merged across A1:D1)
+        worksheet.mergeCells('A1:D1');
+        worksheet.getCell('A1').value = 'MARINE PROVISIONS PRICE LIST';
+        worksheet.getCell('A1').font = { bold: true, size: 16 };
+        worksheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+
+        // Add date and total items
+        worksheet.getCell('A3').value = 'Generated on: ' + new Date().toLocaleDateString();
+        worksheet.getCell('A5').value = 'Total Items: ' + this.processedData.length;
+
+        // Add email
+        worksheet.getCell('A9').value = 'Email:';
+        worksheet.getCell('B9').value = 'office@eos-supply.co.uk';
+
+        // Add PROVISIONS row (B14:D14) with dark blue background and white text
+        const provisionsRow = worksheet.getRow(14);
+        provisionsRow.getCell(2).value = 'PROVISIONS';
+        provisionsRow.getCell(3).value = '$';
+        provisionsRow.getCell(4).value = '-';
+
+        // Style PROVISIONS row - dark blue background with white text
+        provisionsRow.getCell(2).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        provisionsRow.getCell(2).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF4472C4' }
+        };
+        provisionsRow.getCell(2).alignment = { horizontal: 'left' };
+        provisionsRow.getCell(2).border = {
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+
+        provisionsRow.getCell(3).font = { color: { argb: 'FF000000' } };
+        provisionsRow.getCell(3).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF4472C4' }
+        };
+        provisionsRow.getCell(3).alignment = { horizontal: 'center' };
+        provisionsRow.getCell(3).border = {
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+
+        provisionsRow.getCell(4).font = { color: { argb: 'FF000000' } };
+        provisionsRow.getCell(4).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF4472C4' }
+        };
+        provisionsRow.getCell(4).alignment = { horizontal: 'center' };
+        provisionsRow.getCell(4).border = {
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+
+        // Add FRESH PROVISIONS row (B15:D15) with light blue background and black text
+        const freshProvisionsRow = worksheet.getRow(15);
+        freshProvisionsRow.getCell(2).value = 'FRESH PROVISIONS';
+        freshProvisionsRow.getCell(3).value = '$';
+        freshProvisionsRow.getCell(4).value = '-';
+
+        // Style FRESH PROVISIONS row - light blue background with black text
+        freshProvisionsRow.getCell(2).font = { bold: true, color: { argb: 'FF000000' } };
+        freshProvisionsRow.getCell(2).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFB4C6E7' }
+        };
+        freshProvisionsRow.getCell(2).alignment = { horizontal: 'left' };
+        freshProvisionsRow.getCell(2).border = {
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+
+        freshProvisionsRow.getCell(3).font = { color: { argb: 'FF000000' } };
+        freshProvisionsRow.getCell(3).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFB4C6E7' }
+        };
+        freshProvisionsRow.getCell(3).alignment = { horizontal: 'center' };
+        freshProvisionsRow.getCell(3).border = {
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+
+        freshProvisionsRow.getCell(4).font = { color: { argb: 'FF000000' } };
+        freshProvisionsRow.getCell(4).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFB4C6E7' }
+        };
+        freshProvisionsRow.getCell(4).alignment = { horizontal: 'center' };
+        freshProvisionsRow.getCell(4).border = {
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+
+        // Add BOND row (B16:D16) with light blue background and black text
+        const bondRow = worksheet.getRow(16);
+        bondRow.getCell(2).value = 'BOND';
+        bondRow.getCell(3).value = '$';
+        bondRow.getCell(4).value = '-';
+
+        // Style BOND row - light blue background with black text
+        bondRow.getCell(2).font = { bold: true, color: { argb: 'FF000000' } };
+        bondRow.getCell(2).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFB4C6E7' }
+        };
+        bondRow.getCell(2).alignment = { horizontal: 'left' };
+        bondRow.getCell(2).border = {
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+
+        bondRow.getCell(3).font = { color: { argb: 'FF000000' } };
+        bondRow.getCell(3).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFB4C6E7' }
+        };
+        bondRow.getCell(3).alignment = { horizontal: 'center' };
+        bondRow.getCell(3).border = {
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+
+        bondRow.getCell(4).font = { color: { argb: 'FF000000' } };
+        bondRow.getCell(4).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFB4C6E7' }
+        };
+        bondRow.getCell(4).alignment = { horizontal: 'center' };
+        bondRow.getCell(4).border = {
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+
+        // Add TOTAL ORDER row (B19:E19)
+        const totalRow = worksheet.getRow(19);
+        totalRow.getCell(2).value = 'TOTAL ORDER, USD';
+        totalRow.getCell(4).value = '$';
+        totalRow.getCell(5).value = '-';
+
+        // Style TOTAL ORDER row - no background, black text
+        totalRow.getCell(2).font = { bold: true, color: { argb: 'FF000000' } };
+        totalRow.getCell(4).font = { color: { argb: 'FF000000' } };
+        totalRow.getCell(5).font = { color: { argb: 'FF000000' } };
+        totalRow.getCell(4).alignment = { horizontal: 'center' };
+        totalRow.getCell(5).alignment = { horizontal: 'center' };
+    }
+
+    private createProvisionsSheet(workbook: ExcelJS.Workbook): void {
+        // Filter data for provisions (meat, alcohol, cigarettes, etc.)
+        const provisionsData = this.processedData.filter(item =>
+            this.isProvisionItem(item.description)
+        );
+
+        const worksheet = workbook.addWorksheet('PROVISIONS');
+
+        // Add headers
+        const headers = ['Pos.', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
+        const headerRow = worksheet.addRow(headers);
+
+        // Style header row with dark blue background and white text
+        headerRow.eachCell((cell, colNumber) => {
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF4472C4' }
+            };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FF000000' } },
+                left: { style: 'thin', color: { argb: 'FF000000' } },
+                bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                right: { style: 'thin', color: { argb: 'FF000000' } }
+            };
+        });
+
+        // Add data rows
+        provisionsData.forEach((item, index) => {
+            const dataRow = worksheet.addRow([
+                (index + 1).toString(),
+                item.description,
+                item.remarks || '-',
+                item.unit,
+                '', // Empty Qty column
+                `$ ${item.price.toFixed(2)}`,
+                '' // Empty Total column
+            ]);
+
+            // Style data rows with borders
+            dataRow.eachCell((cell, colNumber) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                };
+                cell.alignment = { vertical: 'middle' };
+            });
+        });
+
+        // Set column widths
+        worksheet.getColumn(1).width = 8;   // Pos.
+        worksheet.getColumn(2).width = 40;  // Description
+        worksheet.getColumn(3).width = 20;  // Remark
+        worksheet.getColumn(4).width = 8;   // Unit
+        worksheet.getColumn(5).width = 8;   // Qty
+        worksheet.getColumn(6).width = 12;  // Price
+        worksheet.getColumn(7).width = 12; // Total
+    }
+
+    private createFreshProvisionsSheet(workbook: ExcelJS.Workbook): void {
+        // Filter data for fresh provisions (fruits, vegetables)
+        const freshProvisionsData = this.processedData.filter(item =>
+            this.isFreshProvisionItem(item.description)
+        );
+
+        const worksheet = workbook.addWorksheet('FRESH PROVISIONS');
+
+        // Add headers
+        const headers = ['Pos.', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
+        const headerRow = worksheet.addRow(headers);
+
+        // Style header row with dark blue background and white text
+        headerRow.eachCell((cell, colNumber) => {
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF4472C4' }
+            };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FF000000' } },
+                left: { style: 'thin', color: { argb: 'FF000000' } },
+                bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                right: { style: 'thin', color: { argb: 'FF000000' } }
+            };
+        });
+
+        // Add data rows
+        freshProvisionsData.forEach((item, index) => {
+            const dataRow = worksheet.addRow([
+                (index + 1).toString(),
+                item.description,
+                item.remarks || '-',
+                item.unit,
+                '', // Empty Qty column
+                `$ ${item.price.toFixed(2)}`,
+                '' // Empty Total column
+            ]);
+
+            // Style data rows with borders
+            dataRow.eachCell((cell, colNumber) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                };
+                cell.alignment = { vertical: 'middle' };
+            });
+        });
+
+        // Set column widths
+        worksheet.getColumn(1).width = 8;   // Pos.
+        worksheet.getColumn(2).width = 40;  // Description
+        worksheet.getColumn(3).width = 20;  // Remark
+        worksheet.getColumn(4).width = 8;   // Unit
+        worksheet.getColumn(5).width = 8;   // Qty
+        worksheet.getColumn(6).width = 12;  // Price
+        worksheet.getColumn(7).width = 12; // Total
+    }
+
+    private createBondSheet(workbook: ExcelJS.Workbook): void {
+        // Filter data for bond items (alcohol, spirits)
+        const bondData = this.processedData.filter(item =>
+            this.isBondItem(item.description)
+        );
+
+        const worksheet = workbook.addWorksheet('BOND');
+
+        // Add headers
+        const headers = ['Pos.', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
+        const headerRow = worksheet.addRow(headers);
+
+        // Style header row with dark blue background and white text
+        headerRow.eachCell((cell, colNumber) => {
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF4472C4' }
+            };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FF000000' } },
+                left: { style: 'thin', color: { argb: 'FF000000' } },
+                bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                right: { style: 'thin', color: { argb: 'FF000000' } }
+            };
+        });
+
+        // Add data rows
+        bondData.forEach((item, index) => {
+            const dataRow = worksheet.addRow([
+                (index + 1).toString(),
+                item.description,
+                item.remarks || '-',
+                item.unit,
+                '', // Empty Qty column
+                `$ ${item.price.toFixed(2)}`,
+                '' // Empty Total column
+            ]);
+
+            // Style data rows with borders
+            dataRow.eachCell((cell, colNumber) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                };
+                cell.alignment = { vertical: 'middle' };
+            });
+        });
+
+        // Set column widths
+        worksheet.getColumn(1).width = 8;   // Pos.
+        worksheet.getColumn(2).width = 40;  // Description
+        worksheet.getColumn(3).width = 20;  // Remark
+        worksheet.getColumn(4).width = 8;   // Unit
+        worksheet.getColumn(5).width = 8;   // Qty
+        worksheet.getColumn(6).width = 12;  // Price
+        worksheet.getColumn(7).width = 12; // Total
+    }
+
+    private isProvisionItem(description: string): boolean {
+        const provisionKeywords = [
+            'beef', 'lamb', 'pork', 'chicken', 'meat', 'fish', 'seafood',
+            'whisky', 'vodka', 'rum', 'cognac', 'wine', 'beer', 'alcohol',
+            'marlboro', 'philip', 'chesterfield', 'lucky', 'camel', 'cigarette',
+            'coca', 'sprite', 'pepsi', 'seven', 'fanta', 'juice'
+        ];
+
+        const desc = description.toLowerCase();
+        return provisionKeywords.some(keyword => desc.includes(keyword));
+    }
+
+    private isFreshProvisionItem(description: string): boolean {
+        const freshKeywords = [
+            'apple', 'banana', 'orange', 'grape', 'lemon', 'lime', 'avocado',
+            'carrot', 'lettuce', 'tomato', 'onion', 'potato', 'cucumber',
+            'broccoli', 'cauliflower', 'cabbage', 'spinach', 'kale'
+        ];
+
+        const desc = description.toLowerCase();
+        return freshKeywords.some(keyword => desc.includes(keyword));
+    }
+
+    private isBondItem(description: string): boolean {
+        const bondKeywords = [
+            'whisky', 'vodka', 'rum', 'cognac', 'wine', 'beer', 'alcohol',
+            'spirit', 'liquor'
+        ];
+
+        const desc = description.toLowerCase();
+        return bondKeywords.some(keyword => desc.includes(keyword));
+    }
+
 }
