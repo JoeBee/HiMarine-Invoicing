@@ -6,8 +6,6 @@
             (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'Bonded')" (click)="triggerFileInput('Bonded')">
             <div class="icon">📁</div>
             <p><strong>Bonded</strong></p>
-            <p>Drag and drop Excel files here</p>
-            <p>or click to browse</p>
             <input type="file" id="fileInput-Bonded" multiple accept=".xlsx,.xls"
                 (change)="onFileSelect($event, 'Bonded')" style="display: none;">
         </div>
@@ -17,11 +15,13 @@
             (click)="triggerFileInput('Provisions')">
             <div class="icon">📁</div>
             <p><strong>Provisions</strong></p>
-            <p>Drag and drop Excel files here</p>
-            <p>or click to browse</p>
             <input type="file" id="fileInput-Provisions" multiple accept=".xlsx,.xls"
                 (change)="onFileSelect($event, 'Provisions')" style="display: none;">
         </div>
+    </div>
+
+    <div class="drop-zone-instructions">
+        <p>Drag and drop Excel files here or click to browse</p>
     </div>
 
     <div *ngIf="isProcessing" class="processing-message">

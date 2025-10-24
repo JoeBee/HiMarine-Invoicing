@@ -15,14 +15,17 @@
 
 .drop-zones-container {
     display: flex;
-    gap: 20px;
-    margin-bottom: 30px;
+    gap: 30px;
+    margin-bottom: 0px;
+    width: 100%;
+    padding: 0 20px;
 
     .drop-zone {
         flex: 1;
+        min-width: 300px;
         border: 2px dashed #ccc;
         border-radius: 8px;
-        padding: 40px 20px;
+        padding: 60px 40px;
         text-align: center;
         cursor: pointer;
         transition: all 0.3s ease;
@@ -61,6 +64,17 @@
     }
 }
 
+.drop-zone-instructions {
+    text-align: center;
+    margin: 0px 0 20px 0;
+    color: #666;
+    font-size: 16px;
+
+    p {
+        margin: 0;
+        font-weight: 500;
+    }
+}
 
 .processing-message {
     text-align: center;

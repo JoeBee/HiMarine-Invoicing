@@ -2,11 +2,9 @@
     <header>
         <!-- Main Navigation Row -->
         <nav class="nav-tabs main-nav">
-            <a routerLink="/suppliers" routerLinkActive="active"
-                (click)="updateActiveMainTab('/suppliers')">Suppliers</a>
-            <a routerLink="/invoicing" routerLinkActive="active"
-                (click)="updateActiveMainTab('/invoicing')">Invoicing</a>
-            <a routerLink="/history" routerLinkActive="active" (click)="updateActiveMainTab('')">History</a>
+            <a (click)="onMainTabClick('suppliers')" [class.active]="activeMainTab === 'suppliers'">Suppliers</a>
+            <a (click)="onMainTabClick('invoicing')" [class.active]="activeMainTab === 'invoicing'">Invoicing</a>
+            <a (click)="onMainTabClick('history')" [class.active]="activeMainTab === 'history'">History</a>
         </nav>
 
         <!-- Sub Navigation Row - Suppliers -->

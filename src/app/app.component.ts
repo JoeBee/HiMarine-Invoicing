@@ -29,8 +29,20 @@ export class AppComponent {
             this.activeMainTab = 'suppliers';
         } else if (url.startsWith('/invoicing')) {
             this.activeMainTab = 'invoicing';
+        } else if (url.startsWith('/history')) {
+            this.activeMainTab = 'history';
         } else {
             this.activeMainTab = '';
+        }
+    }
+
+    onMainTabClick(tab: string): void {
+        if (tab === 'suppliers') {
+            this.router.navigate(['/suppliers/supplier-docs']);
+        } else if (tab === 'invoicing') {
+            this.router.navigate(['/invoicing/captains-request']);
+        } else if (tab === 'history') {
+            this.router.navigate(['/history']);
         }
     }
 

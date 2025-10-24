@@ -27,6 +27,7 @@ header {
         font-size: 16px;
         border-bottom: 3px solid transparent;
         transition: all 0.3s ease;
+        cursor: pointer;
 
         &:hover {
             color: #0066cc;
@@ -47,7 +48,7 @@ header {
     border-bottom: 1px solid #e0e0e0;
 
     // Suppliers tab - Red theme
-    a[routerLink="/suppliers"] {
+    a:first-child {
         color: #d32f2f;
 
         &:hover {
@@ -63,7 +64,7 @@ header {
     }
 
     // Invoicing tab - Blue theme
-    a[routerLink="/invoicing"] {
+    a:nth-child(2) {
         color: #1976d2;
 
         &:hover {
@@ -79,7 +80,7 @@ header {
     }
 
     // History tab - Green theme
-    a[routerLink="/history"] {
+    a:last-child {
         color: #388e3c;
 
         &:hover {
