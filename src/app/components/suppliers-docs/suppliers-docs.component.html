@@ -1,13 +1,27 @@
 <div class="suppliers-container">
-    <h1>Suppliers Docs</h1>
+    <!-- <h1>Suppliers Docs</h1> -->
 
-    <div class="drop-zone" [class.drag-over]="isDragging" (dragover)="onDragOver($event)"
-        (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="triggerFileInput()">
-        <div class="icon">📁</div>
-        <p><strong>Drag and drop Excel files here</strong></p>
-        <p>or click to browse</p>
-        <input type="file" id="fileInput" multiple accept=".xlsx,.xls" (change)="onFileSelect($event)"
-            style="display: none;">
+    <div class="drop-zones-container">
+        <div class="drop-zone" [class.drag-over]="isDragging" (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'Bonded')" (click)="triggerFileInput('Bonded')">
+            <div class="icon">📁</div>
+            <p><strong>Bonded</strong></p>
+            <p>Drag and drop Excel files here</p>
+            <p>or click to browse</p>
+            <input type="file" id="fileInput-Bonded" multiple accept=".xlsx,.xls"
+                (change)="onFileSelect($event, 'Bonded')" style="display: none;">
+        </div>
+
+        <div class="drop-zone" [class.drag-over]="isDragging" (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'Provisions')"
+            (click)="triggerFileInput('Provisions')">
+            <div class="icon">📁</div>
+            <p><strong>Provisions</strong></p>
+            <p>Drag and drop Excel files here</p>
+            <p>or click to browse</p>
+            <input type="file" id="fileInput-Provisions" multiple accept=".xlsx,.xls"
+                (change)="onFileSelect($event, 'Provisions')" style="display: none;">
+        </div>
     </div>
 
     <div *ngIf="isProcessing" class="processing-message">
@@ -26,6 +40,9 @@
                 <tr>
                     <th class="sortable-header" (click)="sortData('fileName')">
                         File Name {{ getSortIcon('fileName') }}
+                    </th>
+                    <th class="sortable-header" (click)="sortData('category')">
+                        Category {{ getSortIcon('category') }}
                     </th>
                     <th class="sortable-header" (click)="sortData('topLeftCell')">
                         Top Left Cell {{ getSortIcon('topLeftCell') }}
@@ -53,6 +70,7 @@
             <tbody>
                 <tr *ngFor="let file of supplierFiles">
                     <td class="clickable-filename" (click)="openFile(file)">{{ file.fileName }}</td>
+                    <td>{{ file.category || 'N/A' }}</td>
                     <td [class.not-found]="file.topLeftCell === 'NOT FOUND'">{{ file.topLeftCell }}</td>
                     <td [class.not-found]="file.descriptionColumn === 'NOT FOUND'">{{
                         file.descriptionHeader || file.descriptionColumn }}</td>

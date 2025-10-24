@@ -41,38 +41,38 @@ export class SuppliersDocsComponent implements OnInit {
         this.isDragging = false;
     }
 
-    async onDrop(event: DragEvent): Promise<void> {
+    async onDrop(event: DragEvent, category?: string): Promise<void> {
         event.preventDefault();
         event.stopPropagation();
         this.isDragging = false;
 
         const files = event.dataTransfer?.files;
         if (files) {
-            await this.processFiles(files);
+            await this.processFiles(files, category);
         }
     }
 
-    onFileSelect(event: Event): void {
+    onFileSelect(event: Event, category?: string): void {
         const input = event.target as HTMLInputElement;
         if (input.files) {
-            this.processFiles(input.files);
+            this.processFiles(input.files, category);
         }
     }
 
-    async processFiles(fileList: FileList): Promise<void> {
+    async processFiles(fileList: FileList, category?: string): Promise<void> {
         this.isProcessing = true;
         const files = Array.from(fileList).filter(f =>
             f.name.toLowerCase().endsWith('.xlsx') || f.name.toLowerCase().endsWith('.xls')
         );
 
         if (files.length > 0) {
-            await this.dataService.addSupplierFiles(files);
+            await this.dataService.addSupplierFiles(files, category);
         }
         this.isProcessing = false;
     }
 
-    triggerFileInput(): void {
-        const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+    triggerFileInput(category?: string): void {
+        const fileInput = document.getElementById(category ? `fileInput-${category}` : 'fileInput') as HTMLInputElement;
         fileInput?.click();
     }
 
@@ -129,6 +129,10 @@ export class SuppliersDocsComponent implements OnInit {
                 case 'rowCount':
                     aValue = a.rowCount;
                     bValue = b.rowCount;
+                    break;
+                case 'category':
+                    aValue = (a.category || 'N/A').toLowerCase();
+                    bValue = (b.category || 'N/A').toLowerCase();
                     break;
                 case 'status':
                     // Sort by status: success (true) > pending (undefined) > error (false)

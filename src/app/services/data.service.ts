@@ -16,6 +16,7 @@ export interface SupplierFileInfo {
     rowCount: number;
     file: File;
     hasData?: boolean; // Track if file has data after processing
+    category?: string; // Track which drop-zone the file was dropped on
 }
 
 export interface ProcessedDataRow {
@@ -41,13 +42,14 @@ export class DataService {
 
     constructor() { }
 
-    addSupplierFiles(files: File[]): Promise<void> {
+    addSupplierFiles(files: File[], category?: string): Promise<void> {
         return new Promise(async (resolve) => {
             const currentFiles = this.supplierFilesSubject.value;
             const newFileInfos: SupplierFileInfo[] = [];
 
             for (const file of files) {
                 const fileInfo = await this.analyzeFile(file);
+                fileInfo.category = category;
                 newFileInfos.push(fileInfo);
             }
 

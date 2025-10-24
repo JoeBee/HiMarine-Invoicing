@@ -9,5 +9,5 @@ import { CommonModule } from '@angular/common';
     styleUrls: ['./captains-request.component.scss']
 })
 export class CaptainsRequestComponent {
-    // Component for Captains Request functionality
+    // Component for Captain's Request functionality
 }
