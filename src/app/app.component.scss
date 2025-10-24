@@ -25,7 +25,7 @@ header {
         color: #666;
         font-weight: 500;
         font-size: 16px;
-        border-bottom: 3px solid transparent;
+        border-bottom: none;
         transition: all 0.3s ease;
         cursor: pointer;
 
@@ -36,7 +36,6 @@ header {
 
         &.active {
             color: #0066cc;
-            border-bottom-color: #0066cc;
             background-color: #f0f7ff;
         }
     }
@@ -58,7 +57,6 @@ header {
 
         &.active {
             color: #b71c1c;
-            border-bottom-color: #d32f2f;
             background-color: #ffebee;
         }
     }
@@ -74,7 +72,6 @@ header {
 
         &.active {
             color: #0d47a1;
-            border-bottom-color: #1976d2;
             background-color: #e3f2fd;
         }
     }
@@ -90,7 +87,6 @@ header {
 
         &.active {
             color: #1b5e20;
-            border-bottom-color: #388e3c;
             background-color: #e8f5e8;
         }
     }
@@ -104,6 +100,8 @@ header {
         padding: 15px 20px;
         font-size: 14px;
         background-color: transparent;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
 
         &:hover {
             background-color: #e9ecef;
