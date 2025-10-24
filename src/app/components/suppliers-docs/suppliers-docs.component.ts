@@ -20,6 +20,7 @@ export class SuppliersDocsComponent implements OnInit {
     isProcessing = false;
     sortState: SortState = { column: '', direction: 'asc' };
     showConfirmDialog = false;
+    hoveredDropzone: string | null = null;
 
     constructor(private dataService: DataService) { }
 
@@ -29,22 +30,25 @@ export class SuppliersDocsComponent implements OnInit {
         });
     }
 
-    onDragOver(event: DragEvent): void {
+    onDragOver(event: DragEvent, category?: string): void {
         event.preventDefault();
         event.stopPropagation();
         this.isDragging = true;
+        this.hoveredDropzone = category || null;
     }
 
     onDragLeave(event: DragEvent): void {
         event.preventDefault();
         event.stopPropagation();
         this.isDragging = false;
+        this.hoveredDropzone = null;
     }
 
     async onDrop(event: DragEvent, category?: string): Promise<void> {
         event.preventDefault();
         event.stopPropagation();
         this.isDragging = false;
+        this.hoveredDropzone = null;
 
         const files = event.dataTransfer?.files;
         if (files) {

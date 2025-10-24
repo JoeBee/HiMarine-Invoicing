@@ -26,6 +26,7 @@ export interface ProcessedDataRow {
     unit: string;
     remarks: string;
     count: number;
+    category?: string; // Track which drop-zone the file was dropped on
     originalData?: any[]; // Store original row data from XLSX
     originalHeaders?: string[]; // Store original column headers
 }
@@ -298,6 +299,7 @@ export class DataService {
                             unit: unitCell && unitCell.v ? String(unitCell.v) : '',
                             remarks: remarksCell && remarksCell.v ? String(remarksCell.v) : '',
                             count: 0,
+                            category: fileInfo.category,
                             originalData: originalRowData,
                             originalHeaders: originalHeaders
                         });
