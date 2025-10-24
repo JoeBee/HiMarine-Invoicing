@@ -8,9 +8,11 @@ export interface SupplierFileInfo {
     descriptionColumn: string;
     priceColumn: string;
     unitColumn: string;
+    remarksColumn: string;
     descriptionHeader: string;
     priceHeader: string;
     unitHeader: string;
+    remarksHeader: string;
     rowCount: number;
     file: File;
     hasData?: boolean; // Track if file has data after processing
@@ -21,6 +23,7 @@ export interface ProcessedDataRow {
     description: string;
     price: number;
     unit: string;
+    remarks: string;
     count: number;
     originalData?: any[]; // Store original row data from XLSX
     originalHeaders?: string[]; // Store original column headers
@@ -69,9 +72,11 @@ export class DataService {
                 let descriptionColumn = 'NOT FOUND';
                 let priceColumn = 'NOT FOUND';
                 let unitColumn = 'NOT FOUND';
+                let remarksColumn = 'NOT FOUND';
                 let descriptionHeader = '';
                 let priceHeader = '';
                 let unitHeader = '';
+                let remarksHeader = '';
                 let rowCount = 0;
 
                 // Look for the first row containing "description", "descrption", or "item"
@@ -132,6 +137,12 @@ export class DataService {
                                             unitColumn = XLSX.utils.encode_col(searchCol);
                                             unitHeader = headerText;
                                         }
+
+                                        if (headerValue.includes('remark') ||
+                                            headerValue.includes('comment')) {
+                                            remarksColumn = XLSX.utils.encode_col(searchCol);
+                                            remarksHeader = headerText;
+                                        }
                                     }
                                 }
 
@@ -144,6 +155,9 @@ export class DataService {
                                 }
                                 if (unitColumn === 'NOT FOUND') {
                                     unitHeader = 'NOT FOUND';
+                                }
+                                if (remarksColumn === 'NOT FOUND') {
+                                    remarksHeader = 'NOT FOUND';
                                 }
 
                                 // Count data rows (excluding header row) - only if columns were found
@@ -183,9 +197,11 @@ export class DataService {
                     descriptionColumn,
                     priceColumn,
                     unitColumn,
+                    remarksColumn,
                     descriptionHeader,
                     priceHeader,
                     unitHeader,
+                    remarksHeader,
                     rowCount,
                     file
                 });
@@ -240,6 +256,7 @@ export class DataService {
                 const descColIndex = XLSX.utils.decode_col(fileInfo.descriptionColumn);
                 const priceColIndex = XLSX.utils.decode_col(fileInfo.priceColumn);
                 const unitColIndex = XLSX.utils.decode_col(fileInfo.unitColumn);
+                const remarksColIndex = XLSX.utils.decode_col(fileInfo.remarksColumn);
 
                 const rows: ProcessedDataRow[] = [];
 
@@ -256,10 +273,12 @@ export class DataService {
                     const descAddress = XLSX.utils.encode_cell({ r: row, c: descColIndex });
                     const priceAddress = XLSX.utils.encode_cell({ r: row, c: priceColIndex });
                     const unitAddress = XLSX.utils.encode_cell({ r: row, c: unitColIndex });
+                    const remarksAddress = XLSX.utils.encode_cell({ r: row, c: remarksColIndex });
 
                     const descCell = worksheet[descAddress];
                     const priceCell = worksheet[priceAddress];
                     const unitCell = worksheet[unitAddress];
+                    const remarksCell = worksheet[remarksAddress];
 
                     if (descCell && descCell.v && priceCell && priceCell.v) {
                         // Extract original row data
@@ -275,6 +294,7 @@ export class DataService {
                             description: String(descCell.v),
                             price: Number(priceCell.v),
                             unit: unitCell && unitCell.v ? String(unitCell.v) : '',
+                            remarks: remarksCell && remarksCell.v ? String(remarksCell.v) : '',
                             count: 0,
                             originalData: originalRowData,
                             originalHeaders: originalHeaders

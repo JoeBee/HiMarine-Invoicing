@@ -41,6 +41,115 @@ header {
     }
 }
 
+
+// Color-coded tab styling
+.main-nav {
+    border-bottom: 1px solid #e0e0e0;
+
+    // Suppliers tab - Red theme
+    a[routerLink="/suppliers"] {
+        color: #d32f2f;
+
+        &:hover {
+            color: #b71c1c;
+            background-color: #ffebee;
+        }
+
+        &.active {
+            color: #b71c1c;
+            border-bottom-color: #d32f2f;
+            background-color: #ffebee;
+        }
+    }
+
+    // Invoicing tab - Blue theme
+    a[routerLink="/invoicing"] {
+        color: #1976d2;
+
+        &:hover {
+            color: #0d47a1;
+            background-color: #e3f2fd;
+        }
+
+        &.active {
+            color: #0d47a1;
+            border-bottom-color: #1976d2;
+            background-color: #e3f2fd;
+        }
+    }
+
+    // History tab - Green theme
+    a[routerLink="/history"] {
+        color: #388e3c;
+
+        &:hover {
+            color: #1b5e20;
+            background-color: #e8f5e8;
+        }
+
+        &.active {
+            color: #1b5e20;
+            border-bottom-color: #388e3c;
+            background-color: #e8f5e8;
+        }
+    }
+}
+
+.sub-nav {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+
+    a {
+        padding: 15px 20px;
+        font-size: 14px;
+        background-color: transparent;
+
+        &:hover {
+            background-color: #e9ecef;
+        }
+
+        &.active {
+            background-color: #e3f2fd;
+            border-bottom-color: #2196f3;
+        }
+    }
+
+    // Suppliers sub-tabs - Red theme
+    a[routerLink="/suppliers/supplier-docs"],
+    a[routerLink="/suppliers/price-list"] {
+        color: #d32f2f;
+
+        &:hover {
+            color: #b71c1c;
+            background-color: #ffebee;
+        }
+
+        &.active {
+            color: #b71c1c;
+            background-color: #ffebee;
+            border-bottom-color: #d32f2f;
+        }
+    }
+
+    // Invoicing sub-tabs - Blue theme
+    a[routerLink="/invoicing/process-data"],
+    a[routerLink="/invoicing/captains-request"],
+    a[routerLink="/invoicing/invoice"] {
+        color: #1976d2;
+
+        &:hover {
+            color: #0d47a1;
+            background-color: #e3f2fd;
+        }
+
+        &.active {
+            color: #0d47a1;
+            background-color: #e3f2fd;
+            border-bottom-color: #1976d2;
+        }
+    }
+}
+
 main {
     flex: 1;
     padding-top: 40px;

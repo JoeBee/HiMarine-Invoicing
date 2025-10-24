@@ -113,6 +113,10 @@ export class ProcessDataComponent implements OnInit, OnDestroy {
                     aValue = a.unit.toLowerCase();
                     bValue = b.unit.toLowerCase();
                     break;
+                case 'remarks':
+                    aValue = a.remarks.toLowerCase();
+                    bValue = b.remarks.toLowerCase();
+                    break;
                 case 'price':
                     aValue = a.price;
                     bValue = b.price;

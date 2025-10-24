@@ -51,18 +51,19 @@ export class InvoiceComponent implements OnInit {
 
         // Prepare data for Excel
         const worksheetData = [
-            ['File Name', 'Description', 'Count', 'Unit Price', 'Total Price'],
+            ['File Name', 'Description', 'Count', 'Remarks', 'Unit Price', 'Total Price'],
             ...includedData.map(row => {
                 const adjustedPrice = row.price * 1.10 / 0.9;
                 return [
                     row.fileName,
                     row.description,
                     row.count,
+                    row.remarks,
                     adjustedPrice,
                     row.count * adjustedPrice
                 ];
             }),
-            ['', '', '', 'TOTAL AMOUNT:', this.finalTotalAmount]
+            ['', '', '', '', 'TOTAL AMOUNT:', this.finalTotalAmount]
         ];
 
         // Create workbook and worksheet
@@ -73,20 +74,21 @@ export class InvoiceComponent implements OnInit {
             { wch: 30 },
             { wch: 50 },
             { wch: 10 },
+            { wch: 30 },
             { wch: 15 },
             { wch: 15 }
         ];
 
         // Format price columns as currency
-        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:E1');
+        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:F1');
         for (let row = 1; row <= range.e.r; row++) {
-            // Format unit price column (column 3, index 3)
-            const unitPriceAddress = XLSX.utils.encode_cell({ r: row, c: 3 });
+            // Format unit price column (column 4, index 4)
+            const unitPriceAddress = XLSX.utils.encode_cell({ r: row, c: 4 });
             if (worksheet[unitPriceAddress]) {
                 worksheet[unitPriceAddress].z = '"$"#,##0.00';
             }
-            // Format total price column (column 4, index 4)
-            const totalPriceAddress = XLSX.utils.encode_cell({ r: row, c: 4 });
+            // Format total price column (column 5, index 5)
+            const totalPriceAddress = XLSX.utils.encode_cell({ r: row, c: 5 });
             if (worksheet[totalPriceAddress]) {
                 worksheet[totalPriceAddress].z = '"$"#,##0.00';
             }
@@ -94,8 +96,8 @@ export class InvoiceComponent implements OnInit {
 
         // Format the total amount row as bold and currency
         const totalRowIndex = range.e.r;
-        const totalLabelAddress = XLSX.utils.encode_cell({ r: totalRowIndex, c: 3 });
-        const totalAmountAddress = XLSX.utils.encode_cell({ r: totalRowIndex, c: 4 });
+        const totalLabelAddress = XLSX.utils.encode_cell({ r: totalRowIndex, c: 4 });
+        const totalAmountAddress = XLSX.utils.encode_cell({ r: totalRowIndex, c: 5 });
 
         if (worksheet[totalLabelAddress]) {
             worksheet[totalLabelAddress].s = { font: { bold: true } };
@@ -160,7 +162,7 @@ export class InvoiceComponent implements OnInit {
         // Create table headers
         const tableTop = 110;
         const availableWidth = pageWidth - (margin * 2);
-        const colWidths = [availableWidth * 0.25, availableWidth * 0.35, availableWidth * 0.15, availableWidth * 0.125, availableWidth * 0.125];
+        const colWidths = [availableWidth * 0.20, availableWidth * 0.25, availableWidth * 0.10, availableWidth * 0.20, availableWidth * 0.125, availableWidth * 0.125];
         const colPositions = [margin];
         for (let i = 1; i < colWidths.length; i++) {
             colPositions.push(colPositions[i - 1] + colWidths[i - 1]);
@@ -169,7 +171,7 @@ export class InvoiceComponent implements OnInit {
         // Table headers
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        const headers = ['File Name', 'Description', 'Count', 'Unit Price', 'Total'];
+        const headers = ['File Name', 'Description', 'Count', 'Remarks', 'Unit Price', 'Total'];
         headers.forEach((header, index) => {
             doc.text(header, colPositions[index], tableTop);
         });
@@ -201,13 +203,18 @@ export class InvoiceComponent implements OnInit {
             // Count
             doc.text(row.count.toString(), colPositions[2], currentY);
 
+            // Remarks (truncate if too long)
+            const maxRemarksLength = Math.floor(colWidths[3] / 3); // Approximate characters per unit width
+            const remarks = row.remarks.length > maxRemarksLength ? row.remarks.substring(0, maxRemarksLength - 3) + '...' : row.remarks;
+            doc.text(remarks, colPositions[3], currentY);
+
             // Unit price (with calculation applied)
             const adjustedPrice = row.price * 1.10 / 0.9;
-            doc.text(`$${adjustedPrice.toFixed(2)}`, colPositions[3], currentY);
+            doc.text(`$${adjustedPrice.toFixed(2)}`, colPositions[4], currentY);
 
             // Total (with calculation applied)
             const total = (row.count * adjustedPrice).toFixed(2);
-            doc.text(`$${total}`, colPositions[4], currentY);
+            doc.text(`$${total}`, colPositions[5], currentY);
 
             currentY += 10;
         });
@@ -221,7 +228,7 @@ export class InvoiceComponent implements OnInit {
         doc.setFontSize(12);
         const totalText = `TOTAL AMOUNT: $${this.finalTotalAmount.toFixed(2)}`;
         const totalTextWidth = doc.getTextWidth(totalText);
-        const totalX = Math.max(colPositions[3], pageWidth - margin - totalTextWidth);
+        const totalX = Math.max(colPositions[4], pageWidth - margin - totalTextWidth);
         doc.text(totalText, totalX, currentY);
 
         // Save the PDF

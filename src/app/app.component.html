@@ -1,10 +1,25 @@
 <div class="app-container">
     <header>
-        <nav class="nav-tabs">
-            <a routerLink="/suppliers" routerLinkActive="active">Suppliers</a>
-            <a routerLink="/process-data" routerLinkActive="active">Process Data</a>
-            <a routerLink="/invoice" routerLinkActive="active">Invoice</a>
-            <a routerLink="/history" routerLinkActive="active">History</a>
+        <!-- Main Navigation Row -->
+        <nav class="nav-tabs main-nav">
+            <a routerLink="/suppliers" routerLinkActive="active"
+                (click)="updateActiveMainTab('/suppliers')">Suppliers</a>
+            <a routerLink="/invoicing" routerLinkActive="active"
+                (click)="updateActiveMainTab('/invoicing')">Invoicing</a>
+            <a routerLink="/history" routerLinkActive="active" (click)="updateActiveMainTab('')">History</a>
+        </nav>
+
+        <!-- Sub Navigation Row - Suppliers -->
+        <nav class="nav-tabs sub-nav" *ngIf="activeMainTab === 'suppliers'">
+            <a routerLink="/suppliers/supplier-docs" routerLinkActive="active">Supplier Docs</a>
+            <a routerLink="/suppliers/price-list" routerLinkActive="active">Price List</a>
+        </nav>
+
+        <!-- Sub Navigation Row - Invoicing -->
+        <nav class="nav-tabs sub-nav" *ngIf="activeMainTab === 'invoicing'">
+            <a routerLink="/invoicing/captains-request" routerLinkActive="active">Captains Request</a>
+            <a routerLink="/invoicing/process-data" routerLinkActive="active">Process Data</a>
+            <a routerLink="/invoicing/invoice" routerLinkActive="active">Invoice</a>
         </nav>
     </header>
 
@@ -17,7 +32,7 @@
             <button class="modal-close" (click)="closeInfoModal()" aria-label="Close modal">&times;</button>
             <h2>User Instructions</h2>
 
-            <h3>Suppliers Tab</h3>
+            <h3>Suppliers Docs Tab</h3>
             <ul>
                 <li>Drag and drop Excel files into the drop zone to upload them</li>
                 <li>You can upload files individually or multiple files at once</li>

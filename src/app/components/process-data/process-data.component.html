@@ -70,6 +70,9 @@
                     <th class="sortable-header" (click)="sortData('unit')">
                         Unit {{ getSortIcon('unit') }}
                     </th>
+                    <th class="sortable-header" (click)="sortData('remarks')">
+                        Remarks {{ getSortIcon('remarks') }}
+                    </th>
                     <th class="sortable-header" (click)="sortData('price')">
                         Price {{ getSortIcon('price') }}
                     </th>
@@ -97,12 +100,13 @@
                         <td>{{ row.fileName }}</td>
                         <td>{{ row.description }}</td>
                         <td>{{ row.unit }}</td>
+                        <td>{{ row.remarks }}</td>
                         <td>{{ row.price | currency }}</td>
                     </tr>
 
                     <!-- Expanded row showing original XLSX data -->
                     <tr *ngIf="isRowExpanded(i)" class="expanded-row">
-                        <td colspan="5" class="expanded-content">
+                        <td colspan="6" class="expanded-content">
                             <div class="original-data-container">
                                 <h4>Original Data from {{ row.fileName }}</h4>
                                 <div class="original-data-table" *ngIf="row.originalData && row.originalHeaders">
@@ -131,7 +135,7 @@
     </div>
 
     <div *ngIf="!hasSupplierFiles && processedData.length === 0" class="empty-state">
-        <p>No supplier files uploaded yet. Please upload files on the Suppliers tab first.</p>
+        <p>No supplier files uploaded yet. Please upload files on the Suppliers Docs tab first.</p>
     </div>
 
     <div *ngIf="hasSupplierFiles && processedData.length === 0 && !isProcessing" class="empty-state">
