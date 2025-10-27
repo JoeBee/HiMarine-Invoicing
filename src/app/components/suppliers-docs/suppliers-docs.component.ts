@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DataService, SupplierFileInfo } from '../../services/data.service';
 
 interface SortState {
@@ -10,7 +11,7 @@ interface SortState {
 @Component({
     selector: 'app-suppliers-docs',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, FormsModule],
     templateUrl: './suppliers-docs.component.html',
     styleUrls: ['./suppliers-docs.component.scss']
 })
@@ -21,13 +22,29 @@ export class SuppliersDocsComponent implements OnInit {
     sortState: SortState = { column: '', direction: 'asc' };
     showConfirmDialog = false;
     hoveredDropzone: string | null = null;
+    priceMultiple: number = 1.22;
+    hasSupplierFiles = false;
+    buttonDisabled = false;
+    hasNewFiles = false;
+    priceMultipleChanged = false;
+    initialPriceMultiple: number = 1.22;
 
     constructor(private dataService: DataService) { }
 
     ngOnInit(): void {
+        this.hasSupplierFiles = this.dataService.hasSupplierFiles();
+
+        // Load price multiple from data service
+        this.priceMultiple = this.dataService.getPriceMultiple();
+        this.initialPriceMultiple = this.priceMultiple;
+
         this.dataService.supplierFiles$.subscribe(files => {
             this.supplierFiles = files;
+            this.hasSupplierFiles = this.dataService.hasSupplierFiles();
         });
+
+        // Initialize button state
+        this.updateButtonState();
     }
 
     onDragOver(event: DragEvent, category?: string): void {
@@ -71,6 +88,8 @@ export class SuppliersDocsComponent implements OnInit {
 
         if (files.length > 0) {
             await this.dataService.addSupplierFiles(files, category);
+            this.hasNewFiles = true; // Mark that new files have been added
+            this.updateButtonState();
         }
         this.isProcessing = false;
     }
@@ -87,6 +106,11 @@ export class SuppliersDocsComponent implements OnInit {
     confirmClearAll(): void {
         this.dataService.clearAll();
         this.showConfirmDialog = false;
+
+        // Reset flags when all files are cleared
+        this.hasNewFiles = false;
+        this.priceMultipleChanged = false;
+        this.updateButtonState();
     }
 
     cancelClearAll(): void {
@@ -183,4 +207,31 @@ export class SuppliersDocsComponent implements OnInit {
             URL.revokeObjectURL(url);
         }, 1000);
     }
+
+    onPriceMultipleChange(): void {
+        // Update price multiple in data service
+        this.dataService.setPriceMultiple(this.priceMultiple);
+
+        // Check if price multiple has changed from initial value
+        this.priceMultipleChanged = this.priceMultiple !== this.initialPriceMultiple;
+        this.updateButtonState();
+    }
+
+    async processSupplierFiles(): Promise<void> {
+        this.isProcessing = true;
+        await this.dataService.processSupplierFiles();
+        this.isProcessing = false;
+
+        // Reset flags after processing
+        this.hasNewFiles = false;
+        this.priceMultipleChanged = false;
+        this.initialPriceMultiple = this.priceMultiple; // Update initial value
+        this.updateButtonState();
+    }
+
+    updateButtonState(): void {
+        // Button is enabled only when there are new files or price multiple has changed
+        this.buttonDisabled = !(this.hasNewFiles || this.priceMultipleChanged);
+    }
+
 }

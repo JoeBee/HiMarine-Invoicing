@@ -1,13 +1,44 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { DataService } from '../../services/data.service';
 
 @Component({
     selector: 'app-suppliers',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, FormsModule],
     templateUrl: './suppliers.component.html',
     styleUrls: ['./suppliers.component.scss']
 })
-export class SuppliersComponent {
-    // Placeholder component for new Suppliers tab
+export class SuppliersComponent implements OnInit {
+    priceMultiple: number = 1.22;
+    hasSupplierFiles = false;
+    isProcessing = false;
+    buttonDisabled = false;
+
+    constructor(private dataService: DataService) { }
+
+    ngOnInit(): void {
+        this.hasSupplierFiles = this.dataService.hasSupplierFiles();
+
+        // Load price multiple from data service
+        this.priceMultiple = this.dataService.getPriceMultiple();
+
+        // Subscribe to supplier files changes
+        this.dataService.supplierFiles$.subscribe(files => {
+            this.hasSupplierFiles = this.dataService.hasSupplierFiles();
+        });
+    }
+
+    onPriceMultipleChange(): void {
+        // Update price multiple in data service
+        this.dataService.setPriceMultiple(this.priceMultiple);
+    }
+
+    async processSupplierFiles(): Promise<void> {
+        this.isProcessing = true;
+        await this.dataService.processSupplierFiles();
+        this.isProcessing = false;
+        this.buttonDisabled = true; // Disable button after processing
+    }
 }

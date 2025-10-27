@@ -26,6 +26,7 @@ export interface ProcessedDataRow {
     unit: string;
     remarks: string;
     count: number;
+    included: boolean; // Track if row is included in the final output
     category?: string; // Track which drop-zone the file was dropped on
     originalData?: any[]; // Store original row data from XLSX
     originalHeaders?: string[]; // Store original column headers
@@ -37,9 +38,11 @@ export interface ProcessedDataRow {
 export class DataService {
     private supplierFilesSubject = new BehaviorSubject<SupplierFileInfo[]>([]);
     private processedDataSubject = new BehaviorSubject<ProcessedDataRow[]>([]);
+    private priceMultipleSubject = new BehaviorSubject<number>(1.22);
 
     supplierFiles$: Observable<SupplierFileInfo[]> = this.supplierFilesSubject.asObservable();
     processedData$: Observable<ProcessedDataRow[]> = this.processedDataSubject.asObservable();
+    priceMultiple$: Observable<number> = this.priceMultipleSubject.asObservable();
 
     constructor() { }
 
@@ -292,13 +295,19 @@ export class DataService {
                             originalRowData.push(cell && cell.v ? cell.v : '');
                         }
 
+                        // Apply price multiple to the price
+                        const originalPrice = Number(priceCell.v);
+                        const priceMultiple = this.priceMultipleSubject.value;
+                        const adjustedPrice = originalPrice * priceMultiple;
+
                         rows.push({
                             fileName: fileInfo.fileName,
                             description: String(descCell.v),
-                            price: Number(priceCell.v),
+                            price: adjustedPrice,
                             unit: unitCell && unitCell.v ? String(unitCell.v) : '',
                             remarks: remarksCell && remarksCell.v ? String(remarksCell.v) : '',
                             count: 0,
+                            included: true, // Default to included
                             category: fileInfo.category,
                             originalData: originalRowData,
                             originalHeaders: originalHeaders
@@ -325,6 +334,14 @@ export class DataService {
         }
     }
 
+    updateRowIncluded(index: number, included: boolean): void {
+        const currentData = this.processedDataSubject.value;
+        if (index >= 0 && index < currentData.length) {
+            currentData[index].included = included;
+            this.processedDataSubject.next([...currentData]);
+        }
+    }
+
     hasSupplierFiles(): boolean {
         return this.supplierFilesSubject.value.length > 0;
     }
@@ -332,6 +349,14 @@ export class DataService {
     clearAll(): void {
         this.supplierFilesSubject.next([]);
         this.processedDataSubject.next([]);
+    }
+
+    setPriceMultiple(multiple: number): void {
+        this.priceMultipleSubject.next(multiple);
+    }
+
+    getPriceMultiple(): number {
+        return this.priceMultipleSubject.value;
     }
 }
 

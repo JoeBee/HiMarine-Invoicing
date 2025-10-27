@@ -1,23 +1,13 @@
 <div class="price-list-container">
     <h1>Price List Review</h1>
 
-    <!-- Process Data Section -->
-    <div class="action-section" *ngIf="!hasProcessedFiles">
-        <button class="primary" [disabled]="!hasSupplierFiles || isProcessing || buttonDisabled"
-            (click)="processSupplierFiles()">
-            {{ isProcessing ? 'Processing...' : 'Process Supplier Files' }}
-        </button>
-    </div>
-
+    <!-- Export Section -->
     <div class="action-section" *ngIf="hasProcessedFiles">
         <button class="primary" [disabled]="processedData.length === 0" (click)="exportToExcel()">
             Export to Excel
         </button>
     </div>
 
-    <div *ngIf="isProcessing" class="processing-message">
-        <p>Processing supplier files, please wait...</p>
-    </div>
 
     <div *ngIf="processedData.length > 0" class="data-table">
         <!-- <h2>Processed Data</h2> -->
@@ -67,8 +57,8 @@
         <table>
             <thead>
                 <tr>
-                    <th class="sortable-header" (click)="sortData('count')">
-                        # {{ getSortIcon('count') }}
+                    <th class="sortable-header" (click)="sortData('included')">
+                        Include {{ getSortIcon('included') }}
                     </th>
                     <th class="sortable-header" (click)="sortData('fileName')">
                         File Name {{ getSortIcon('fileName') }}
@@ -94,20 +84,8 @@
                 <ng-container *ngFor="let row of filteredData; let i = index">
                     <tr class="data-row" (click)="onRowClick(i)" [class.expanded]="isRowExpanded(i)">
                         <td>
-                            <select [value]="row.count" (change)="onCountChange(i, $event)" class="count-dropdown"
-                                (click)="$event.stopPropagation()">
-                                <option value="0">0</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                                <option value="7">7</option>
-                                <option value="8">8</option>
-                                <option value="9">9</option>
-                                <option value="10">10</option>
-                            </select>
+                            <input type="checkbox" [checked]="row.included" (change)="onIncludeChange(i, $event)"
+                                class="include-checkbox" (click)="$event.stopPropagation()">
                         </td>
                         <td>{{ row.fileName }}</td>
                         <td>{{ row.category || 'N/A' }}</td>
@@ -147,12 +125,9 @@
         </table>
     </div>
 
-    <div *ngIf="!hasSupplierFiles && processedData.length === 0" class="empty-state">
-        <p>No supplier files uploaded yet. Please upload files on the Supplier Docs tab first.</p>
-    </div>
-
-    <div *ngIf="hasSupplierFiles && processedData.length === 0 && !isProcessing" class="empty-state">
-        <p>Click "Process Supplier Files" to begin processing the uploaded files.</p>
+    <div *ngIf="processedData.length === 0" class="empty-state">
+        <p>No processed data available. Please upload files on the Supplier Docs tab and process them on the Suppliers
+            tab.</p>
     </div>
 
     <div *ngIf="processedData.length > 0 && filteredData.length === 0" class="empty-state">

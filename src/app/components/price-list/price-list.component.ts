@@ -21,11 +21,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
     // Process Data functionality
     processedData: ProcessedDataRow[] = [];
     filteredData: ProcessedDataRow[] = [];
-    hasSupplierFiles = false;
     hasProcessedFiles = false; // Track if files have been processed
-    previousFileCount = 0; // Track previous file count to detect new files
-    isProcessing = false;
-    buttonDisabled = false; // Track if button should be disabled
     sortState: SortState = { column: '', direction: 'asc' };
 
     // Filter properties
@@ -41,45 +37,25 @@ export class PriceListComponent implements OnInit, OnDestroy {
     constructor(private dataService: DataService) { }
 
     ngOnInit(): void {
-        this.hasSupplierFiles = this.dataService.hasSupplierFiles();
-
-        this.dataService.supplierFiles$.subscribe((files) => {
-            const currentFileCount = files.length;
-            this.hasSupplierFiles = this.dataService.hasSupplierFiles();
-
-            // If new files are added (file count increased) and we had previously processed files, show the button again
-            if (currentFileCount > this.previousFileCount && this.hasProcessedFiles) {
-                this.hasProcessedFiles = false;
-                this.buttonDisabled = false; // Re-enable button when new files are added
-            }
-
-            this.previousFileCount = currentFileCount;
-        });
-
         this.dataService.processedData$.subscribe(data => {
             this.processedData = data;
             this.filteredData = [...data]; // Initialize filtered data
             this.updateAvailableFileNames();
             this.updateCommonDescriptions();
             this.applyFilters();
+
+            // Update hasProcessedFiles based on data availability
+            this.hasProcessedFiles = data.length > 0;
         });
 
         // Add document click listener to close expanded rows when clicking outside
         document.addEventListener('click', this.onDocumentClick.bind(this));
     }
 
-    // Process Data functionality methods
-    async processSupplierFiles(): Promise<void> {
-        this.isProcessing = true;
-        await this.dataService.processSupplierFiles();
-        this.isProcessing = false;
-        this.hasProcessedFiles = true; // Mark that files have been processed
-        this.buttonDisabled = true; // Disable button after processing
-    }
 
-    onCountChange(index: number, event: Event): void {
-        const select = event.target as HTMLSelectElement;
-        const count = parseInt(select.value, 10);
+    onIncludeChange(index: number, event: Event): void {
+        const checkbox = event.target as HTMLInputElement;
+        const included = checkbox.checked;
 
         // Find the original index in processedData
         const filteredRow = this.filteredData[index];
@@ -91,7 +67,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         );
 
         if (originalIndex !== -1) {
-            this.dataService.updateRowCount(originalIndex, count);
+            this.dataService.updateRowIncluded(originalIndex, included);
         }
     }
 
@@ -132,9 +108,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
                     aValue = a.price;
                     bValue = b.price;
                     break;
-                case 'count':
-                    aValue = a.count;
-                    bValue = b.count;
+                case 'included':
+                    aValue = a.included ? 1 : 0;
+                    bValue = b.included ? 1 : 0;
                     break;
                 default:
                     return 0;
@@ -290,13 +266,22 @@ export class PriceListComponent implements OnInit, OnDestroy {
         worksheet.getColumn('B').width = 30;  // Column B (for email and labels)
         worksheet.getColumn('C').width = 15;  // Column C (for combined $ and - values)
 
+        // Set default font formatting for column B - Cambria, Regular, size 16
+        worksheet.getColumn('B').font = {
+            name: 'Cambria',
+            size: 16
+        };
+
         // Add email (moved to B9 to match image)
         worksheet.getCell('B9').value = 'office@eos-supply.co.uk';
 
         // Add PROVISIONS row (B14:C14) with dark blue background and white text
         const provisionsRow = worksheet.getRow(14);
         provisionsRow.getCell(2).value = 'PROVISIONS';
-        provisionsRow.getCell(3).value = { formula: 'PROVISIONS!G320' };
+        // Calculate the total row number dynamically based on data length (only included items)
+        const provisionsDataLength = this.processedData.filter(item => this.isProvisionItem(item.description) && item.included).length;
+        const provisionsTotalRow = provisionsDataLength + 3; // +1 for header, +2 for two rows below last data
+        provisionsRow.getCell(3).value = { formula: `PROVISIONS!G${provisionsTotalRow}` };
 
         // Style PROVISIONS row - dark blue background with white text
         provisionsRow.getCell(2).font = {
@@ -341,7 +326,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Add FRESH PROVISIONS row (B15:C15) with light blue background and black text
         const freshProvisionsRow = worksheet.getRow(15);
         freshProvisionsRow.getCell(2).value = 'FRESH PROVISIONS';
-        freshProvisionsRow.getCell(3).value = { formula: "'FRESH PROVISIONS'!G107" };
+        // Calculate the total row number dynamically based on data length (only included items)
+        const freshProvisionsDataLength = this.processedData.filter(item => this.isFreshProvisionItem(item.description) && item.included).length;
+        const freshProvisionsTotalRow = freshProvisionsDataLength + 3; // +1 for header, +2 for two rows below last data
+        freshProvisionsRow.getCell(3).value = { formula: `'FRESH PROVISIONS'!G${freshProvisionsTotalRow}` };
 
         // Style FRESH PROVISIONS row - light blue background with black text
         freshProvisionsRow.getCell(2).font = {
@@ -386,7 +374,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Add BOND row (B16:C16) with light blue background and black text
         const bondRow = worksheet.getRow(16);
         bondRow.getCell(2).value = 'BOND';
-        bondRow.getCell(3).value = { formula: 'BOND!G84' };
+        // Calculate the total row number dynamically based on data length (only included items)
+        const bondDataLength = this.processedData.filter(item => this.isBondItem(item.description) && item.included).length;
+        const bondTotalRow = bondDataLength + 3; // +1 for header, +2 for two rows below last data
+        bondRow.getCell(3).value = { formula: `BOND!G${bondTotalRow}` };
 
         // Style BOND row - light blue background with black text
         bondRow.getCell(2).font = {
@@ -452,9 +443,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
     }
 
     private createProvisionsSheet(workbook: ExcelJS.Workbook): void {
-        // Filter data for provisions (meat, alcohol, cigarettes, etc.)
+        // Filter data for provisions (meat, alcohol, cigarettes, etc.) and only included items
         const provisionsData = this.processedData.filter(item =>
-            this.isProvisionItem(item.description)
+            this.isProvisionItem(item.description) && item.included
         );
 
         const worksheet = workbook.addWorksheet('PROVISIONS');
@@ -523,12 +514,29 @@ export class PriceListComponent implements OnInit, OnDestroy {
         worksheet.getColumn(5).width = 8;   // Qty
         worksheet.getColumn(6).width = 12;  // Price
         worksheet.getColumn(7).width = 12; // Total
+
+        // Add TOTAL USD row two rows below the last data row
+        const lastDataRow = provisionsData.length + 1; // +1 for header row
+        const totalRowNumber = lastDataRow + 2; // Two rows below last data
+
+        // Add TOTAL USD label in column F
+        const totalLabelCell = worksheet.getCell(`F${totalRowNumber}`);
+        totalLabelCell.value = 'TOTAL USD';
+        totalLabelCell.font = { bold: true };
+        totalLabelCell.alignment = { horizontal: 'left' };
+
+        // Add sum formula in column G
+        const totalValueCell = worksheet.getCell(`G${totalRowNumber}`);
+        totalValueCell.value = { formula: `=SUM(G3:G${lastDataRow})` };
+        totalValueCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+        totalValueCell.font = { bold: true };
+        totalValueCell.alignment = { horizontal: 'right' };
     }
 
     private createFreshProvisionsSheet(workbook: ExcelJS.Workbook): void {
-        // Filter data for fresh provisions (fruits, vegetables)
+        // Filter data for fresh provisions (fruits, vegetables) and only included items
         const freshProvisionsData = this.processedData.filter(item =>
-            this.isFreshProvisionItem(item.description)
+            this.isFreshProvisionItem(item.description) && item.included
         );
 
         const worksheet = workbook.addWorksheet('FRESH PROVISIONS');
@@ -597,12 +605,29 @@ export class PriceListComponent implements OnInit, OnDestroy {
         worksheet.getColumn(5).width = 8;   // Qty
         worksheet.getColumn(6).width = 12;  // Price
         worksheet.getColumn(7).width = 12; // Total
+
+        // Add TOTAL USD row two rows below the last data row
+        const lastDataRow = freshProvisionsData.length + 1; // +1 for header row
+        const totalRowNumber = lastDataRow + 2; // Two rows below last data
+
+        // Add TOTAL USD label in column F
+        const totalLabelCell = worksheet.getCell(`F${totalRowNumber}`);
+        totalLabelCell.value = 'TOTAL USD';
+        totalLabelCell.font = { bold: true };
+        totalLabelCell.alignment = { horizontal: 'left' };
+
+        // Add sum formula in column G
+        const totalValueCell = worksheet.getCell(`G${totalRowNumber}`);
+        totalValueCell.value = { formula: `=SUM(G3:G${lastDataRow})` };
+        totalValueCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+        totalValueCell.font = { bold: true };
+        totalValueCell.alignment = { horizontal: 'right' };
     }
 
     private createBondSheet(workbook: ExcelJS.Workbook): void {
-        // Filter data for bond items (alcohol, spirits)
+        // Filter data for bond items (alcohol, spirits) and only included items
         const bondData = this.processedData.filter(item =>
-            this.isBondItem(item.description)
+            this.isBondItem(item.description) && item.included
         );
 
         const worksheet = workbook.addWorksheet('BOND');
@@ -671,6 +696,23 @@ export class PriceListComponent implements OnInit, OnDestroy {
         worksheet.getColumn(5).width = 8;   // Qty
         worksheet.getColumn(6).width = 12;  // Price
         worksheet.getColumn(7).width = 12; // Total
+
+        // Add TOTAL USD row two rows below the last data row
+        const lastDataRow = bondData.length + 1; // +1 for header row
+        const totalRowNumber = lastDataRow + 2; // Two rows below last data
+
+        // Add TOTAL USD label in column F
+        const totalLabelCell = worksheet.getCell(`F${totalRowNumber}`);
+        totalLabelCell.value = 'TOTAL USD';
+        totalLabelCell.font = { bold: true };
+        totalLabelCell.alignment = { horizontal: 'left' };
+
+        // Add sum formula in column G
+        const totalValueCell = worksheet.getCell(`G${totalRowNumber}`);
+        totalValueCell.value = { formula: `=SUM(G3:G${lastDataRow})` };
+        totalValueCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+        totalValueCell.font = { bold: true };
+        totalValueCell.alignment = { horizontal: 'right' };
     }
 
     private isProvisionItem(description: string): boolean {

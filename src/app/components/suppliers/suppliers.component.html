@@ -1,5 +1,32 @@
 <div class="suppliers-container">
     <h1>Suppliers</h1>
-    <p>This is a placeholder for the new Suppliers tab functionality.</p>
-    <p>Future features will be implemented here.</p>
+
+    <!-- Price Multiple and Process Controls -->
+    <div class="controls-section">
+        <div class="price-multiple-group">
+            <label for="priceMultiple">Price Multiple:</label>
+            <input type="number" id="priceMultiple" [(ngModel)]="priceMultiple"
+                (ngModelChange)="onPriceMultipleChange()" step="0.01" min="0" max="999.99" placeholder="1.22"
+                class="price-multiple-input">
+            <span class="price-multiple-label">(e.g., 1.22 for 22% markup)</span>
+        </div>
+
+        <button class="primary process-button" [disabled]="!hasSupplierFiles || isProcessing || buttonDisabled"
+            (click)="processSupplierFiles()">
+            {{ isProcessing ? 'Processing...' : 'Process Supplier Files' }}
+        </button>
+    </div>
+
+    <div *ngIf="isProcessing" class="processing-message">
+        <p>Processing supplier files, please wait...</p>
+    </div>
+
+    <div *ngIf="!hasSupplierFiles" class="empty-state">
+        <p>No supplier files uploaded yet. Please upload files on the Supplier Docs tab first.</p>
+    </div>
+
+    <div *ngIf="hasSupplierFiles && !isProcessing" class="success-state">
+        <p>✅ Supplier files are ready to be processed. Use the controls above to set your price multiple and process the
+            files.</p>
+    </div>
 </div>
