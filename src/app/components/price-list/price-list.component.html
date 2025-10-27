@@ -6,6 +6,9 @@
         <button class="primary" [disabled]="processedData.length === 0" (click)="exportToExcel()">
             Export to Excel
         </button>
+        <button class="secondary" [disabled]="processedData.length === 0" (click)="showInvalidPricesDialog()">
+            Show Invalid Price Records
+        </button>
     </div>
 
 
@@ -51,7 +54,7 @@
         </div>
 
         <div class="results-info" *ngIf="filteredData.length > 0">
-            <p>Showing {{ filteredData.length }} of {{ processedData.length }} results</p>
+            <p>Selected {{ getSelectedCount() }} of {{ filteredData.length }} results</p>
         </div>
 
         <table>
@@ -135,5 +138,42 @@
 
     <div *ngIf="processedData.length > 0 && filteredData.length === 0" class="empty-state">
         <p>No results match the current filters. Try adjusting your filter criteria.</p>
+    </div>
+
+    <!-- Invalid Price Records Dialog -->
+    <div *ngIf="showInvalidPriceDialog" class="dialog-overlay" (click)="closeInvalidPriceDialog()">
+        <div class="dialog-content" (click)="$event.stopPropagation()">
+            <div class="dialog-header">
+                <h3>Invalid Price Records</h3>
+                <button type="button" class="close-btn" (click)="closeInvalidPriceDialog()">&times;</button>
+            </div>
+            <div class="dialog-body">
+                <p>The following {{ invalidPriceRecords.length }} records have invalid prices and are excluded from
+                    Excel exports:</p>
+                <div class="invalid-records-list">
+                    <table class="invalid-records-table">
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>Description</th>
+                                <th>Price</th>
+                                <th>Unit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let record of invalidPriceRecords">
+                                <td>{{ record.fileName }}</td>
+                                <td>{{ record.description }}</td>
+                                <td>{{ record.price }}</td>
+                                <td>{{ record.unit }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button type="button" class="btn btn-secondary" (click)="closeInvalidPriceDialog()">Close</button>
+            </div>
+        </div>
     </div>
 </div>

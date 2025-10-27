@@ -37,6 +37,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
     // Select all functionality
     selectAllState: 'all' | 'some' | 'none' = 'all';
 
+    // Invalid price tracking
+    invalidPriceRecords: ProcessedDataRow[] = [];
+    showInvalidPriceDialog = false;
+
     constructor(private dataService: DataService) { }
 
     ngOnInit(): void {
@@ -108,6 +112,31 @@ export class PriceListComponent implements OnInit, OnDestroy {
         } else {
             this.selectAllState = 'some';
         }
+    }
+
+    getSelectedCount(): number {
+        return this.filteredData.filter(row => row.included).length;
+    }
+
+    isPriceValid(price: any): boolean {
+        return typeof price === 'number' && !isNaN(price) && isFinite(price);
+    }
+
+    validatePrices(): void {
+        this.invalidPriceRecords = this.processedData.filter(row => !this.isPriceValid(row.price));
+    }
+
+    getValidPriceRecords(): ProcessedDataRow[] {
+        return this.processedData.filter(row => this.isPriceValid(row.price));
+    }
+
+    showInvalidPricesDialog(): void {
+        this.validatePrices();
+        this.showInvalidPriceDialog = true;
+    }
+
+    closeInvalidPriceDialog(): void {
+        this.showInvalidPriceDialog = false;
     }
 
     sortData(column: string): void {
@@ -318,10 +347,14 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Add PROVISIONS row (B14:C14) with dark blue background and white text
         const provisionsRow = worksheet.getRow(14);
         provisionsRow.getCell(2).value = 'PROVISIONS';
-        // Calculate the total row number dynamically based on data length (only included items)
-        const provisionsDataLength = this.processedData.filter(item => this.isProvisionItem(item.description) && item.included).length;
+        // Calculate the total row number dynamically based on data length (only included items with valid prices)
+        const provisionsDataLength = this.getValidPriceRecords().filter(item => this.isProvisionItem(item) && !this.isFreshProvisionItem(item) && item.included).length;
         const provisionsTotalRow = provisionsDataLength + 3; // +1 for header, +2 for two rows below last data
-        provisionsRow.getCell(3).value = { formula: `PROVISIONS!G${provisionsTotalRow}` };
+        if (provisionsDataLength > 0) {
+            provisionsRow.getCell(3).value = { formula: `PROVISIONS!G${provisionsTotalRow}` };
+        } else {
+            provisionsRow.getCell(3).value = 0; // No data, so total is 0
+        }
 
         // Style PROVISIONS row - dark blue background with white text
         provisionsRow.getCell(2).font = {
@@ -355,7 +388,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
             fgColor: { argb: 'FFFFFFFF' }
         };
         provisionsRow.getCell(3).alignment = { horizontal: 'center' };
-        provisionsRow.getCell(3).numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+        provisionsRow.getCell(3).numFmt = '$#,##0.00';
         provisionsRow.getCell(3).border = {
             top: { style: 'thin', color: { argb: 'FF000000' } },
             left: { style: 'thin', color: { argb: 'FF000000' } },
@@ -366,10 +399,14 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Add FRESH PROVISIONS row (B15:C15) with light blue background and black text
         const freshProvisionsRow = worksheet.getRow(15);
         freshProvisionsRow.getCell(2).value = 'FRESH PROVISIONS';
-        // Calculate the total row number dynamically based on data length (only included items)
-        const freshProvisionsDataLength = this.processedData.filter(item => this.isFreshProvisionItem(item.description) && item.included).length;
+        // Calculate the total row number dynamically based on data length (only included items with valid prices)
+        const freshProvisionsDataLength = this.getValidPriceRecords().filter(item => this.isFreshProvisionItem(item) && item.included).length;
         const freshProvisionsTotalRow = freshProvisionsDataLength + 3; // +1 for header, +2 for two rows below last data
-        freshProvisionsRow.getCell(3).value = { formula: `'FRESH PROVISIONS'!G${freshProvisionsTotalRow}` };
+        if (freshProvisionsDataLength > 0) {
+            freshProvisionsRow.getCell(3).value = { formula: `'FRESH PROVISIONS'!G${freshProvisionsTotalRow}` };
+        } else {
+            freshProvisionsRow.getCell(3).value = 0; // No data, so total is 0
+        }
 
         // Style FRESH PROVISIONS row - light blue background with black text
         freshProvisionsRow.getCell(2).font = {
@@ -403,7 +440,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
             fgColor: { argb: 'FFFFFFFF' }
         };
         freshProvisionsRow.getCell(3).alignment = { horizontal: 'center' };
-        freshProvisionsRow.getCell(3).numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+        freshProvisionsRow.getCell(3).numFmt = '$#,##0.00';
         freshProvisionsRow.getCell(3).border = {
             top: { style: 'thin', color: { argb: 'FF000000' } },
             left: { style: 'thin', color: { argb: 'FF000000' } },
@@ -414,10 +451,14 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Add BOND row (B16:C16) with light blue background and black text
         const bondRow = worksheet.getRow(16);
         bondRow.getCell(2).value = 'BOND';
-        // Calculate the total row number dynamically based on data length (only included items)
-        const bondDataLength = this.processedData.filter(item => this.isBondItem(item.description) && item.included).length;
+        // Calculate the total row number dynamically based on data length (only included items with valid prices)
+        const bondDataLength = this.getValidPriceRecords().filter(item => this.isBondItem(item) && item.included).length;
         const bondTotalRow = bondDataLength + 3; // +1 for header, +2 for two rows below last data
-        bondRow.getCell(3).value = { formula: `BOND!G${bondTotalRow}` };
+        if (bondDataLength > 0) {
+            bondRow.getCell(3).value = { formula: `BOND!G${bondTotalRow}` };
+        } else {
+            bondRow.getCell(3).value = 0; // No data, so total is 0
+        }
 
         // Style BOND row - light blue background with black text
         bondRow.getCell(2).font = {
@@ -451,7 +492,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
             fgColor: { argb: 'FFFFFFFF' }
         };
         bondRow.getCell(3).alignment = { horizontal: 'center' };
-        bondRow.getCell(3).numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+        bondRow.getCell(3).numFmt = '$#,##0.00';
         bondRow.getCell(3).border = {
             top: { style: 'thin', color: { argb: 'FF000000' } },
             left: { style: 'thin', color: { argb: 'FF000000' } },
@@ -479,13 +520,13 @@ export class PriceListComponent implements OnInit, OnDestroy {
             color: { argb: 'FF000000' }
         };
         totalRow.getCell(3).alignment = { horizontal: 'center' };
-        totalRow.getCell(3).numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+        totalRow.getCell(3).numFmt = '$#,##0.00';
     }
 
     private createProvisionsSheet(workbook: ExcelJS.Workbook): void {
-        // Filter data for provisions (meat, alcohol, cigarettes, etc.) and only included items
-        const provisionsData = this.processedData.filter(item =>
-            this.isProvisionItem(item.description) && item.included
+        // Filter data for provisions: Data uploaded via "Provisions" dropzone AND NOT fresh provisions AND valid price
+        const provisionsData = this.getValidPriceRecords().filter(item =>
+            this.isProvisionItem(item) && !this.isFreshProvisionItem(item) && item.included
         );
 
         const worksheet = workbook.addWorksheet('PROVISIONS');
@@ -504,10 +545,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
             };
             cell.alignment = { horizontal: 'center', vertical: 'middle' };
             cell.border = {
-                top: { style: 'thin', color: { argb: 'FF000000' } },
-                left: { style: 'thin', color: { argb: 'FF000000' } },
-                bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                right: { style: 'thin', color: { argb: 'FF000000' } }
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
             };
         });
 
@@ -519,28 +560,28 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 item.description,
                 item.remarks || '-',
                 item.unit,
-                '', // Empty Qty column
+                0, // Qty column - set to 0 instead of empty string
                 item.price, // Price as number for formula calculation
                 '' // Empty Total column - will be filled with formula
             ]);
 
-            // Add formula to column G (Total column) - handle empty cells gracefully
+            // Add formula to column G (Total column) - simplified formula
             const totalCell = worksheet.getCell(`G${rowNumber}`);
-            totalCell.value = { formula: `=IF(OR(E${rowNumber}="",F${rowNumber}=""),"-",F${rowNumber}*E${rowNumber})` };
+            totalCell.value = { formula: `=F${rowNumber}*E${rowNumber}` };
 
             // Format Price column (F) and Total column (G) with Accounting format
             const priceCell = worksheet.getCell(`F${rowNumber}`);
-            priceCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+            priceCell.numFmt = '$#,##0.00';
 
-            totalCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+            totalCell.numFmt = '$#,##0.00';
 
-            // Style data rows with borders
+            // Style data rows with simple borders
             dataRow.eachCell((cell, colNumber) => {
                 cell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } },
-                    left: { style: 'thin', color: { argb: 'FF000000' } },
-                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
                 };
                 cell.alignment = { vertical: 'middle' };
             });
@@ -565,18 +606,22 @@ export class PriceListComponent implements OnInit, OnDestroy {
         totalLabelCell.font = { bold: true };
         totalLabelCell.alignment = { horizontal: 'left' };
 
-        // Add sum formula in column G
+        // Add sum formula in column G - handle empty data case
         const totalValueCell = worksheet.getCell(`G${totalRowNumber}`);
-        totalValueCell.value = { formula: `=SUM(G3:G${lastDataRow})` };
-        totalValueCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+        if (provisionsData.length > 0) {
+            totalValueCell.value = { formula: `=SUM(G3:G${lastDataRow})` };
+        } else {
+            totalValueCell.value = 0; // No data, so total is 0
+        }
+        totalValueCell.numFmt = '$#,##0.00';
         totalValueCell.font = { bold: true };
         totalValueCell.alignment = { horizontal: 'right' };
     }
 
     private createFreshProvisionsSheet(workbook: ExcelJS.Workbook): void {
-        // Filter data for fresh provisions (fruits, vegetables) and only included items
-        const freshProvisionsData = this.processedData.filter(item =>
-            this.isFreshProvisionItem(item.description) && item.included
+        // Filter data for fresh provisions: Data uploaded via "Provisions" dropzone AND has description containing fresh provisions keywords AND valid price
+        const freshProvisionsData = this.getValidPriceRecords().filter(item =>
+            this.isFreshProvisionItem(item) && item.included
         );
 
         const worksheet = workbook.addWorksheet('FRESH PROVISIONS');
@@ -595,10 +640,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
             };
             cell.alignment = { horizontal: 'center', vertical: 'middle' };
             cell.border = {
-                top: { style: 'thin', color: { argb: 'FF000000' } },
-                left: { style: 'thin', color: { argb: 'FF000000' } },
-                bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                right: { style: 'thin', color: { argb: 'FF000000' } }
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
             };
         });
 
@@ -610,28 +655,28 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 item.description,
                 item.remarks || '-',
                 item.unit,
-                '', // Empty Qty column
+                0, // Qty column - set to 0 instead of empty string
                 item.price, // Price as number for formula calculation
                 '' // Empty Total column - will be filled with formula
             ]);
 
-            // Add formula to column G (Total column) - handle empty cells gracefully
+            // Add formula to column G (Total column) - simplified formula
             const totalCell = worksheet.getCell(`G${rowNumber}`);
-            totalCell.value = { formula: `=IF(OR(E${rowNumber}="",F${rowNumber}=""),"-",F${rowNumber}*E${rowNumber})` };
+            totalCell.value = { formula: `=F${rowNumber}*E${rowNumber}` };
 
             // Format Price column (F) and Total column (G) with Accounting format
             const priceCell = worksheet.getCell(`F${rowNumber}`);
-            priceCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+            priceCell.numFmt = '$#,##0.00';
 
-            totalCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+            totalCell.numFmt = '$#,##0.00';
 
-            // Style data rows with borders
+            // Style data rows with simple borders
             dataRow.eachCell((cell, colNumber) => {
                 cell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } },
-                    left: { style: 'thin', color: { argb: 'FF000000' } },
-                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
                 };
                 cell.alignment = { vertical: 'middle' };
             });
@@ -656,18 +701,22 @@ export class PriceListComponent implements OnInit, OnDestroy {
         totalLabelCell.font = { bold: true };
         totalLabelCell.alignment = { horizontal: 'left' };
 
-        // Add sum formula in column G
+        // Add sum formula in column G - handle empty data case
         const totalValueCell = worksheet.getCell(`G${totalRowNumber}`);
-        totalValueCell.value = { formula: `=SUM(G3:G${lastDataRow})` };
-        totalValueCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+        if (freshProvisionsData.length > 0) {
+            totalValueCell.value = { formula: `=SUM(G3:G${lastDataRow})` };
+        } else {
+            totalValueCell.value = 0; // No data, so total is 0
+        }
+        totalValueCell.numFmt = '$#,##0.00';
         totalValueCell.font = { bold: true };
         totalValueCell.alignment = { horizontal: 'right' };
     }
 
     private createBondSheet(workbook: ExcelJS.Workbook): void {
-        // Filter data for bond items (alcohol, spirits) and only included items
-        const bondData = this.processedData.filter(item =>
-            this.isBondItem(item.description) && item.included
+        // Filter data for bond items: Data uploaded via "Bonded" dropzone AND valid price
+        const bondData = this.getValidPriceRecords().filter(item =>
+            this.isBondItem(item) && item.included
         );
 
         const worksheet = workbook.addWorksheet('BOND');
@@ -686,10 +735,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
             };
             cell.alignment = { horizontal: 'center', vertical: 'middle' };
             cell.border = {
-                top: { style: 'thin', color: { argb: 'FF000000' } },
-                left: { style: 'thin', color: { argb: 'FF000000' } },
-                bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                right: { style: 'thin', color: { argb: 'FF000000' } }
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
             };
         });
 
@@ -701,28 +750,28 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 item.description,
                 item.remarks || '-',
                 item.unit,
-                '', // Empty Qty column
+                0, // Qty column - set to 0 instead of empty string
                 item.price, // Price as number for formula calculation
                 '' // Empty Total column - will be filled with formula
             ]);
 
-            // Add formula to column G (Total column) - handle empty cells gracefully
+            // Add formula to column G (Total column) - simplified formula
             const totalCell = worksheet.getCell(`G${rowNumber}`);
-            totalCell.value = { formula: `=IF(OR(E${rowNumber}="",F${rowNumber}=""),"-",F${rowNumber}*E${rowNumber})` };
+            totalCell.value = { formula: `=F${rowNumber}*E${rowNumber}` };
 
             // Format Price column (F) and Total column (G) with Accounting format
             const priceCell = worksheet.getCell(`F${rowNumber}`);
-            priceCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+            priceCell.numFmt = '$#,##0.00';
 
-            totalCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+            totalCell.numFmt = '$#,##0.00';
 
-            // Style data rows with borders
+            // Style data rows with simple borders
             dataRow.eachCell((cell, colNumber) => {
                 cell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } },
-                    left: { style: 'thin', color: { argb: 'FF000000' } },
-                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
                 };
                 cell.alignment = { vertical: 'middle' };
             });
@@ -747,45 +796,49 @@ export class PriceListComponent implements OnInit, OnDestroy {
         totalLabelCell.font = { bold: true };
         totalLabelCell.alignment = { horizontal: 'left' };
 
-        // Add sum formula in column G
+        // Add sum formula in column G - handle empty data case
         const totalValueCell = worksheet.getCell(`G${totalRowNumber}`);
-        totalValueCell.value = { formula: `=SUM(G3:G${lastDataRow})` };
-        totalValueCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+        if (bondData.length > 0) {
+            totalValueCell.value = { formula: `=SUM(G3:G${lastDataRow})` };
+        } else {
+            totalValueCell.value = 0; // No data, so total is 0
+        }
+        totalValueCell.numFmt = '$#,##0.00';
         totalValueCell.font = { bold: true };
         totalValueCell.alignment = { horizontal: 'right' };
     }
 
-    private isProvisionItem(description: string): boolean {
-        const provisionKeywords = [
-            'beef', 'lamb', 'pork', 'chicken', 'meat', 'fish', 'seafood',
-            'whisky', 'vodka', 'rum', 'cognac', 'wine', 'beer', 'alcohol',
-            'marlboro', 'philip', 'chesterfield', 'lucky', 'camel', 'cigarette',
-            'coca', 'sprite', 'pepsi', 'seven', 'fanta', 'juice'
-        ];
-
-        const desc = description.toLowerCase();
-        return provisionKeywords.some(keyword => desc.includes(keyword));
+    private isProvisionItem(item: ProcessedDataRow): boolean {
+        // Data uploaded via "Provisions" dropzone should go in "PROVISIONS" Excel tab
+        return item.category === 'Provisions';
     }
 
-    private isFreshProvisionItem(description: string): boolean {
-        const freshKeywords = [
-            'apple', 'banana', 'orange', 'grape', 'lemon', 'lime', 'avocado',
-            'carrot', 'lettuce', 'tomato', 'onion', 'potato', 'cucumber',
-            'broccoli', 'cauliflower', 'cabbage', 'spinach', 'kale'
+    private isFreshProvisionItem(item: ProcessedDataRow): boolean {
+        // Data uploaded via "Provisions" dropzone AND has "Description" containing a word from freshProvisionsList should go in "FRESH PROVISIONS" Excel tab
+        if (item.category !== 'Provisions') {
+            return false;
+        }
+
+        const freshProvisionsList = [
+            'APPLES', 'AVOCADO', 'BANANAS', 'BEANS', 'BEETROOTS', 'BROCOLI', 'BULGOR',
+            'CABBAGE', 'CARROTS', 'CASSAVA', 'CAULIFLOWER', 'CELERY', 'CHARCOAL',
+            'CHICKPEAS', 'COCO', 'CORN', 'CUCUMBERS', 'DILL', 'EGGPLANTS', 'ENDIVES',
+            'FLOUR', 'FRIES', 'GARLIC', 'GINGER', 'GRAPEFRUITS', 'GRAPES', 'GUAVA',
+            'KALE', 'KIWI', 'LEEKS', 'LEMONGRASS', 'LEMONS', 'LENTILS', 'LETTUCE',
+            'LIME', 'MACARONI', 'MANGO', 'MARROWS', 'MELON', 'MINT', 'MUSHROOMS',
+            'NOODLES', 'ONIONS', 'ORANGES', 'PAPAYA', 'PARSLEY', 'PEARS', 'PEAS',
+            'PEPPER', 'PINEAPPLES', 'POTATOES', 'PUMPKINS', 'RADISHES', 'RICE',
+            'SEMOLINA', 'SPAGHETTIES', 'SPINACH', 'SPROUT', 'STARCH', 'SWISSCHARD',
+            'TANGERINES', 'TOMATOES', 'VEGETABLES', 'WHEAT', 'ZUCCHINI'
         ];
 
-        const desc = description.toLowerCase();
-        return freshKeywords.some(keyword => desc.includes(keyword));
+        const desc = item.description.toUpperCase();
+        return freshProvisionsList.some(keyword => desc.includes(keyword));
     }
 
-    private isBondItem(description: string): boolean {
-        const bondKeywords = [
-            'whisky', 'vodka', 'rum', 'cognac', 'wine', 'beer', 'alcohol',
-            'spirit', 'liquor'
-        ];
-
-        const desc = description.toLowerCase();
-        return bondKeywords.some(keyword => desc.includes(keyword));
+    private isBondItem(item: ProcessedDataRow): boolean {
+        // Data uploaded via "Bonded" dropzone should go in "BOND" Excel tab
+        return item.category === 'Bonded';
     }
 
 }
