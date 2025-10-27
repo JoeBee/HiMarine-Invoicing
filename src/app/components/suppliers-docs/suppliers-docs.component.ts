@@ -24,7 +24,7 @@ export class SuppliersDocsComponent implements OnInit {
     hoveredDropzone: string | null = null;
     priceMultiple: number = 1.22;
     hasSupplierFiles = false;
-    buttonDisabled = false;
+    buttonDisabled = true; // Always disabled since we removed the process button
     hasNewFiles = false;
     priceMultipleChanged = false;
     initialPriceMultiple: number = 1.22;
@@ -88,7 +88,11 @@ export class SuppliersDocsComponent implements OnInit {
 
         if (files.length > 0) {
             await this.dataService.addSupplierFiles(files, category);
-            this.hasNewFiles = true; // Mark that new files have been added
+            // Automatically process files after adding them
+            await this.dataService.processSupplierFiles();
+            this.hasNewFiles = false; // Reset since we processed immediately
+            this.priceMultipleChanged = false; // Reset since we processed immediately
+            this.initialPriceMultiple = this.priceMultiple; // Update initial value
             this.updateButtonState();
         }
         this.isProcessing = false;
@@ -209,29 +213,19 @@ export class SuppliersDocsComponent implements OnInit {
     }
 
     onPriceMultipleChange(): void {
-        // Update price multiple in data service
+        // Update price multiple in data service (this will automatically reprocess)
         this.dataService.setPriceMultiple(this.priceMultiple);
 
-        // Check if price multiple has changed from initial value
-        this.priceMultipleChanged = this.priceMultiple !== this.initialPriceMultiple;
-        this.updateButtonState();
-    }
-
-    async processSupplierFiles(): Promise<void> {
-        this.isProcessing = true;
-        await this.dataService.processSupplierFiles();
-        this.isProcessing = false;
-
-        // Reset flags after processing
+        // Reset flags since processing happens automatically
         this.hasNewFiles = false;
         this.priceMultipleChanged = false;
-        this.initialPriceMultiple = this.priceMultiple; // Update initial value
+        this.initialPriceMultiple = this.priceMultiple;
         this.updateButtonState();
     }
 
     updateButtonState(): void {
-        // Button is enabled only when there are new files or price multiple has changed
-        this.buttonDisabled = !(this.hasNewFiles || this.priceMultipleChanged);
+        // Button is always disabled since we removed the process button
+        this.buttonDisabled = true;
     }
 
 }

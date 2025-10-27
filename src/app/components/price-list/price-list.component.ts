@@ -56,6 +56,13 @@ export class PriceListComponent implements OnInit, OnDestroy {
             this.hasProcessedFiles = data.length > 0;
         });
 
+        // Subscribe to price multiple changes to update the display
+        this.dataService.priceMultiple$.subscribe(() => {
+            // The processed data will be automatically updated by the data service
+            // when price multiple changes, so we just need to refresh our filtered data
+            this.applyFilters();
+        });
+
         // Add document click listener to close expanded rows when clicking outside
         document.addEventListener('click', this.onDocumentClick.bind(this));
     }
@@ -84,19 +91,26 @@ export class PriceListComponent implements OnInit, OnDestroy {
         const checkbox = event.target as HTMLInputElement;
         const checked = checkbox.checked;
 
-        // Update all rows in the current filtered data
-        this.filteredData.forEach((filteredRow, index) => {
-            const originalIndex = this.processedData.findIndex(row =>
-                row.fileName === filteredRow.fileName &&
-                row.description === filteredRow.description &&
-                row.price === filteredRow.price &&
-                row.unit === filteredRow.unit
-            );
+        if (checked) {
+            // When checking "Select All", only select the currently filtered/visible rows
+            this.filteredData.forEach((filteredRow, index) => {
+                const originalIndex = this.processedData.findIndex(row =>
+                    row.fileName === filteredRow.fileName &&
+                    row.description === filteredRow.description &&
+                    row.price === filteredRow.price &&
+                    row.unit === filteredRow.unit
+                );
 
-            if (originalIndex !== -1) {
-                this.dataService.updateRowIncluded(originalIndex, checked);
-            }
-        });
+                if (originalIndex !== -1) {
+                    this.dataService.updateRowIncluded(originalIndex, checked);
+                }
+            });
+        } else {
+            // When unchecking "Select All", uncheck ALL rows in the entire dataset
+            this.processedData.forEach((row, index) => {
+                this.dataService.updateRowIncluded(index, false);
+            });
+        }
 
         this.updateSelectAllState();
     }
@@ -316,11 +330,23 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Generate Excel file
         const buffer = await workbook.xlsx.writeBuffer();
         const data = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        saveAs(data, 'Marine_Provisions_Price_List.xlsx');
+
+        // Generate filename with current date in yyyyMMdd format
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const dateString = `${year}${month}${day}`;
+        const fileName = `EOS Supply LTD_Price List_${dateString}.xlsx`;
+
+        saveAs(data, fileName);
     }
 
     private createCoverSheet(workbook: ExcelJS.Workbook): void {
         const worksheet = workbook.addWorksheet('COVER SHEET');
+
+        // Set tab color - white with green underline (using light green for tab color)
+        worksheet.properties.tabColor = { argb: 'FF90EE90' }; // Light green
 
         // Remove grid lines from the worksheet
         worksheet.properties.showGridLines = false;
@@ -531,6 +557,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
         const worksheet = workbook.addWorksheet('PROVISIONS');
 
+        // Set tab color - medium blue
+        worksheet.properties.tabColor = { argb: 'FF4472C4' }; // Medium blue
+
         // Add headers
         const headers = ['Pos.', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
         const headerRow = worksheet.addRow(headers);
@@ -626,6 +655,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
         const worksheet = workbook.addWorksheet('FRESH PROVISIONS');
 
+        // Set tab color - medium blue (same as PROVISIONS)
+        worksheet.properties.tabColor = { argb: 'FF4472C4' }; // Medium blue
+
         // Add headers
         const headers = ['Pos.', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
         const headerRow = worksheet.addRow(headers);
@@ -720,6 +752,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
         );
 
         const worksheet = workbook.addWorksheet('BOND');
+
+        // Set tab color - light blue
+        worksheet.properties.tabColor = { argb: 'FFB4C6E7' }; // Light blue
 
         // Add headers
         const headers = ['Pos.', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];

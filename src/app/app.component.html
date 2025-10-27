@@ -5,7 +5,7 @@
             <a (click)="onMainTabClick('suppliers')" [class.active]="activeMainTab === 'suppliers'">🏢 Suppliers</a>
             <a (click)="onMainTabClick('invoicing')" [class.active]="activeMainTab === 'invoicing'">📄 Invoicing (Under
                 Construction)</a>
-            <a (click)="onMainTabClick('history')" [class.active]="activeMainTab === 'history'">📊 History</a>
+            <a (click)="onMainTabClick('history')" [class.active]="activeMainTab === 'history'">&#x23F3; History</a>
         </nav>
 
         <!-- Sub Navigation Row - Suppliers -->
@@ -29,62 +29,139 @@
     <div class="modal-overlay" *ngIf="showInfoModal" (click)="closeInfoModal()">
         <div class="modal" (click)="$event.stopPropagation()">
             <button class="modal-close" (click)="closeInfoModal()" aria-label="Close modal">&times;</button>
-            <h2>User Instructions</h2>
+            <h2>HI Marine Invoicing - User Instructions</h2>
 
-            <h3>Suppliers Docs Tab</h3>
+            <h3>🏢 Suppliers Tab</h3>
+            <h4>Supplier Docs</h4>
             <ul>
-                <li>Drag and drop Excel files into the drop zone to upload them</li>
-                <li>You can upload files individually or multiple files at once</li>
-                <li>The system will automatically read each file and extract:
+                <li><strong>File Upload:</strong> Drag and drop Excel files (.xlsx/.xls) into the categorized drop
+                    zones:
+                    <ul>
+                        <li><strong>Bonded:</strong> For bonded/restricted items</li>
+                        <li><strong>Provisions:</strong> For general provisions and fresh provisions</li>
+                    </ul>
+                </li>
+                <li><strong>Automatic Processing:</strong> Files are automatically analyzed and processed upon upload
+                </li>
+                <li><strong>File Analysis:</strong> The system automatically detects:
                     <ul>
                         <li>File name (without extension)</li>
                         <li>Top left cell where the data table starts</li>
-                        <li>Column letter containing the description data</li>
-                        <li>Column letter containing the price data</li>
+                        <li>Description column (searches for "description", "product", "item")</li>
+                        <li>Price column (searches for "price", "cost", "amount", "value")</li>
+                        <li>Unit column (searches for "unit", "units")</li>
+                        <li>Remarks column (searches for "remark", "comment")</li>
+                        <li>Number of data rows found</li>
                     </ul>
                 </li>
-                <li>All uploaded files will be displayed in a table for review</li>
-            </ul>
-
-            <h3>Process Data Tab</h3>
-            <ul>
-                <li>Click the "Process Supplier Files" button once files are uploaded</li>
-                <li>The system will read all Excel files and extract description and price data</li>
-                <li>Data will be sorted by description first, then by price (low to high)</li>
-                <li>Review the processed data in the table</li>
-                <li><strong>Click on any row</strong> to view the original data from the Excel file with all column
-                    headers</li>
-                <li>Click away from the table to close the expanded view</li>
-                <li>Use the count dropdown to select quantities for each item</li>
-                <li>Use the filter controls to narrow down results by file name, description, or search text</li>
-                <li>Sort columns by clicking on the column headers</li>
-            </ul>
-
-            <h3>Invoice Tab</h3>
-            <ul>
-                <li>Click "Generate Invoice" to create an Excel workbook</li>
-                <li>Only items with a count greater than 0 will be included in the invoice</li>
-                <li>The generated Excel file will be downloaded to your computer</li>
-                <li>Review the invoice summary before generating</li>
-            </ul>
-
-            <h3>History Tab</h3>
-            <ul>
-                <li>This tab is a placeholder for future functionality</li>
-            </ul>
-
-            <h3>New Features</h3>
-            <ul>
-                <li><strong>Expandable Rows:</strong> Click on any row in the Process Data table to view the complete
-                    original data from the Excel file</li>
-                <li><strong>Original Data View:</strong> See all columns and headers exactly as they appear in the
-                    source Excel file</li>
-                <li><strong>Enhanced Filtering:</strong> Filter by file name, description, or search for specific text
+                <li><strong>Price Multiple:</strong> Set a markup multiplier (default: 1.22 for 22% markup)</li>
+                <li><strong>File Management:</strong> View all uploaded files in a sortable table with status indicators
                 </li>
-                <li><strong>Column Sorting:</strong> Click column headers to sort data in ascending or descending order
-                </li>
-                <li><strong>Quantity Selection:</strong> Use dropdown menus to select quantities for each item</li>
+                <li><strong>File Preview:</strong> Click on any filename to open the original Excel file</li>
             </ul>
+
+            <h4>Price List</h4>
+            <ul>
+                <li><strong>Data Review:</strong> Review all processed data from uploaded files</li>
+                <li><strong>Item Selection:</strong> Use checkboxes to include/exclude items from exports</li>
+                <li><strong>Bulk Selection:</strong> Use "Select All" checkbox for bulk operations</li>
+                <li><strong>Advanced Filtering:</strong>
+                    <ul>
+                        <li>Filter by file name (dropdown with all uploaded files)</li>
+                        <li>Filter by common descriptions (Beer, Cheese, Ice, Provision)</li>
+                        <li>Search within descriptions using text input</li>
+                        <li>Clear all filters with one click</li>
+                    </ul>
+                </li>
+                <li><strong>Column Sorting:</strong> Click any column header to sort (ascending/descending)</li>
+                <li><strong>Row Expansion:</strong> Click any row to view complete original Excel data</li>
+                <li><strong>Excel Export:</strong> Generate comprehensive Excel workbook with:
+                    <ul>
+                        <li>Cover sheet with totals by category</li>
+                        <li>PROVISIONS sheet (general provisions)</li>
+                        <li>FRESH PROVISIONS sheet (fresh produce items)</li>
+                        <li>BOND sheet (bonded items)</li>
+                    </ul>
+                </li>
+                <li><strong>Invalid Price Detection:</strong> View and manage records with invalid pricing data</li>
+            </ul>
+
+            <h3>📄 Invoicing Tab</h3>
+            <h4>Captain's Request</h4>
+            <ul>
+                <li><strong>Placeholder:</strong> Future functionality for managing captain requests and orders</li>
+            </ul>
+
+            <h4>Process Data</h4>
+            <ul>
+                <li><strong>Data Processing:</strong> Click "Process Supplier Files" to extract and consolidate data
+                </li>
+                <li><strong>Quantity Selection:</strong> Use dropdown menus (0-10) to select quantities for each item
+                </li>
+                <li><strong>Data Organization:</strong> Data is automatically sorted by description, then by price</li>
+                <li><strong>Advanced Filtering:</strong> Same filtering options as Price List tab</li>
+                <li><strong>Row Expansion:</strong> Click any row to view original Excel data with all columns</li>
+                <li><strong>Column Sorting:</strong> Sort by any column (count, file name, description, unit, remarks,
+                    price)</li>
+                <li><strong>Real-time Updates:</strong> Changes to quantities are immediately reflected</li>
+            </ul>
+
+            <h4>Invoice</h4>
+            <ul>
+                <li><strong>Invoice Generation:</strong> Create invoices in two formats:
+                    <ul>
+                        <li><strong>Excel Format:</strong> Professional Excel invoice with formulas</li>
+                        <li><strong>PDF Format:</strong> Print-ready PDF invoice</li>
+                    </ul>
+                </li>
+                <li><strong>Item Selection:</strong> Only items with count > 0 are included in invoices</li>
+                <li><strong>Price Calculation:</strong> Automatic price adjustment (1.10/0.9 multiplier applied)</li>
+                <li><strong>Invoice Preview:</strong> Review selected items and totals before generation</li>
+                <li><strong>Summary Information:</strong>
+                    <ul>
+                        <li>Total items processed</li>
+                        <li>Items selected for invoice</li>
+                        <li>Subtotal and final total amounts</li>
+                    </ul>
+                </li>
+                <li><strong>File Naming:</strong> Invoices are automatically named with current date</li>
+            </ul>
+
+            <h3>⏰ History Tab</h3>
+            <ul>
+                <li><strong>Placeholder:</strong> Reserved for future historical data and reporting functionality</li>
+                <li><strong>Visual Element:</strong> Features historical imagery related to marine invoicing</li>
+            </ul>
+
+            <h3>🔧 Key Features & Tips</h3>
+            <ul>
+                <li><strong>Automatic Processing:</strong> Files are processed immediately upon upload - no manual
+                    processing required</li>
+                <li><strong>Category Management:</strong> Use Bonded vs Provisions drop zones to organize items by type
+                </li>
+                <li><strong>Fresh Provisions Detection:</strong> Items with fresh produce keywords are automatically
+                    categorized</li>
+                <li><strong>Price Validation:</strong> Invalid price records are identified and excluded from exports
+                </li>
+                <li><strong>Data Integrity:</strong> Original Excel data is preserved and accessible for verification
+                </li>
+                <li><strong>Responsive Design:</strong> Works on desktop and mobile devices</li>
+                <li><strong>File Compatibility:</strong> Supports both .xlsx and .xls Excel formats</li>
+                <li><strong>Real-time Updates:</strong> All changes are immediately reflected across tabs</li>
+                <li><strong>Export Options:</strong> Multiple export formats (Excel workbooks, PDF invoices)</li>
+                <li><strong>Error Handling:</strong> Clear status indicators and error messages guide troubleshooting
+                </li>
+            </ul>
+
+            <h3>📋 Workflow Summary</h3>
+            <ol>
+                <li><strong>Upload:</strong> Drag Excel files to appropriate drop zones (Bonded/Provisions)</li>
+                <li><strong>Review:</strong> Check file analysis results in Supplier Docs tab</li>
+                <li><strong>Select:</strong> Use Price List tab to select items for inclusion</li>
+                <li><strong>Quantify:</strong> Set quantities in Process Data tab</li>
+                <li><strong>Generate:</strong> Create invoices in Excel or PDF format</li>
+                <li><strong>Export:</strong> Download comprehensive price lists and invoices</li>
+            </ol>
 
             <button class="primary close-button" (click)="closeInfoModal()">Close</button>
         </div>

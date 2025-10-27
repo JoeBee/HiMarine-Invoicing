@@ -353,6 +353,10 @@ export class DataService {
 
     setPriceMultiple(multiple: number): void {
         this.priceMultipleSubject.next(multiple);
+        // Automatically reprocess data when price multiple changes
+        if (this.supplierFilesSubject.value.length > 0) {
+            this.processSupplierFiles();
+        }
     }
 
     getPriceMultiple(): number {
