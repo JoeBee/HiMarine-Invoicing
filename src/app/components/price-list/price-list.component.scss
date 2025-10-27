@@ -170,6 +170,40 @@
         }
     }
 
+    .select-all-header {
+        background-color: #0066cc !important;
+        text-align: center;
+        padding: 12px 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        user-select: none;
+
+        .select-all-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #ffffff;
+            transform: scale(1.1);
+
+            &:focus {
+                outline: 2px solid #ffffff;
+                outline-offset: 2px;
+            }
+
+            &:hover {
+                transform: scale(1.2);
+            }
+        }
+
+        .select-all-label {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+    }
+
     .include-checkbox {
         width: 18px;
         height: 18px;

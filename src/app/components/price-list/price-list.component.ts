@@ -34,6 +34,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
     // Row expansion properties
     expandedRowIndex: number | null = null;
 
+    // Select all functionality
+    selectAllState: 'all' | 'some' | 'none' = 'all';
+
     constructor(private dataService: DataService) { }
 
     ngOnInit(): void {
@@ -43,6 +46,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
             this.updateAvailableFileNames();
             this.updateCommonDescriptions();
             this.applyFilters();
+            this.updateSelectAllState();
 
             // Update hasProcessedFiles based on data availability
             this.hasProcessedFiles = data.length > 0;
@@ -68,6 +72,41 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
         if (originalIndex !== -1) {
             this.dataService.updateRowIncluded(originalIndex, included);
+            this.updateSelectAllState();
+        }
+    }
+
+    onSelectAllChange(event: Event): void {
+        const checkbox = event.target as HTMLInputElement;
+        const checked = checkbox.checked;
+
+        // Update all rows in the current filtered data
+        this.filteredData.forEach((filteredRow, index) => {
+            const originalIndex = this.processedData.findIndex(row =>
+                row.fileName === filteredRow.fileName &&
+                row.description === filteredRow.description &&
+                row.price === filteredRow.price &&
+                row.unit === filteredRow.unit
+            );
+
+            if (originalIndex !== -1) {
+                this.dataService.updateRowIncluded(originalIndex, checked);
+            }
+        });
+
+        this.updateSelectAllState();
+    }
+
+    updateSelectAllState(): void {
+        const totalRows = this.filteredData.length;
+        const checkedRows = this.filteredData.filter(row => row.included).length;
+
+        if (checkedRows === 0) {
+            this.selectAllState = 'none';
+        } else if (checkedRows === totalRows) {
+            this.selectAllState = 'all';
+        } else {
+            this.selectAllState = 'some';
         }
     }
 
@@ -181,6 +220,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         }
 
         this.filteredData = filtered;
+        this.updateSelectAllState();
     }
 
     clearFilters(): void {
@@ -423,7 +463,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Add TOTAL ORDER row (B19:C19)
         const totalRow = worksheet.getRow(19);
         totalRow.getCell(2).value = 'TOTAL ORDER, USD';
-        totalRow.getCell(3).value = '$';
+        totalRow.getCell(3).value = { formula: '=SUM(C14:C16)' };
 
         // Style TOTAL ORDER row - no background, black text
         totalRow.getCell(2).font = {

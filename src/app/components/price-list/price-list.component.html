@@ -57,8 +57,11 @@
         <table>
             <thead>
                 <tr>
-                    <th class="sortable-header" (click)="sortData('included')">
-                        Include {{ getSortIcon('included') }}
+                    <th class="select-all-header">
+                        <input type="checkbox" [checked]="selectAllState === 'all'"
+                            [indeterminate]="selectAllState === 'some'" (change)="onSelectAllChange($event)"
+                            class="select-all-checkbox" title="Select All">
+                        <span class="select-all-label">Select All</span>
                     </th>
                     <th class="sortable-header" (click)="sortData('fileName')">
                         File Name {{ getSortIcon('fileName') }}
