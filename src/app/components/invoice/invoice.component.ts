@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService, ProcessedDataRow } from '../../services/data.service';
+import { LoggingService } from '../../services/logging.service';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
@@ -16,12 +17,24 @@ export class InvoiceComponent implements OnInit {
     processedData: ProcessedDataRow[] = [];
     hasDataToInvoice = false;
 
-    constructor(private dataService: DataService) { }
+    constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
     ngOnInit(): void {
+        this.loggingService.logSystemEvent('component_initialized', {
+            component: 'InvoiceComponent',
+            timestamp: new Date().toISOString()
+        }, 'InvoiceComponent');
+
         this.dataService.processedData$.subscribe(data => {
             this.processedData = data;
             this.hasDataToInvoice = data.some(row => row.count > 0);
+
+            this.loggingService.logDataProcessing('invoice_data_updated', {
+                totalItems: data.length,
+                itemsToInvoice: data.filter(row => row.count > 0).length,
+                totalAmount: this.totalAmount,
+                finalAmount: this.finalTotalAmount
+            }, 'InvoiceComponent');
         });
     }
 
@@ -42,9 +55,19 @@ export class InvoiceComponent implements OnInit {
     }
 
     generateInvoice(): void {
+        this.loggingService.logButtonClick('generate_invoice_excel', 'InvoiceComponent', {
+            totalItems: this.processedData.length,
+            itemsToInvoice: this.includedItems.length,
+            totalAmount: this.totalAmount,
+            finalAmount: this.finalTotalAmount
+        });
+
         const includedData = this.processedData.filter(row => row.count > 0);
 
         if (includedData.length === 0) {
+            this.loggingService.logUserAction('invoice_generation_failed', {
+                reason: 'no_items_selected'
+            }, 'InvoiceComponent');
             alert('No items selected for invoice. Please set a count greater than 0 for items you want to invoice.');
             return;
         }
@@ -119,12 +142,29 @@ export class InvoiceComponent implements OnInit {
         // Download file
         const fileName = `Invoice_${new Date().toISOString().split('T')[0]}.xlsx`;
         saveAs(blob, fileName);
+
+        this.loggingService.logExport('excel_invoice_generated', {
+            fileName,
+            fileSize: blob.size,
+            itemsIncluded: includedData.length,
+            totalAmount: this.finalTotalAmount
+        }, 'InvoiceComponent');
     }
 
     generateInvoicePDF(): void {
+        this.loggingService.logButtonClick('generate_invoice_pdf', 'InvoiceComponent', {
+            totalItems: this.processedData.length,
+            itemsToInvoice: this.includedItems.length,
+            totalAmount: this.totalAmount,
+            finalAmount: this.finalTotalAmount
+        });
+
         const includedData = this.processedData.filter(row => row.count > 0);
 
         if (includedData.length === 0) {
+            this.loggingService.logUserAction('pdf_invoice_generation_failed', {
+                reason: 'no_items_selected'
+            }, 'InvoiceComponent');
             alert('No items selected for invoice. Please set a count greater than 0 for items you want to invoice.');
             return;
         }
@@ -234,6 +274,12 @@ export class InvoiceComponent implements OnInit {
         // Save the PDF
         const fileName = `Invoice_${new Date().toISOString().split('T')[0]}.pdf`;
         doc.save(fileName);
+
+        this.loggingService.logExport('pdf_invoice_generated', {
+            fileName,
+            itemsIncluded: includedData.length,
+            totalAmount: this.finalTotalAmount
+        }, 'InvoiceComponent');
     }
 }
 

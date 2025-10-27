@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, SupplierFileInfo } from '../../services/data.service';
+import { LoggingService } from '../../services/logging.service';
 
 interface SortState {
     column: string;
@@ -29,9 +30,14 @@ export class SuppliersDocsComponent implements OnInit {
     priceMultipleChanged = false;
     initialPriceMultiple: number = 1.22;
 
-    constructor(private dataService: DataService) { }
+    constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
     ngOnInit(): void {
+        this.loggingService.logSystemEvent('component_initialized', {
+            component: 'SuppliersDocsComponent',
+            timestamp: new Date().toISOString()
+        }, 'SuppliersDocsComponent');
+
         this.hasSupplierFiles = this.dataService.hasSupplierFiles();
 
         // Load price multiple from data service
@@ -41,6 +47,11 @@ export class SuppliersDocsComponent implements OnInit {
         this.dataService.supplierFiles$.subscribe(files => {
             this.supplierFiles = files;
             this.hasSupplierFiles = this.dataService.hasSupplierFiles();
+
+            this.loggingService.logDataProcessing('files_updated', {
+                fileCount: files.length,
+                hasData: files.some(f => f.hasData === true)
+            }, 'SuppliersDocsComponent');
         });
 
         // Initialize button state
@@ -52,6 +63,11 @@ export class SuppliersDocsComponent implements OnInit {
         event.stopPropagation();
         this.isDragging = true;
         this.hoveredDropzone = category || null;
+
+        this.loggingService.logUserAction('drag_over', {
+            category: category || 'unknown',
+            filesCount: event.dataTransfer?.files.length || 0
+        }, 'SuppliersDocsComponent');
     }
 
     onDragLeave(event: DragEvent): void {
@@ -59,6 +75,10 @@ export class SuppliersDocsComponent implements OnInit {
         event.stopPropagation();
         this.isDragging = false;
         this.hoveredDropzone = null;
+
+        this.loggingService.logUserAction('drag_leave', {
+            category: this.hoveredDropzone || 'unknown'
+        }, 'SuppliersDocsComponent');
     }
 
     async onDrop(event: DragEvent, category?: string): Promise<void> {
@@ -69,6 +89,12 @@ export class SuppliersDocsComponent implements OnInit {
 
         const files = event.dataTransfer?.files;
         if (files) {
+            this.loggingService.logUserAction('files_dropped', {
+                category: category || 'unknown',
+                filesCount: files.length,
+                fileNames: Array.from(files).map(f => f.name)
+            }, 'SuppliersDocsComponent');
+
             await this.processFiles(files, category);
         }
     }
@@ -76,6 +102,12 @@ export class SuppliersDocsComponent implements OnInit {
     onFileSelect(event: Event, category?: string): void {
         const input = event.target as HTMLInputElement;
         if (input.files) {
+            this.loggingService.logUserAction('files_selected', {
+                category: category || 'unknown',
+                filesCount: input.files.length,
+                fileNames: Array.from(input.files).map(f => f.name)
+            }, 'SuppliersDocsComponent');
+
             this.processFiles(input.files, category);
         }
     }
@@ -87,27 +119,70 @@ export class SuppliersDocsComponent implements OnInit {
         );
 
         if (files.length > 0) {
-            await this.dataService.addSupplierFiles(files, category);
-            // Automatically process files after adding them
-            await this.dataService.processSupplierFiles();
-            this.hasNewFiles = false; // Reset since we processed immediately
-            this.priceMultipleChanged = false; // Reset since we processed immediately
-            this.initialPriceMultiple = this.priceMultiple; // Update initial value
-            this.updateButtonState();
+            // Log file upload details
+            files.forEach(file => {
+                this.loggingService.logFileUpload(
+                    file.name,
+                    file.size,
+                    file.type,
+                    category || 'unknown',
+                    'SuppliersDocsComponent'
+                );
+            });
+
+            try {
+                await this.dataService.addSupplierFiles(files, category);
+                // Automatically process files after adding them
+                await this.dataService.processSupplierFiles();
+
+                this.loggingService.logDataProcessing('files_processed_successfully', {
+                    fileCount: files.length,
+                    category: category || 'unknown',
+                    fileNames: files.map(f => f.name)
+                }, 'SuppliersDocsComponent');
+
+                this.hasNewFiles = false; // Reset since we processed immediately
+                this.priceMultipleChanged = false; // Reset since we processed immediately
+                this.initialPriceMultiple = this.priceMultiple; // Update initial value
+                this.updateButtonState();
+            } catch (error) {
+                this.loggingService.logError(error as Error, 'file_processing', 'SuppliersDocsComponent', {
+                    fileCount: files.length,
+                    category: category || 'unknown'
+                });
+            }
+        } else {
+            this.loggingService.logUserAction('invalid_files_selected', {
+                totalFiles: fileList.length,
+                validFiles: 0,
+                category: category || 'unknown'
+            }, 'SuppliersDocsComponent');
         }
         this.isProcessing = false;
     }
 
     triggerFileInput(category?: string): void {
+        this.loggingService.logButtonClick('file_input_triggered', 'SuppliersDocsComponent', {
+            category: category || 'unknown'
+        });
+
         const fileInput = document.getElementById(category ? `fileInput-${category}` : 'fileInput') as HTMLInputElement;
         fileInput?.click();
     }
 
     clearAllFiles(): void {
+        this.loggingService.logButtonClick('clear_all_files_requested', 'SuppliersDocsComponent', {
+            currentFileCount: this.supplierFiles.length
+        });
+
         this.showConfirmDialog = true;
     }
 
     confirmClearAll(): void {
+        this.loggingService.logUserAction('clear_all_files_confirmed', {
+            filesCleared: this.supplierFiles.length
+        }, 'SuppliersDocsComponent');
+
         this.dataService.clearAll();
         this.showConfirmDialog = false;
 
@@ -118,16 +193,21 @@ export class SuppliersDocsComponent implements OnInit {
     }
 
     cancelClearAll(): void {
+        this.loggingService.logButtonClick('clear_all_files_cancelled', 'SuppliersDocsComponent');
         this.showConfirmDialog = false;
     }
 
     sortData(column: string): void {
+        const previousDirection = this.sortState.direction;
+
         if (this.sortState.column === column) {
             this.sortState.direction = this.sortState.direction === 'asc' ? 'desc' : 'asc';
         } else {
             this.sortState.column = column;
             this.sortState.direction = 'asc';
         }
+
+        this.loggingService.logSortChange(column, this.sortState.direction, 'SuppliersDocsComponent');
 
         this.supplierFiles.sort((a, b) => {
             let aValue: any;
@@ -202,6 +282,12 @@ export class SuppliersDocsComponent implements OnInit {
     }
 
     openFile(fileInfo: SupplierFileInfo): void {
+        this.loggingService.logUserAction('file_opened', {
+            fileName: fileInfo.fileName,
+            fileSize: fileInfo.file.size,
+            category: fileInfo.category
+        }, 'SuppliersDocsComponent');
+
         // Create a URL for the file and open it in a new tab
         const url = URL.createObjectURL(fileInfo.file);
         window.open(url, '_blank');
@@ -213,6 +299,11 @@ export class SuppliersDocsComponent implements OnInit {
     }
 
     onPriceMultipleChange(): void {
+        this.loggingService.logFormSubmission('price_multiple_change', {
+            newValue: this.priceMultiple,
+            previousValue: this.initialPriceMultiple
+        }, 'SuppliersDocsComponent');
+
         // Update price multiple in data service (this will automatically reprocess)
         this.dataService.setPriceMultiple(this.priceMultiple);
 

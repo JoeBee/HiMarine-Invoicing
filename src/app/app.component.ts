@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
+import { LoggingService } from './services/logging.service';
 
 @Component({
     selector: 'app-root',
@@ -15,12 +16,27 @@ export class AppComponent {
     showInfoModal = false;
     activeMainTab = '';
 
-    constructor(private router: Router) {
+    constructor(private router: Router, private loggingService: LoggingService) {
+        // Log application initialization
+        this.loggingService.logSystemEvent('application_initialized', {
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            url: window.location.href
+        }, 'AppComponent');
+
         // Listen to route changes to determine active main tab
         this.router.events
             .pipe(filter(event => event instanceof NavigationEnd))
             .subscribe((event) => {
-                this.updateActiveMainTab((event as NavigationEnd).url);
+                const navigationEvent = event as NavigationEnd;
+                this.updateActiveMainTab(navigationEvent.url);
+
+                // Log navigation
+                this.loggingService.logNavigation(
+                    this.router.url,
+                    navigationEvent.url,
+                    'AppComponent'
+                );
             });
     }
 
@@ -37,6 +53,11 @@ export class AppComponent {
     }
 
     onMainTabClick(tab: string): void {
+        this.loggingService.logButtonClick(`main_tab_${tab}`, 'AppComponent', {
+            previousTab: this.activeMainTab,
+            newTab: tab
+        });
+
         if (tab === 'suppliers') {
             this.router.navigate(['/suppliers/supplier-docs']);
         } else if (tab === 'invoicing') {
@@ -47,10 +68,12 @@ export class AppComponent {
     }
 
     openInfoModal(): void {
+        this.loggingService.logButtonClick('info_modal_open', 'AppComponent');
         this.showInfoModal = true;
     }
 
     closeInfoModal(): void {
+        this.loggingService.logButtonClick('info_modal_close', 'AppComponent');
         this.showInfoModal = false;
     }
 }

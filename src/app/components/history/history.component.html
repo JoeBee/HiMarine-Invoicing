@@ -1,15 +1,157 @@
 <div class="history-container">
-    <h1>History</h1>
+    <div class="history-header">
+        <h1>📊 Application Logs</h1>
+        <div class="header-actions">
+            <button class="btn btn-secondary" (click)="refreshLogs()" [disabled]="isLoading">
+                {{ isLoading ? 'Loading...' : '🔄 Refresh' }}
+            </button>
+            <button class="btn btn-primary" (click)="exportLogs()" [disabled]="filteredLogs.length === 0">
+                📥 Export CSV
+            </button>
+        </div>
+    </div>
 
-    <div class="placeholder-content">
-        <p class="placeholder-text">This tab is reserved for future functionality.</p>
+    <!-- Error Message -->
+    <div *ngIf="error" class="error-message">
+        <p>{{ error }}</p>
+        <button class="btn btn-secondary" (click)="refreshLogs()">Try Again</button>
+    </div>
 
-        <div class="historical-image">
-            <img src="images/HandingInvoiceToShipCaptain.png" alt="Handing Invoice to Ship Captain"
-                class="historical-image">
+    <!-- Loading Indicator -->
+    <div *ngIf="isLoading" class="loading-indicator">
+        <p>Loading logs...</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section" *ngIf="!isLoading && logs.length > 0">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="categoryFilter">Category:</label>
+                <select id="categoryFilter" [(ngModel)]="selectedCategory" (change)="onFilterChange()">
+                    <option value="">All Categories</option>
+                    <option *ngFor="let category of categories" [value]="category">
+                        {{ getCategoryIcon(category) }} {{ category.replace('_', ' ').toUpperCase() }}
+                    </option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="levelFilter">Level:</label>
+                <select id="levelFilter" [(ngModel)]="selectedLevel" (change)="onFilterChange()">
+                    <option value="">All Levels</option>
+                    <option *ngFor="let level of levels" [value]="level">
+                        {{ level.toUpperCase() }}
+                    </option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="componentFilter">Component:</label>
+                <select id="componentFilter" [(ngModel)]="selectedComponent" (change)="onFilterChange()">
+                    <option value="">All Components</option>
+                    <option *ngFor="let component of components" [value]="component">
+                        {{ component }}
+                    </option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="searchInput">Search:</label>
+                <input type="text" id="searchInput" [(ngModel)]="searchText" (input)="onFilterChange()"
+                    placeholder="Search logs...">
+            </div>
+
+            <div class="filter-group">
+                <label for="startDate">From Date:</label>
+                <input type="date" id="startDate" [(ngModel)]="dateRange.start" (change)="onFilterChange()">
+            </div>
+
+            <div class="filter-group">
+                <label for="endDate">To Date:</label>
+                <input type="date" id="endDate" [(ngModel)]="dateRange.end" (change)="onFilterChange()">
+            </div>
+
+            <div class="filter-group">
+                <button class="btn btn-secondary" (click)="clearFilters()">Clear Filters</button>
+            </div>
         </div>
 
-        <!-- <p class="caption">George Washington meeting Henry VIII in this historically impossible but entertaining
-            scenario!</p> -->
+        <div class="filter-summary">
+            <p>Showing {{ filteredLogs.length }} of {{ logs.length }} logs</p>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="logs-section" *ngIf="!isLoading && filteredLogs.length > 0">
+        <div class="logs-table-container">
+            <table class="logs-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Level</th>
+                        <th>Category</th>
+                        <th>Component</th>
+                        <th>Action</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let log of paginatedLogs" [class]="getLevelClass(log.level)">
+                        <td class="timestamp">{{ formatTimestamp(log.timestamp) }}</td>
+                        <td class="level">
+                            <span class="level-badge">{{ log.level.toUpperCase() }}</span>
+                        </td>
+                        <td class="category">
+                            <span class="category-icon">{{ getCategoryIcon(log.category) }}</span>
+                            {{ log.category.replace('_', ' ').toUpperCase() }}
+                        </td>
+                        <td class="component">{{ log.component }}</td>
+                        <td class="action">{{ formatAction(log.action, log.category, log.details) }}</td>
+                        <td class="details">
+                            <div class="details-content" *ngIf="log.details">
+                                <div class="key-value-pairs">{{ formatDetails(log.details) }}</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="totalPages > 1">
+            <button class="btn btn-secondary" (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 1">
+                Previous
+            </button>
+
+            <span class="page-info">
+                Page {{ currentPage }} of {{ totalPages }}
+            </span>
+
+            <button class="btn btn-secondary" (click)="onPageChange(currentPage + 1)"
+                [disabled]="currentPage === totalPages">
+                Next
+            </button>
+        </div>
+    </div>
+
+    <!-- No Logs Message -->
+    <div class="no-logs-message" *ngIf="!isLoading && logs.length === 0">
+        <div class="no-logs-content">
+            <h3>📝 No Logs Available</h3>
+            <p>No application logs have been recorded yet. Logs will appear here as you use the application.</p>
+            <div class="historical-image">
+                <img src="images/HandingInvoiceToShipCaptain.png" alt="Handing Invoice to Ship Captain"
+                    class="historical-image">
+            </div>
+        </div>
+    </div>
+
+    <!-- No Filtered Results -->
+    <div class="no-results-message" *ngIf="!isLoading && logs.length > 0 && filteredLogs.length === 0">
+        <div class="no-results-content">
+            <h3>🔍 No Results Found</h3>
+            <p>No logs match your current filter criteria. Try adjusting your filters.</p>
+            <button class="btn btn-primary" (click)="clearFilters()">Clear Filters</button>
+        </div>
     </div>
 </div>

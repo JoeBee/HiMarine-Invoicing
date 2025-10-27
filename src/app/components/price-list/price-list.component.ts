@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, ProcessedDataRow } from '../../services/data.service';
+import { LoggingService } from '../../services/logging.service';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
@@ -41,9 +42,14 @@ export class PriceListComponent implements OnInit, OnDestroy {
     invalidPriceRecords: ProcessedDataRow[] = [];
     showInvalidPriceDialog = false;
 
-    constructor(private dataService: DataService) { }
+    constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
     ngOnInit(): void {
+        this.loggingService.logSystemEvent('component_initialized', {
+            component: 'PriceListComponent',
+            timestamp: new Date().toISOString()
+        }, 'PriceListComponent');
+
         this.dataService.processedData$.subscribe(data => {
             this.processedData = data;
             this.filteredData = [...data]; // Initialize filtered data
@@ -54,6 +60,11 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
             // Update hasProcessedFiles based on data availability
             this.hasProcessedFiles = data.length > 0;
+
+            this.loggingService.logDataProcessing('data_loaded', {
+                totalRecords: data.length,
+                filteredRecords: this.filteredData.length
+            }, 'PriceListComponent');
         });
 
         // Subscribe to price multiple changes to update the display
@@ -84,12 +95,24 @@ export class PriceListComponent implements OnInit, OnDestroy {
         if (originalIndex !== -1) {
             this.dataService.updateRowIncluded(originalIndex, included);
             this.updateSelectAllState();
+
+            this.loggingService.logDataSelection('item_inclusion_toggled',
+                this.filteredData.filter(row => row.included).length,
+                this.filteredData.length,
+                'PriceListComponent'
+            );
         }
     }
 
     onSelectAllChange(event: Event): void {
         const checkbox = event.target as HTMLInputElement;
         const checked = checkbox.checked;
+
+        this.loggingService.logDataSelection('select_all_toggled',
+            checked ? this.filteredData.length : 0,
+            this.filteredData.length,
+            'PriceListComponent'
+        );
 
         if (checked) {
             // When checking "Select All", only select the currently filtered/visible rows
@@ -313,33 +336,49 @@ export class PriceListComponent implements OnInit, OnDestroy {
     }
 
     async exportToExcel(): Promise<void> {
-        const workbook = new ExcelJS.Workbook();
+        this.loggingService.logButtonClick('export_to_excel', 'PriceListComponent', {
+            totalRecords: this.processedData.length,
+            selectedRecords: this.filteredData.filter(row => row.included).length
+        });
 
-        // Create Cover Sheet
-        this.createCoverSheet(workbook);
+        try {
+            const workbook = new ExcelJS.Workbook();
 
-        // Create Provisions sheet
-        this.createProvisionsSheet(workbook);
+            // Create Cover Sheet
+            this.createCoverSheet(workbook);
 
-        // Create Fresh Provisions sheet
-        this.createFreshProvisionsSheet(workbook);
+            // Create Provisions sheet
+            this.createProvisionsSheet(workbook);
 
-        // Create Bond sheet
-        this.createBondSheet(workbook);
+            // Create Fresh Provisions sheet
+            this.createFreshProvisionsSheet(workbook);
 
-        // Generate Excel file
-        const buffer = await workbook.xlsx.writeBuffer();
-        const data = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            // Create Bond sheet
+            this.createBondSheet(workbook);
 
-        // Generate filename with current date in yyyyMMdd format
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        const dateString = `${year}${month}${day}`;
-        const fileName = `EOS Supply LTD_Price List_${dateString}.xlsx`;
+            // Generate Excel file
+            const buffer = await workbook.xlsx.writeBuffer();
+            const data = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
-        saveAs(data, fileName);
+            // Generate filename with current date in yyyyMMdd format
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateString = `${year}${month}${day}`;
+            const fileName = `EOS Supply LTD_Price List_${dateString}.xlsx`;
+
+            saveAs(data, fileName);
+
+            this.loggingService.logExport('excel_export_successful', {
+                fileName,
+                fileSize: data.size,
+                totalRecords: this.processedData.length,
+                selectedRecords: this.filteredData.filter(row => row.included).length
+            }, 'PriceListComponent');
+        } catch (error) {
+            this.loggingService.logError(error as Error, 'excel_export', 'PriceListComponent');
+        }
     }
 
     private createCoverSheet(workbook: ExcelJS.Workbook): void {

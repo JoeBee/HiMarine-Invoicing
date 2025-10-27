@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, ProcessedDataRow } from '../../services/data.service';
+import { LoggingService } from '../../services/logging.service';
 
 interface SortState {
     column: string;
@@ -34,9 +35,14 @@ export class ProcessDataComponent implements OnInit, OnDestroy {
     // Row expansion properties
     expandedRowIndex: number | null = null;
 
-    constructor(private dataService: DataService) { }
+    constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
     ngOnInit(): void {
+        this.loggingService.logSystemEvent('component_initialized', {
+            component: 'ProcessDataComponent',
+            timestamp: new Date().toISOString()
+        }, 'ProcessDataComponent');
+
         this.hasSupplierFiles = this.dataService.hasSupplierFiles();
 
         this.dataService.supplierFiles$.subscribe((files) => {
@@ -49,6 +55,11 @@ export class ProcessDataComponent implements OnInit, OnDestroy {
             }
 
             this.previousFileCount = currentFileCount;
+
+            this.loggingService.logDataProcessing('files_updated', {
+                fileCount: files.length,
+                hasProcessedFiles: this.hasProcessedFiles
+            }, 'ProcessDataComponent');
         });
 
         this.dataService.processedData$.subscribe(data => {
@@ -57,6 +68,11 @@ export class ProcessDataComponent implements OnInit, OnDestroy {
             this.updateAvailableFileNames();
             this.updateCommonDescriptions();
             this.applyFilters();
+
+            this.loggingService.logDataProcessing('processed_data_updated', {
+                totalRecords: data.length,
+                filteredRecords: this.filteredData.length
+            }, 'ProcessDataComponent');
         });
 
         // Add document click listener to close expanded rows when clicking outside
@@ -64,10 +80,24 @@ export class ProcessDataComponent implements OnInit, OnDestroy {
     }
 
     async processSupplierFiles(): Promise<void> {
+        this.loggingService.logButtonClick('process_supplier_files', 'ProcessDataComponent', {
+            fileCount: this.dataService.hasSupplierFiles() ? 1 : 0
+        });
+
         this.isProcessing = true;
-        await this.dataService.processSupplierFiles();
-        this.isProcessing = false;
-        this.hasProcessedFiles = true; // Mark that files have been processed
+
+        try {
+            await this.dataService.processSupplierFiles();
+            this.isProcessing = false;
+            this.hasProcessedFiles = true; // Mark that files have been processed
+
+            this.loggingService.logDataProcessing('files_processed_successfully', {
+                processedFiles: this.dataService.hasSupplierFiles() ? 1 : 0
+            }, 'ProcessDataComponent');
+        } catch (error) {
+            this.isProcessing = false;
+            this.loggingService.logError(error as Error, 'file_processing', 'ProcessDataComponent');
+        }
     }
 
     onCountChange(index: number, event: Event): void {
@@ -85,6 +115,13 @@ export class ProcessDataComponent implements OnInit, OnDestroy {
 
         if (originalIndex !== -1) {
             this.dataService.updateRowCount(originalIndex, count);
+
+            this.loggingService.logUserAction('item_count_changed', {
+                itemDescription: filteredRow.description,
+                previousCount: filteredRow.count,
+                newCount: count,
+                fileName: filteredRow.fileName
+            }, 'ProcessDataComponent');
         }
     }
 
