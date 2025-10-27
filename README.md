@@ -5,7 +5,7 @@ A modern Angular web application for processing supplier XLSX files and generati
 ## Features
 
 - **Suppliers Tab**: Upload multiple XLSX files via drag-and-drop or file browser
-- **Process Data Tab**: Process uploaded files and extract data with sorting capabilities
+- **Captain's Request Tab**: Upload and process Excel files for captain requests
 - **Invoice Tab**: Generate Excel invoices from selected items
 - **History Tab**: Placeholder for future functionality
 
@@ -33,8 +33,8 @@ npm start
   - Data table location
   - Description and price columns
 
-### Step 2: Process Data
-- Go to the "Process Data" tab
+### Step 2: Review Data
+- Go to the "Price List" tab to review and select items
 - Click "Process Supplier Files"
 - Review the processed data (sorted by description, then price)
 - Check the "Include" checkbox for items you want to invoice
@@ -59,7 +59,6 @@ src/
 ├── app/
 │   ├── components/
 │   │   ├── suppliers/
-│   │   ├── process-data/
 │   │   ├── invoice/
 │   │   └── history/
 │   ├── services/

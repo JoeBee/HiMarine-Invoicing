@@ -26,20 +26,31 @@
     <div *ngIf="excelData && !isProcessing" class="results-container">
         <h2>Excel File Analysis Results</h2>
 
-        <div class="tab-results" *ngFor="let tab of ['COVER SHEET', 'PROVISIONS', 'FRESH PROVISIONS', 'BOND']">
-            <div class="tab-result" *ngIf="excelData[tab]">
-                <h3>{{ tab }}</h3>
-                <div class="result-stats">
-                    <div class="stat-item">
-                        <span class="stat-label">Records with Total > 0:</span>
-                        <span class="stat-value">{{ excelData[tab].recordsWithTotal }}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Sum of All Totals:</span>
-                        <span class="stat-value">${{ excelData[tab].sumOfTotals | number:'1.2-2' }}</span>
-                    </div>
-                </div>
-            </div>
+        <div class="results-table-container">
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Tab Name</th>
+                        <th>Count of Items</th>
+                        <th>Sum of All Totals</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let tab of ['PROVISIONS', 'FRESH PROVISIONS', 'BOND']">
+                        <td *ngIf="excelData[tab]" class="tab-name">{{ tab }}</td>
+                        <td *ngIf="excelData[tab]" class="records-count">{{ excelData[tab].recordsWithTotal }}</td>
+                        <td *ngIf="excelData[tab]" class="total-amount">${{ excelData[tab].sumOfTotals | number:'1.2-2'
+                            }}</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td><strong>Grand Total</strong></td>
+                        <td><strong>{{ getTotalRecords() }}</strong></td>
+                        <td><strong>${{ getGrandTotal() | number:'1.2-2' }}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
     </div>
 

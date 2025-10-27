@@ -19,7 +19,7 @@ interface SortState {
     styleUrls: ['./price-list.component.scss']
 })
 export class PriceListComponent implements OnInit, OnDestroy {
-    // Process Data functionality
+    // Price List functionality
     processedData: ProcessedDataRow[] = [];
     filteredData: ProcessedDataRow[] = [];
     hasProcessedFiles = false; // Track if files have been processed

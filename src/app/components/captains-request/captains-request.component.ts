@@ -159,4 +159,22 @@ export class CaptainsRequestComponent {
 
         return 0;
     }
+
+    getTotalRecords(): number {
+        if (!this.excelData) return 0;
+
+        const tabs = ['PROVISIONS', 'FRESH PROVISIONS', 'BOND'];
+        return tabs.reduce((total, tab) => {
+            return total + (this.excelData![tab]?.recordsWithTotal || 0);
+        }, 0);
+    }
+
+    getGrandTotal(): number {
+        if (!this.excelData) return 0;
+
+        const tabs = ['PROVISIONS', 'FRESH PROVISIONS', 'BOND'];
+        return tabs.reduce((total, tab) => {
+            return total + (this.excelData![tab]?.sumOfTotals || 0);
+        }, 0);
+    }
 }

@@ -131,7 +131,6 @@ header {
     }
 
     // Invoicing sub-tabs - Blue theme
-    a[routerLink="/invoicing/process-data"],
     a[routerLink="/invoicing/captains-request"],
     a[routerLink="/invoicing/invoice"] {
         color: #1976d2;

@@ -3,8 +3,7 @@
         <!-- Main Navigation Row -->
         <nav class="nav-tabs main-nav">
             <a (click)="onMainTabClick('suppliers')" [class.active]="activeMainTab === 'suppliers'">🏢 Suppliers</a>
-            <a (click)="onMainTabClick('invoicing')" [class.active]="activeMainTab === 'invoicing'">📄 Invoicing (Under
-                Construction)</a>
+            <a (click)="onMainTabClick('invoicing')" [class.active]="activeMainTab === 'invoicing'">📄 Invoicing</a>
             <a (click)="onMainTabClick('history')" [class.active]="activeMainTab === 'history'">&#x23F3; History</a>
         </nav>
 
@@ -17,7 +16,6 @@
         <!-- Sub Navigation Row - Invoicing -->
         <nav class="nav-tabs sub-nav" *ngIf="activeMainTab === 'invoicing'">
             <a routerLink="/invoicing/captains-request" routerLinkActive="active">Captain's Request</a>
-            <a routerLink="/invoicing/process-data" routerLinkActive="active">Process Data</a>
             <a routerLink="/invoicing/invoice" routerLinkActive="active">Invoice</a>
         </nav>
     </header>
@@ -92,19 +90,6 @@
                 <li><strong>Placeholder:</strong> Future functionality for managing captain requests and orders</li>
             </ul>
 
-            <h4>Process Data</h4>
-            <ul>
-                <li><strong>Data Processing:</strong> Click "Process Supplier Files" to extract and consolidate data
-                </li>
-                <li><strong>Quantity Selection:</strong> Use dropdown menus (0-10) to select quantities for each item
-                </li>
-                <li><strong>Data Organization:</strong> Data is automatically sorted by description, then by price</li>
-                <li><strong>Advanced Filtering:</strong> Same filtering options as Price List tab</li>
-                <li><strong>Row Expansion:</strong> Click any row to view original Excel data with all columns</li>
-                <li><strong>Column Sorting:</strong> Sort by any column (count, file name, description, unit, remarks,
-                    price)</li>
-                <li><strong>Real-time Updates:</strong> Changes to quantities are immediately reflected</li>
-            </ul>
 
             <h4>Invoice</h4>
             <ul>
@@ -158,7 +143,6 @@
                 <li><strong>Upload:</strong> Drag Excel files to appropriate drop zones (Bonded/Provisions)</li>
                 <li><strong>Review:</strong> Check file analysis results in Supplier Docs tab</li>
                 <li><strong>Select:</strong> Use Price List tab to select items for inclusion</li>
-                <li><strong>Quantify:</strong> Set quantities in Process Data tab</li>
                 <li><strong>Generate:</strong> Create invoices in Excel or PDF format</li>
                 <li><strong>Export:</strong> Download comprehensive price lists and invoices</li>
             </ol>

@@ -23,7 +23,7 @@ Navigate to: **http://localhost:4200**
 ## Quick Workflow
 
 1. **Upload Files** → Go to "Suppliers" tab and drag/drop XLSX files
-2. **Process Data** → Go to "Process Data" tab and click "Process Supplier Files"
+2. **Price List** → Go to "Price List" tab and click "Process Supplier Files"
 3. **Select Items** → Check boxes for items you want to invoice
 4. **Generate Invoice** → Go to "Invoice" tab and click "Generate Invoice"
 

@@ -34,12 +34,12 @@
 
 ---
 
-### 2. Process Data Tab - Extract and Review Data
+### 2. Price List Tab - Extract and Review Data
 
 **Purpose:** Process the uploaded files and prepare data for invoicing.
 
 **Steps:**
-1. Navigate to the "Process Data" tab
+1. Navigate to the "Price List" tab
 2. Click the "Process Supplier Files" button
    - This button is only enabled when files have been uploaded
 3. Wait for processing to complete

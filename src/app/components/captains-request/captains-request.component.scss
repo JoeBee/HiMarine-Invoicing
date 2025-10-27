@@ -118,48 +118,102 @@
         font-size: 24px;
     }
 
-    .tab-results {
-        margin-bottom: 20px;
+    .results-table-container {
+        overflow-x: auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-        .tab-result {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
 
-            h3 {
-                color: #333;
-                margin-bottom: 16px;
-                font-size: 18px;
-                border-bottom: 2px solid #0066cc;
-                padding-bottom: 8px;
-            }
+            thead {
+                background-color: #0066cc;
+                color: white;
 
-            .result-stats {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 20px;
+                th {
+                    padding: 15px 20px;
+                    text-align: left;
+                    font-weight: 600;
+                    font-size: 16px;
+                    border: none;
 
-                .stat-item {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    padding: 12px;
-                    background-color: #f8f9fa;
-                    border-radius: 6px;
-
-                    .stat-label {
-                        font-size: 14px;
-                        color: #666;
-                        margin-bottom: 8px;
-                        text-align: center;
+                    &:first-child {
+                        border-top-left-radius: 8px;
                     }
 
-                    .stat-value {
-                        font-size: 20px;
-                        font-weight: bold;
-                        color: #0066cc;
+                    &:last-child {
+                        border-top-right-radius: 8px;
+                    }
+                }
+            }
+
+            tbody {
+                tr {
+                    border-bottom: 1px solid #e9ecef;
+                    transition: background-color 0.2s ease;
+
+                    &:hover {
+                        background-color: #f8f9fa;
+                    }
+
+                    &:last-child {
+                        border-bottom: none;
+                    }
+
+                    td {
+                        padding: 15px 20px;
+                        vertical-align: middle;
+
+                        &.tab-name {
+                            font-weight: 600;
+                            color: #333;
+                        }
+
+                        &.records-count {
+                            text-align: center;
+                            color: #0066cc;
+                            font-weight: 600;
+                        }
+
+                        &.total-amount {
+                            text-align: right;
+                            color: #28a745;
+                            font-weight: 600;
+                        }
+                    }
+                }
+            }
+
+            tfoot {
+                background-color: #e9ecef;
+                border-top: 2px solid #0066cc;
+
+                .total-row {
+                    td {
+                        padding: 15px 20px;
+                        font-size: 18px;
+                        color: #333;
+
+                        &:first-child {
+                            border-bottom-left-radius: 8px;
+                        }
+
+                        &:last-child {
+                            border-bottom-right-radius: 8px;
+                        }
+
+                        &:nth-child(2) {
+                            text-align: center;
+                            color: #0066cc;
+                        }
+
+                        &:last-child {
+                            text-align: right;
+                            color: #28a745;
+                        }
                     }
                 }
             }
@@ -194,8 +248,21 @@
         padding: 30px 20px;
     }
 
-    .results-container .tab-results .tab-result .result-stats {
-        grid-template-columns: 1fr;
-        gap: 12px;
+    .results-container {
+        .results-table-container {
+            .results-table {
+                font-size: 14px;
+
+                thead th,
+                tbody td,
+                tfoot td {
+                    padding: 10px 12px;
+                }
+
+                tfoot .total-row td {
+                    font-size: 16px;
+                }
+            }
+        }
     }
 }

@@ -67,11 +67,10 @@
     </div>
 
     <div *ngIf="processedData.length === 0" class="empty-state">
-        <p>No data processed yet. Please process supplier files on the Process Data tab first.</p>
+        <p>No data processed yet. Please process supplier files on the Price List tab first.</p>
     </div>
 
     <div *ngIf="processedData.length > 0 && !hasDataToInvoice" class="warning-state">
-        <p>⚠️ No items selected for invoice. Please go to the Process Data tab and set a count greater than 0 for
-            items you want to invoice.</p>
+        <p>⚠️ No items selected for invoice. Please go to the Price List tab and select items you want to invoice.</p>
     </div>
 </div>

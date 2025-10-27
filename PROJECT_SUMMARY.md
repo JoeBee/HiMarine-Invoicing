@@ -43,10 +43,6 @@ A modern, single-page Angular web application for processing supplier XLSX files
 - `suppliers.component.html` - Drag-and-drop interface
 - `suppliers.component.scss` - Supplier tab styling
 
-**Process Data Component** (`src/app/components/process-data/`)
-- `process-data.component.ts` - Data processing logic
-- `process-data.component.html` - Data table with checkboxes
-- `process-data.component.scss` - Process data styling
 
 **Invoice Component** (`src/app/components/invoice/`)
 - `invoice.component.ts` - Invoice generation logic
@@ -71,7 +67,7 @@ A modern, single-page Angular web application for processing supplier XLSX files
   - Price column
 ✅ Display uploaded files in table format
 
-### 2. Data Processing (Process Data Tab)
+### 2. Data Processing
 ✅ "Process Supplier Files" button (enabled when files uploaded)
 ✅ Extract data from XLSX files
 ✅ Sort by description, then price (ascending)
@@ -145,7 +141,6 @@ HiMarine-Invoicing/
 │   ├── app/
 │   │   ├── components/          # Feature components
 │   │   │   ├── suppliers/       # Separate folder per component
-│   │   │   ├── process-data/
 │   │   │   ├── invoice/
 │   │   │   └── history/
 │   │   ├── services/            # Shared services
@@ -216,7 +211,7 @@ No questions! The application has been successfully created with all requested f
 1. ✅ Angular-based web application
 2. ✅ Separate files for HTML, Scripts, and Styling
 3. ✅ Pages in their own folders
-4. ✅ 4 tabs: Suppliers, Process Data, Invoice, History
+4. ✅ 3 tabs: Suppliers, Invoice, History
 5. ✅ XLSX file upload and processing
 6. ✅ Drag-and-drop file upload
 7. ✅ Automatic data detection

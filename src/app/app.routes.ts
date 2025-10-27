@@ -35,10 +35,6 @@ export const routes: Routes = [
         loadComponent: () => import('./components/price-list/price-list.component').then(m => m.PriceListComponent)
     },
     {
-        path: 'invoicing/process-data',
-        loadComponent: () => import('./components/process-data/process-data.component').then(m => m.ProcessDataComponent)
-    },
-    {
         path: 'invoicing/captains-request',
         loadComponent: () => import('./components/captains-request/captains-request.component').then(m => m.CaptainsRequestComponent)
     },
