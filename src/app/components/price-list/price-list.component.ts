@@ -303,7 +303,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Add PROVISIONS row (B14:D14) with dark blue background and white text
         const provisionsRow = worksheet.getRow(14);
         provisionsRow.getCell(2).value = 'PROVISIONS';
-        provisionsRow.getCell(3).value = '$';
+        provisionsRow.getCell(3).value = { formula: 'PROVISIONS!G320' }; // Formula for total
         provisionsRow.getCell(4).value = '-';
 
         // Style PROVISIONS row - dark blue background with white text
@@ -352,7 +352,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Add FRESH PROVISIONS row (B15:D15) with light blue background and black text
         const freshProvisionsRow = worksheet.getRow(15);
         freshProvisionsRow.getCell(2).value = 'FRESH PROVISIONS';
-        freshProvisionsRow.getCell(3).value = '$';
+        freshProvisionsRow.getCell(3).value = { formula: "'FRESH PROVISIONS'!G107" }; // Formula for total
         freshProvisionsRow.getCell(4).value = '-';
 
         // Style FRESH PROVISIONS row - light blue background with black text
@@ -401,7 +401,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Add BOND row (B16:D16) with light blue background and black text
         const bondRow = worksheet.getRow(16);
         bondRow.getCell(2).value = 'BOND';
-        bondRow.getCell(3).value = '$';
+        bondRow.getCell(3).value = { formula: 'BOND!G84' }; // Formula for total
         bondRow.getCell(4).value = '-';
 
         // Style BOND row - light blue background with black text
@@ -450,15 +450,15 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Add TOTAL ORDER row (B19:E19)
         const totalRow = worksheet.getRow(19);
         totalRow.getCell(2).value = 'TOTAL ORDER, USD';
-        totalRow.getCell(4).value = '$';
-        totalRow.getCell(5).value = '-';
+        totalRow.getCell(3).value = { formula: 'SUM(C14:C16)' }; // Formula to sum all totals
+        totalRow.getCell(4).value = '-';
 
         // Style TOTAL ORDER row - no background, black text
         totalRow.getCell(2).font = { bold: true, color: { argb: 'FF000000' } };
+        totalRow.getCell(3).font = { bold: true, color: { argb: 'FF000000' } };
+        totalRow.getCell(3).alignment = { horizontal: 'center' };
         totalRow.getCell(4).font = { color: { argb: 'FF000000' } };
-        totalRow.getCell(5).font = { color: { argb: 'FF000000' } };
         totalRow.getCell(4).alignment = { horizontal: 'center' };
-        totalRow.getCell(5).alignment = { horizontal: 'center' };
     }
 
     private createProvisionsSheet(workbook: ExcelJS.Workbook): void {
@@ -492,15 +492,26 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
         // Add data rows
         provisionsData.forEach((item, index) => {
+            const rowNumber = index + 2; // +2 because header is row 1, data starts at row 2
             const dataRow = worksheet.addRow([
                 (index + 1).toString(),
                 item.description,
                 item.remarks || '-',
                 item.unit,
                 '', // Empty Qty column
-                `$ ${item.price.toFixed(2)}`,
-                '' // Empty Total column
+                item.price, // Price as number for formula calculation
+                '' // Empty Total column - will be filled with formula
             ]);
+
+            // Add formula to column G (Total column) - handle empty cells gracefully
+            const totalCell = worksheet.getCell(`G${rowNumber}`);
+            totalCell.value = { formula: `=IF(OR(E${rowNumber}="",F${rowNumber}=""),"-",F${rowNumber}*E${rowNumber})` };
+
+            // Format Price column (F) and Total column (G) with Accounting format
+            const priceCell = worksheet.getCell(`F${rowNumber}`);
+            priceCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+
+            totalCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
 
             // Style data rows with borders
             dataRow.eachCell((cell, colNumber) => {
@@ -555,15 +566,26 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
         // Add data rows
         freshProvisionsData.forEach((item, index) => {
+            const rowNumber = index + 2; // +2 because header is row 1, data starts at row 2
             const dataRow = worksheet.addRow([
                 (index + 1).toString(),
                 item.description,
                 item.remarks || '-',
                 item.unit,
                 '', // Empty Qty column
-                `$ ${item.price.toFixed(2)}`,
-                '' // Empty Total column
+                item.price, // Price as number for formula calculation
+                '' // Empty Total column - will be filled with formula
             ]);
+
+            // Add formula to column G (Total column) - handle empty cells gracefully
+            const totalCell = worksheet.getCell(`G${rowNumber}`);
+            totalCell.value = { formula: `=IF(OR(E${rowNumber}="",F${rowNumber}=""),"-",F${rowNumber}*E${rowNumber})` };
+
+            // Format Price column (F) and Total column (G) with Accounting format
+            const priceCell = worksheet.getCell(`F${rowNumber}`);
+            priceCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+
+            totalCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
 
             // Style data rows with borders
             dataRow.eachCell((cell, colNumber) => {
@@ -618,15 +640,26 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
         // Add data rows
         bondData.forEach((item, index) => {
+            const rowNumber = index + 2; // +2 because header is row 1, data starts at row 2
             const dataRow = worksheet.addRow([
                 (index + 1).toString(),
                 item.description,
                 item.remarks || '-',
                 item.unit,
                 '', // Empty Qty column
-                `$ ${item.price.toFixed(2)}`,
-                '' // Empty Total column
+                item.price, // Price as number for formula calculation
+                '' // Empty Total column - will be filled with formula
             ]);
+
+            // Add formula to column G (Total column) - handle empty cells gracefully
+            const totalCell = worksheet.getCell(`G${rowNumber}`);
+            totalCell.value = { formula: `=IF(OR(E${rowNumber}="",F${rowNumber}=""),"-",F${rowNumber}*E${rowNumber})` };
+
+            // Format Price column (F) and Total column (G) with Accounting format
+            const priceCell = worksheet.getCell(`F${rowNumber}`);
+            priceCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
+
+            totalCell.numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
 
             // Style data rows with borders
             dataRow.eachCell((cell, colNumber) => {

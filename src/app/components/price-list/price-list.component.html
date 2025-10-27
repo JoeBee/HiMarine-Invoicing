@@ -10,7 +10,7 @@
     </div>
 
     <div class="action-section" *ngIf="hasProcessedFiles">
-        <button class="secondary" [disabled]="processedData.length === 0" (click)="exportToExcel()">
+        <button class="primary" [disabled]="processedData.length === 0" (click)="exportToExcel()">
             Export to Excel
         </button>
     </div>
