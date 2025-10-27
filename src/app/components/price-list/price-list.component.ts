@@ -280,34 +280,31 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Remove grid lines from the worksheet
         worksheet.properties.showGridLines = false;
 
+        // Set view options to hide gridlines
+        worksheet.views = [{
+            showGridLines: false
+        }];
+
         // Set column widths to show all content properly
         worksheet.getColumn('A').width = 20;  // Column A
         worksheet.getColumn('B').width = 30;  // Column B (for email and labels)
-        worksheet.getColumn('C').width = 8;   // Column C (for '$')
-        worksheet.getColumn('D').width = 8;   // Column D (for '-')
+        worksheet.getColumn('C').width = 15;  // Column C (for combined $ and - values)
 
-        // Add title (merged across A1:D1)
-        worksheet.mergeCells('A1:D1');
-        worksheet.getCell('A1').value = 'MARINE PROVISIONS PRICE LIST';
-        worksheet.getCell('A1').font = { bold: true, size: 16 };
-        worksheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
-
-        // Add date and total items
-        worksheet.getCell('A3').value = 'Generated on: ' + new Date().toLocaleDateString();
-        worksheet.getCell('A5').value = 'Total Items: ' + this.processedData.length;
-
-        // Add email
-        worksheet.getCell('A9').value = 'Email:';
+        // Add email (moved to B9 to match image)
         worksheet.getCell('B9').value = 'office@eos-supply.co.uk';
 
-        // Add PROVISIONS row (B14:D14) with dark blue background and white text
+        // Add PROVISIONS row (B14:C14) with dark blue background and white text
         const provisionsRow = worksheet.getRow(14);
         provisionsRow.getCell(2).value = 'PROVISIONS';
-        provisionsRow.getCell(3).value = { formula: 'PROVISIONS!G320' }; // Formula for total
-        provisionsRow.getCell(4).value = '-';
+        provisionsRow.getCell(3).value = { formula: 'PROVISIONS!G320' };
 
         // Style PROVISIONS row - dark blue background with white text
-        provisionsRow.getCell(2).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        provisionsRow.getCell(2).font = {
+            name: 'Cambria',
+            bold: true,
+            size: 16,
+            color: { argb: 'FFFFFFFF' }
+        };
         provisionsRow.getCell(2).fill = {
             type: 'pattern',
             pattern: 'solid',
@@ -321,13 +318,19 @@ export class PriceListComponent implements OnInit, OnDestroy {
             right: { style: 'thin', color: { argb: 'FF000000' } }
         };
 
-        provisionsRow.getCell(3).font = { color: { argb: 'FF000000' } };
+        provisionsRow.getCell(3).font = {
+            name: 'Cambria',
+            bold: true,
+            size: 16,
+            color: { argb: 'FF000000' }
+        };
         provisionsRow.getCell(3).fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FF4472C4' }
+            fgColor: { argb: 'FFFFFFFF' }
         };
         provisionsRow.getCell(3).alignment = { horizontal: 'center' };
+        provisionsRow.getCell(3).numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
         provisionsRow.getCell(3).border = {
             top: { style: 'thin', color: { argb: 'FF000000' } },
             left: { style: 'thin', color: { argb: 'FF000000' } },
@@ -335,28 +338,18 @@ export class PriceListComponent implements OnInit, OnDestroy {
             right: { style: 'thin', color: { argb: 'FF000000' } }
         };
 
-        provisionsRow.getCell(4).font = { color: { argb: 'FF000000' } };
-        provisionsRow.getCell(4).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FF4472C4' }
-        };
-        provisionsRow.getCell(4).alignment = { horizontal: 'center' };
-        provisionsRow.getCell(4).border = {
-            top: { style: 'thin', color: { argb: 'FF000000' } },
-            left: { style: 'thin', color: { argb: 'FF000000' } },
-            bottom: { style: 'thin', color: { argb: 'FF000000' } },
-            right: { style: 'thin', color: { argb: 'FF000000' } }
-        };
-
-        // Add FRESH PROVISIONS row (B15:D15) with light blue background and black text
+        // Add FRESH PROVISIONS row (B15:C15) with light blue background and black text
         const freshProvisionsRow = worksheet.getRow(15);
         freshProvisionsRow.getCell(2).value = 'FRESH PROVISIONS';
-        freshProvisionsRow.getCell(3).value = { formula: "'FRESH PROVISIONS'!G107" }; // Formula for total
-        freshProvisionsRow.getCell(4).value = '-';
+        freshProvisionsRow.getCell(3).value = { formula: "'FRESH PROVISIONS'!G107" };
 
         // Style FRESH PROVISIONS row - light blue background with black text
-        freshProvisionsRow.getCell(2).font = { bold: true, color: { argb: 'FF000000' } };
+        freshProvisionsRow.getCell(2).font = {
+            name: 'Cambria',
+            bold: true,
+            size: 16,
+            color: { argb: 'FF000000' }
+        };
         freshProvisionsRow.getCell(2).fill = {
             type: 'pattern',
             pattern: 'solid',
@@ -370,13 +363,19 @@ export class PriceListComponent implements OnInit, OnDestroy {
             right: { style: 'thin', color: { argb: 'FF000000' } }
         };
 
-        freshProvisionsRow.getCell(3).font = { color: { argb: 'FF000000' } };
+        freshProvisionsRow.getCell(3).font = {
+            name: 'Cambria',
+            bold: true,
+            size: 16,
+            color: { argb: 'FF000000' }
+        };
         freshProvisionsRow.getCell(3).fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FFB4C6E7' }
+            fgColor: { argb: 'FFFFFFFF' }
         };
         freshProvisionsRow.getCell(3).alignment = { horizontal: 'center' };
+        freshProvisionsRow.getCell(3).numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
         freshProvisionsRow.getCell(3).border = {
             top: { style: 'thin', color: { argb: 'FF000000' } },
             left: { style: 'thin', color: { argb: 'FF000000' } },
@@ -384,28 +383,18 @@ export class PriceListComponent implements OnInit, OnDestroy {
             right: { style: 'thin', color: { argb: 'FF000000' } }
         };
 
-        freshProvisionsRow.getCell(4).font = { color: { argb: 'FF000000' } };
-        freshProvisionsRow.getCell(4).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFB4C6E7' }
-        };
-        freshProvisionsRow.getCell(4).alignment = { horizontal: 'center' };
-        freshProvisionsRow.getCell(4).border = {
-            top: { style: 'thin', color: { argb: 'FF000000' } },
-            left: { style: 'thin', color: { argb: 'FF000000' } },
-            bottom: { style: 'thin', color: { argb: 'FF000000' } },
-            right: { style: 'thin', color: { argb: 'FF000000' } }
-        };
-
-        // Add BOND row (B16:D16) with light blue background and black text
+        // Add BOND row (B16:C16) with light blue background and black text
         const bondRow = worksheet.getRow(16);
         bondRow.getCell(2).value = 'BOND';
-        bondRow.getCell(3).value = { formula: 'BOND!G84' }; // Formula for total
-        bondRow.getCell(4).value = '-';
+        bondRow.getCell(3).value = { formula: 'BOND!G84' };
 
         // Style BOND row - light blue background with black text
-        bondRow.getCell(2).font = { bold: true, color: { argb: 'FF000000' } };
+        bondRow.getCell(2).font = {
+            name: 'Cambria',
+            bold: true,
+            size: 16,
+            color: { argb: 'FF000000' }
+        };
         bondRow.getCell(2).fill = {
             type: 'pattern',
             pattern: 'solid',
@@ -419,13 +408,19 @@ export class PriceListComponent implements OnInit, OnDestroy {
             right: { style: 'thin', color: { argb: 'FF000000' } }
         };
 
-        bondRow.getCell(3).font = { color: { argb: 'FF000000' } };
+        bondRow.getCell(3).font = {
+            name: 'Cambria',
+            bold: true,
+            size: 16,
+            color: { argb: 'FF000000' }
+        };
         bondRow.getCell(3).fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FFB4C6E7' }
+            fgColor: { argb: 'FFFFFFFF' }
         };
         bondRow.getCell(3).alignment = { horizontal: 'center' };
+        bondRow.getCell(3).numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
         bondRow.getCell(3).border = {
             top: { style: 'thin', color: { argb: 'FF000000' } },
             left: { style: 'thin', color: { argb: 'FF000000' } },
@@ -433,32 +428,27 @@ export class PriceListComponent implements OnInit, OnDestroy {
             right: { style: 'thin', color: { argb: 'FF000000' } }
         };
 
-        bondRow.getCell(4).font = { color: { argb: 'FF000000' } };
-        bondRow.getCell(4).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFB4C6E7' }
-        };
-        bondRow.getCell(4).alignment = { horizontal: 'center' };
-        bondRow.getCell(4).border = {
-            top: { style: 'thin', color: { argb: 'FF000000' } },
-            left: { style: 'thin', color: { argb: 'FF000000' } },
-            bottom: { style: 'thin', color: { argb: 'FF000000' } },
-            right: { style: 'thin', color: { argb: 'FF000000' } }
-        };
 
-        // Add TOTAL ORDER row (B19:E19)
+        // Add TOTAL ORDER row (B19:C19)
         const totalRow = worksheet.getRow(19);
         totalRow.getCell(2).value = 'TOTAL ORDER, USD';
-        totalRow.getCell(3).value = { formula: 'SUM(C14:C16)' }; // Formula to sum all totals
-        totalRow.getCell(4).value = '-';
+        totalRow.getCell(3).value = '$';
 
         // Style TOTAL ORDER row - no background, black text
-        totalRow.getCell(2).font = { bold: true, color: { argb: 'FF000000' } };
-        totalRow.getCell(3).font = { bold: true, color: { argb: 'FF000000' } };
+        totalRow.getCell(2).font = {
+            name: 'Cambria',
+            bold: true,
+            size: 16,
+            color: { argb: 'FF000000' }
+        };
+        totalRow.getCell(3).font = {
+            name: 'Cambria',
+            bold: true,
+            size: 16,
+            color: { argb: 'FF000000' }
+        };
         totalRow.getCell(3).alignment = { horizontal: 'center' };
-        totalRow.getCell(4).font = { color: { argb: 'FF000000' } };
-        totalRow.getCell(4).alignment = { horizontal: 'center' };
+        totalRow.getCell(3).numFmt = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)';
     }
 
     private createProvisionsSheet(workbook: ExcelJS.Workbook): void {
