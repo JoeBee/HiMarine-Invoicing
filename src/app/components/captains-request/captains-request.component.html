@@ -1,5 +1,50 @@
 <div class="captains-request-container">
     <h1>Captain's Request</h1>
-    <p>This is the Captain's Request component for managing captain requests and orders.</p>
-    <p>Future captain request features will be implemented here.</p>
+
+    <!-- Dropzone for Excel file upload -->
+    <div class="dropzone-container">
+        <div class="dropzone" [class.drag-over]="isDragOver" (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="fileInput.click()">
+            <div class="dropzone-content">
+                <i class="upload-icon">📁</i>
+                <p class="dropzone-text">
+                    {{ uploadedFile ? uploadedFile.name : 'Drop Excel file here or click to browse' }}
+                </p>
+                <p class="dropzone-subtext">Only .xlsx and .xls files are accepted</p>
+            </div>
+        </div>
+        <input #fileInput type="file" accept=".xlsx,.xls" (change)="onFileSelected($event)" style="display: none;">
+    </div>
+
+    <!-- Processing status -->
+    <div *ngIf="isProcessing" class="processing-status">
+        <div class="spinner"></div>
+        <p>Processing Excel file...</p>
+    </div>
+
+    <!-- Results display -->
+    <div *ngIf="excelData && !isProcessing" class="results-container">
+        <h2>Excel File Analysis Results</h2>
+
+        <div class="tab-results" *ngFor="let tab of ['COVER SHEET', 'PROVISIONS', 'FRESH PROVISIONS', 'BOND']">
+            <div class="tab-result" *ngIf="excelData[tab]">
+                <h3>{{ tab }}</h3>
+                <div class="result-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Records with Total > 0:</span>
+                        <span class="stat-value">{{ excelData[tab].recordsWithTotal }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Sum of All Totals:</span>
+                        <span class="stat-value">${{ excelData[tab].sumOfTotals | number:'1.2-2' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error display -->
+    <div *ngIf="errorMessage" class="error-message">
+        <p>{{ errorMessage }}</p>
+    </div>
 </div>
