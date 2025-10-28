@@ -16,11 +16,13 @@
 
         <!-- Export Buttons Section -->
         <div class="export-buttons-section">
-            <button class="export-btn excel-btn" (click)="exportInvoiceToExcel()">
+            <button class="export-btn excel-btn" [disabled]="invoiceData.items.length === 0"
+                (click)="exportInvoiceToExcel()">
                 <span class="btn-icon">📊</span>
                 Export to Excel
             </button>
-            <button class="export-btn pdf-btn" (click)="exportInvoiceToPDF()">
+            <button class="export-btn pdf-btn" [disabled]="invoiceData.items.length === 0"
+                (click)="exportInvoiceToPDF()">
                 <span class="btn-icon">📄</span>
                 Export to PDF
             </button>
