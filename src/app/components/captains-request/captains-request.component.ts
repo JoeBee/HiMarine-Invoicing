@@ -28,11 +28,6 @@ export class CaptainsRequestComponent {
     errorMessage = '';
 
     constructor(private dataService: DataService, private loggingService: LoggingService) {
-        // Log component initialization
-        this.loggingService.logSystemEvent('component_initialized', {
-            component: 'CaptainsRequestComponent',
-            timestamp: new Date().toISOString()
-        }, 'CaptainsRequestComponent');
     }
 
     onDragOver(event: DragEvent): void {

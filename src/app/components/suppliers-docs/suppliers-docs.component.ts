@@ -33,11 +33,6 @@ export class SuppliersDocsComponent implements OnInit {
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
     ngOnInit(): void {
-        this.loggingService.logSystemEvent('component_initialized', {
-            component: 'SuppliersDocsComponent',
-            timestamp: new Date().toISOString()
-        }, 'SuppliersDocsComponent');
-
         this.hasSupplierFiles = this.dataService.hasSupplierFiles();
 
         // Load price multiple from data service

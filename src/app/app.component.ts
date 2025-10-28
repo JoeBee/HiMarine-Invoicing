@@ -17,13 +17,6 @@ export class AppComponent {
     activeMainTab = '';
 
     constructor(private router: Router, private loggingService: LoggingService) {
-        // Log application initialization
-        this.loggingService.logSystemEvent('application_initialized', {
-            timestamp: new Date().toISOString(),
-            userAgent: navigator.userAgent,
-            url: window.location.href
-        }, 'AppComponent');
-
         // Listen to route changes to determine active main tab
         this.router.events
             .pipe(filter(event => event instanceof NavigationEnd))

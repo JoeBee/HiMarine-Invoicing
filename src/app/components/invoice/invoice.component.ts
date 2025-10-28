@@ -72,11 +72,6 @@ export class InvoiceComponent implements OnInit {
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
     ngOnInit(): void {
-        this.loggingService.logSystemEvent('component_initialized', {
-            component: 'InvoiceComponent',
-            timestamp: new Date().toISOString()
-        }, 'InvoiceComponent');
-
         // Subscribe to Excel data from captains-request component
         this.dataService.excelData$.subscribe(data => {
             if (data) {

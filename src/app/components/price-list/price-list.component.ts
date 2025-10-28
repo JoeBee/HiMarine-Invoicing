@@ -46,11 +46,6 @@ export class PriceListComponent implements OnInit, OnDestroy {
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
     ngOnInit(): void {
-        this.loggingService.logSystemEvent('component_initialized', {
-            component: 'PriceListComponent',
-            timestamp: new Date().toISOString()
-        }, 'PriceListComponent');
-
         this.dataService.processedData$.subscribe(data => {
             this.processedData = data;
             this.filteredData = [...data]; // Initialize filtered data
