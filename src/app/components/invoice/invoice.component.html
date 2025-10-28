@@ -14,6 +14,18 @@
             </div>
         </div>
 
+        <!-- Export Buttons Section -->
+        <div class="export-buttons-section">
+            <button class="export-btn excel-btn" (click)="exportInvoiceToExcel()">
+                <span class="btn-icon">📊</span>
+                Export to Excel
+            </button>
+            <button class="export-btn pdf-btn" (click)="exportInvoiceToPDF()">
+                <span class="btn-icon">📄</span>
+                Export to PDF
+            </button>
+        </div>
+
         <!-- Main Content Section -->
         <div class="main-content">
             <!-- Left Side - Bank Details -->

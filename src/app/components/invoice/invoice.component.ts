@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DataService, ProcessedDataRow, ExcelProcessedData, ExcelItemData } from '../../services/data.service';
 import { LoggingService } from '../../services/logging.service';
 import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 
@@ -382,6 +383,517 @@ export class InvoiceComponent implements OnInit {
             fileName,
             itemsIncluded: includedData.length,
             totalAmount: this.finalTotalAmount
+        }, 'InvoiceComponent');
+    }
+
+    async exportInvoiceToExcel(): Promise<void> {
+        this.loggingService.logButtonClick('export_invoice_excel', 'InvoiceComponent', {
+            totalItems: this.invoiceData.items.length,
+            totalAmount: this.invoiceData.totalGBP,
+            finalAmount: this.invoiceData.grandTotal
+        });
+
+        if (this.invoiceData.items.length === 0) {
+            this.loggingService.logUserAction('excel_export_failed', {
+                reason: 'no_items_in_invoice'
+            }, 'InvoiceComponent');
+            alert('No items in the invoice to export.');
+            return;
+        }
+
+        try {
+            // Create workbook and worksheet using ExcelJS
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Invoice');
+
+            // Remove grid lines for cleaner look
+            worksheet.properties.showGridLines = false;
+            worksheet.views = [{ showGridLines: false }];
+
+            // Load and add images
+            try {
+                // Add top logo image
+                const topImageResponse = await fetch('assets/images/HIMarineTopImage.png');
+                const topImageBuffer = await topImageResponse.arrayBuffer();
+                const topImageId = workbook.addImage({
+                    buffer: topImageBuffer,
+                    extension: 'png',
+                });
+                worksheet.addImage(topImageId, {
+                    tl: { col: 1.5, row: 0.5 }, // Moved down slightly from the very top
+                    ext: { width: 300, height: 180 } // 150% of current size: 300x180 pixels
+                });
+
+                // Add bottom border image at the end (we'll set this position later after we know the final row)
+                const bottomImageResponse = await fetch('assets/images/HIMarineBottomBorder.png');
+                const bottomImageBuffer = await bottomImageResponse.arrayBuffer();
+                const bottomImageId = workbook.addImage({
+                    buffer: bottomImageBuffer,
+                    extension: 'png',
+                });
+
+                // We'll add the bottom image after calculating all content
+                // Store the ID for later use
+                (worksheet as any)._bottomImageId = bottomImageId;
+            } catch (imageError) {
+                console.warn('Could not load images for Excel export:', imageError);
+            }
+
+            // Set column widths
+            worksheet.getColumn('A').width = 6;   // Pos
+            worksheet.getColumn('B').width = 35;  // Description  
+            worksheet.getColumn('C').width = 15;  // Remark
+            worksheet.getColumn('D').width = 8;   // Unit
+            worksheet.getColumn('E').width = 6;   // Qty
+            worksheet.getColumn('F').width = 12;  // Price
+            worksheet.getColumn('G').width = 12;  // Total
+
+            // Company Header - Left aligned in column A starting at row 9 (ALL BOLD)
+            const companyHeader = worksheet.getCell('A9');
+            companyHeader.value = 'HI MARINE COMPANY LIMITED';
+            companyHeader.font = { bold: true, size: 18, name: 'Arial' };
+            companyHeader.alignment = { horizontal: 'left' };
+
+            // Company Address - Left aligned (ALL BOLD)
+            const address1 = worksheet.getCell('A10');
+            address1.value = 'Wearfield, Enterprise Park East,';
+            address1.font = { bold: true, size: 12, name: 'Arial' };
+            address1.alignment = { horizontal: 'left' };
+
+            const address2 = worksheet.getCell('A11');
+            address2.value = 'Sunderland, Tyne and Wear, SR5 2TA';
+            address2.font = { bold: true, size: 12, name: 'Arial' };
+            address2.alignment = { horizontal: 'left' };
+
+            const country = worksheet.getCell('A12');
+            country.value = 'United Kingdom';
+            country.font = { bold: true, size: 12, name: 'Arial' };
+            country.alignment = { horizontal: 'left' };
+
+            const email = worksheet.getCell('A13');
+            email.value = 'office@himarinecompany.com';
+            email.font = { bold: true, size: 12, name: 'Arial' };
+            email.alignment = { horizontal: 'left' };
+
+            // Bank Details Section (Left side - Row 15-23)
+            const bankDetailsStart = 15;
+            const bankLabelStyle = { font: { bold: true, size: 11, name: 'Arial' } };
+            const bankValueStyle = { font: { size: 11, name: 'Arial' } };
+
+            worksheet.getCell(`A${bankDetailsStart}`).value = 'Bank Name:';
+            worksheet.getCell(`A${bankDetailsStart}`).font = bankLabelStyle.font;
+            worksheet.getCell(`B${bankDetailsStart}`).value = this.invoiceData.bankName;
+            worksheet.getCell(`B${bankDetailsStart}`).font = bankValueStyle.font;
+
+            worksheet.getCell(`A${bankDetailsStart + 1}`).value = 'Bank Address:';
+            worksheet.getCell(`A${bankDetailsStart + 1}`).font = bankLabelStyle.font;
+            worksheet.mergeCells(`B${bankDetailsStart + 1}:D${bankDetailsStart + 1}`);
+            worksheet.getCell(`B${bankDetailsStart + 1}`).value = this.invoiceData.bankAddress;
+            worksheet.getCell(`B${bankDetailsStart + 1}`).font = bankValueStyle.font;
+
+            worksheet.getCell(`A${bankDetailsStart + 2}`).value = 'IBAN:';
+            worksheet.getCell(`A${bankDetailsStart + 2}`).font = bankLabelStyle.font;
+            worksheet.mergeCells(`B${bankDetailsStart + 2}:D${bankDetailsStart + 2}`);
+            worksheet.getCell(`B${bankDetailsStart + 2}`).value = this.invoiceData.iban;
+            worksheet.getCell(`B${bankDetailsStart + 2}`).font = bankValueStyle.font;
+
+            worksheet.getCell(`A${bankDetailsStart + 3}`).value = 'Swift Code:';
+            worksheet.getCell(`A${bankDetailsStart + 3}`).font = bankLabelStyle.font;
+            worksheet.getCell(`B${bankDetailsStart + 3}`).value = this.invoiceData.swiftCode;
+            worksheet.getCell(`B${bankDetailsStart + 3}`).font = bankValueStyle.font;
+
+            worksheet.getCell(`A${bankDetailsStart + 4}`).value = 'Title on Account:';
+            worksheet.getCell(`A${bankDetailsStart + 4}`).font = bankLabelStyle.font;
+            worksheet.mergeCells(`B${bankDetailsStart + 4}:D${bankDetailsStart + 4}`);
+            worksheet.getCell(`B${bankDetailsStart + 4}`).value = this.invoiceData.accountTitle;
+            worksheet.getCell(`B${bankDetailsStart + 4}`).font = bankValueStyle.font;
+
+            worksheet.getCell(`A${bankDetailsStart + 6}`).value = 'UK DOMESTIC WIRES:';
+            worksheet.getCell(`A${bankDetailsStart + 6}`).font = { bold: true, size: 11, name: 'Arial' };
+
+            worksheet.getCell(`A${bankDetailsStart + 7}`).value = 'Account number:';
+            worksheet.getCell(`A${bankDetailsStart + 7}`).font = bankLabelStyle.font;
+            worksheet.getCell(`B${bankDetailsStart + 7}`).value = this.invoiceData.accountNumber;
+            worksheet.getCell(`B${bankDetailsStart + 7}`).font = bankValueStyle.font;
+
+            worksheet.getCell(`A${bankDetailsStart + 8}`).value = 'Sort code:';
+            worksheet.getCell(`A${bankDetailsStart + 8}`).font = bankLabelStyle.font;
+            worksheet.getCell(`B${bankDetailsStart + 8}`).value = this.invoiceData.sortCode;
+            worksheet.getCell(`B${bankDetailsStart + 8}`).font = bankValueStyle.font;
+
+            // Invoice Details Section (Right side - Row 15-21)
+            const invoiceDetailsStart = 15;
+            const invoiceLabelStyle = { font: { bold: true, size: 11, name: 'Arial' } };
+            const invoiceValueStyle = { font: { size: 11, name: 'Arial' } };
+
+            worksheet.getCell(`E${invoiceDetailsStart}`).value = 'No';
+            worksheet.getCell(`E${invoiceDetailsStart}`).font = invoiceLabelStyle.font;
+            worksheet.getCell(`F${invoiceDetailsStart}`).value = this.invoiceData.invoiceNumber;
+            worksheet.getCell(`F${invoiceDetailsStart}`).font = invoiceValueStyle.font;
+
+            worksheet.getCell(`E${invoiceDetailsStart + 1}`).value = 'Invoice Date';
+            worksheet.getCell(`E${invoiceDetailsStart + 1}`).font = invoiceLabelStyle.font;
+            worksheet.mergeCells(`F${invoiceDetailsStart + 1}:G${invoiceDetailsStart + 1}`);
+            worksheet.getCell(`F${invoiceDetailsStart + 1}`).value = this.invoiceData.invoiceDate;
+            worksheet.getCell(`F${invoiceDetailsStart + 1}`).font = invoiceValueStyle.font;
+
+            worksheet.getCell(`E${invoiceDetailsStart + 2}`).value = 'Vessel';
+            worksheet.getCell(`E${invoiceDetailsStart + 2}`).font = invoiceLabelStyle.font;
+            worksheet.getCell(`F${invoiceDetailsStart + 2}`).value = this.invoiceData.vessel;
+            worksheet.getCell(`F${invoiceDetailsStart + 2}`).font = invoiceValueStyle.font;
+
+            worksheet.getCell(`E${invoiceDetailsStart + 3}`).value = 'Country';
+            worksheet.getCell(`E${invoiceDetailsStart + 3}`).font = invoiceLabelStyle.font;
+            worksheet.getCell(`F${invoiceDetailsStart + 3}`).value = this.invoiceData.country;
+            worksheet.getCell(`F${invoiceDetailsStart + 3}`).font = invoiceValueStyle.font;
+
+            worksheet.getCell(`E${invoiceDetailsStart + 4}`).value = 'Port';
+            worksheet.getCell(`E${invoiceDetailsStart + 4}`).font = invoiceLabelStyle.font;
+            worksheet.getCell(`F${invoiceDetailsStart + 4}`).value = this.invoiceData.port;
+            worksheet.getCell(`F${invoiceDetailsStart + 4}`).font = invoiceValueStyle.font;
+
+            worksheet.getCell(`E${invoiceDetailsStart + 5}`).value = 'Category';
+            worksheet.getCell(`E${invoiceDetailsStart + 5}`).font = invoiceLabelStyle.font;
+            worksheet.getCell(`F${invoiceDetailsStart + 5}`).value = this.invoiceData.category;
+            worksheet.getCell(`F${invoiceDetailsStart + 5}`).font = invoiceValueStyle.font;
+
+            worksheet.getCell(`E${invoiceDetailsStart + 6}`).value = 'Invoice Due';
+            worksheet.getCell(`E${invoiceDetailsStart + 6}`).font = invoiceLabelStyle.font;
+            worksheet.getCell(`F${invoiceDetailsStart + 6}`).value = this.invoiceData.invoiceDue;
+            worksheet.getCell(`F${invoiceDetailsStart + 6}`).font = invoiceValueStyle.font;
+
+            // Items Table (Starting from row 25)
+            const tableStartRow = 25;
+
+            // Table Headers
+            const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
+            headers.forEach((header, index) => {
+                const cell = worksheet.getCell(tableStartRow, index + 1);
+                cell.value = header;
+                cell.font = { bold: true, size: 11, name: 'Arial', color: { argb: 'FFFFFFFF' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF000000' } } as any;
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                } as any;
+            });
+
+            // Table Data
+            this.invoiceData.items.forEach((item, index) => {
+                const rowIndex = tableStartRow + 1 + index;
+
+                // Pos
+                const posCell = worksheet.getCell(rowIndex, 1);
+                posCell.value = item.pos;
+                posCell.font = { size: 10, name: 'Arial' };
+                posCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                posCell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                } as any;
+
+                // Description
+                const descCell = worksheet.getCell(rowIndex, 2);
+                descCell.value = item.description;
+                descCell.font = { size: 10, name: 'Arial' };
+                descCell.alignment = { horizontal: 'left', vertical: 'middle' };
+                descCell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                } as any;
+
+                // Remark
+                const remarkCell = worksheet.getCell(rowIndex, 3);
+                remarkCell.value = item.remark;
+                remarkCell.font = { size: 10, name: 'Arial' };
+                remarkCell.alignment = { horizontal: 'left', vertical: 'middle' };
+                remarkCell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                } as any;
+
+                // Unit
+                const unitCell = worksheet.getCell(rowIndex, 4);
+                unitCell.value = item.unit;
+                unitCell.font = { size: 10, name: 'Arial' };
+                unitCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                unitCell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                } as any;
+
+                // Qty
+                const qtyCell = worksheet.getCell(rowIndex, 5);
+                qtyCell.value = item.qty;
+                qtyCell.font = { size: 10, name: 'Arial' };
+                qtyCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                qtyCell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                } as any;
+
+                // Price
+                const priceCell = worksheet.getCell(rowIndex, 6);
+                priceCell.value = item.price;
+                priceCell.font = { size: 10, name: 'Arial' };
+                priceCell.alignment = { horizontal: 'right', vertical: 'middle' };
+                priceCell.numFmt = '£#,##0.00';
+                priceCell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                } as any;
+
+                // Total
+                const totalCell = worksheet.getCell(rowIndex, 7);
+                totalCell.value = item.total;
+                totalCell.font = { size: 10, name: 'Arial' };
+                totalCell.alignment = { horizontal: 'right', vertical: 'middle' };
+                totalCell.numFmt = '£#,##0.00';
+                totalCell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                } as any;
+            });
+
+            // Totals Section
+            const totalsStartRow = tableStartRow + this.invoiceData.items.length + 3;
+
+            // TOTAL GBP
+            worksheet.getCell(`F${totalsStartRow}`).value = 'TOTAL GBP';
+            worksheet.getCell(`F${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
+            worksheet.getCell(`F${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
+            worksheet.getCell(`G${totalsStartRow}`).value = this.invoiceData.totalGBP;
+            worksheet.getCell(`G${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
+            worksheet.getCell(`G${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
+            worksheet.getCell(`G${totalsStartRow}`).numFmt = '£#,##0.00';
+
+            // Delivery fee
+            worksheet.getCell(`F${totalsStartRow + 1}`).value = 'Delivery fee';
+            worksheet.getCell(`F${totalsStartRow + 1}`).font = { bold: true, size: 11, name: 'Arial' };
+            worksheet.getCell(`F${totalsStartRow + 1}`).alignment = { horizontal: 'right', vertical: 'middle' };
+            worksheet.getCell(`G${totalsStartRow + 1}`).value = this.invoiceData.deliveryFee;
+            worksheet.getCell(`G${totalsStartRow + 1}`).font = { bold: true, size: 11, name: 'Arial' };
+            worksheet.getCell(`G${totalsStartRow + 1}`).alignment = { horizontal: 'right', vertical: 'middle' };
+            worksheet.getCell(`G${totalsStartRow + 1}`).numFmt = '£#,##0.00';
+
+            // Grand Total
+            worksheet.getCell(`G${totalsStartRow + 2}`).value = this.invoiceData.grandTotal;
+            worksheet.getCell(`G${totalsStartRow + 2}`).font = { bold: true, size: 12, name: 'Arial' };
+            worksheet.getCell(`G${totalsStartRow + 2}`).alignment = { horizontal: 'right', vertical: 'middle' };
+            worksheet.getCell(`G${totalsStartRow + 2}`).numFmt = '£#,##0.00';
+
+            // Terms and Conditions
+            const termsStartRow = totalsStartRow + 5;
+            worksheet.mergeCells(`A${termsStartRow}:G${termsStartRow}`);
+            worksheet.getCell(`A${termsStartRow}`).value = 'By placing the order according to the above quotation you are accepting the following terms:';
+            worksheet.getCell(`A${termsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
+
+            const terms = [
+                'I.    Credit days: 30 calendar days.',
+                'II.   Accounts not paid in this time frame will be charged 10% interest rate per month, any discount given will be null and void.',
+                'III.  Should collection or legal action be required to collect past dues, fees for such action will be added to your account.',
+                'IV.   Subject to unsold. Final weights are subject to vendor packing standards.',
+                'V.    If the transaction is canceled after the order is authorized, we have the right to collect the invoice without claim.'
+            ];
+
+            terms.forEach((term, index) => {
+                worksheet.mergeCells(`A${termsStartRow + 1 + index}:G${termsStartRow + 1 + index}`);
+                worksheet.getCell(`A${termsStartRow + 1 + index}`).value = term;
+                worksheet.getCell(`A${termsStartRow + 1 + index}`).font = { size: 10, name: 'Arial' };
+            });
+
+            // Add bottom image
+            const bottomImageRowPosition = termsStartRow + terms.length + 3; // Add some spacing
+            if ((worksheet as any)._bottomImageId) {
+                worksheet.addImage((worksheet as any)._bottomImageId, {
+                    tl: { col: 0, row: bottomImageRowPosition }, // Position at bottom
+                    ext: { width: 667, height: 80 } // 2/3 of previous width: 667x80 pixels
+                });
+            }
+
+            // Generate Excel file
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+
+            // Download file
+            const fileName = `HIMarine_Invoice_${this.invoiceData.invoiceNumber}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            saveAs(blob, fileName);
+
+            this.loggingService.logExport('excel_invoice_exported', {
+                fileName,
+                fileSize: blob.size,
+                itemsIncluded: this.invoiceData.items.length,
+                totalAmount: this.invoiceData.grandTotal
+            }, 'InvoiceComponent');
+
+        } catch (error) {
+            this.loggingService.logError(error as Error, 'excel_export', 'InvoiceComponent');
+            alert('An error occurred while exporting to Excel. Please try again.');
+        }
+    }
+
+    exportInvoiceToPDF(): void {
+        this.loggingService.logButtonClick('export_invoice_pdf', 'InvoiceComponent', {
+            totalItems: this.invoiceData.items.length,
+            totalAmount: this.invoiceData.totalGBP,
+            finalAmount: this.invoiceData.grandTotal
+        });
+
+        if (this.invoiceData.items.length === 0) {
+            this.loggingService.logUserAction('pdf_export_failed', {
+                reason: 'no_items_in_invoice'
+            }, 'InvoiceComponent');
+            alert('No items in the invoice to export.');
+            return;
+        }
+
+        // Create new PDF document
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 15;
+
+        // Add company header
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text('HI MARINE COMPANY LIMITED', pageWidth / 2, 20, { align: 'center' });
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Wearfield, Enterprise Park East, Sunderland, Tyne and Wear, SR5 2TA', pageWidth / 2, 30, { align: 'center' });
+        doc.text('United Kingdom', pageWidth / 2, 35, { align: 'center' });
+        doc.text('office@himarinecompany.com', pageWidth / 2, 40, { align: 'center' });
+
+        // Invoice details - Left side
+        let yPos = 55;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Invoice Details:', margin, yPos);
+
+        yPos += 10;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Invoice No: ${this.invoiceData.invoiceNumber}`, margin, yPos);
+        yPos += 7;
+        doc.text(`Invoice Date: ${this.invoiceData.invoiceDate}`, margin, yPos);
+        yPos += 7;
+        doc.text(`Vessel: ${this.invoiceData.vessel}`, margin, yPos);
+        yPos += 7;
+        doc.text(`Country: ${this.invoiceData.country}`, margin, yPos);
+        yPos += 7;
+        doc.text(`Port: ${this.invoiceData.port}`, margin, yPos);
+        yPos += 7;
+        doc.text(`Category: ${this.invoiceData.category}`, margin, yPos);
+        yPos += 7;
+        doc.text(`Invoice Due: ${this.invoiceData.invoiceDue}`, margin, yPos);
+
+        // Bank details - Right side
+        yPos = 55;
+        const rightMargin = pageWidth / 2 + 10;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Bank Details:', rightMargin, yPos);
+
+        yPos += 10;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Bank Name: ${this.invoiceData.bankName}`, rightMargin, yPos);
+        yPos += 7;
+        doc.text(`Bank Address: ${this.invoiceData.bankAddress}`, rightMargin, yPos, { maxWidth: pageWidth / 2 - 20 });
+        yPos += 14;
+        doc.text(`IBAN: ${this.invoiceData.iban}`, rightMargin, yPos);
+        yPos += 7;
+        doc.text(`Swift Code: ${this.invoiceData.swiftCode}`, rightMargin, yPos);
+        yPos += 7;
+        doc.text(`Account Title: ${this.invoiceData.accountTitle}`, rightMargin, yPos, { maxWidth: pageWidth / 2 - 20 });
+        yPos += 14;
+        doc.text(`Account Number: ${this.invoiceData.accountNumber}`, rightMargin, yPos);
+        yPos += 7;
+        doc.text(`Sort Code: ${this.invoiceData.sortCode}`, rightMargin, yPos);
+
+        // Items table
+        yPos = 140;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Items:', margin, yPos);
+
+        yPos += 10;
+        // Table header
+        const colWidths = [20, 60, 30, 20, 20, 25, 25];
+        const colPositions = [margin];
+        for (let i = 1; i < colWidths.length; i++) {
+            colPositions.push(colPositions[i - 1] + colWidths[i - 1]);
+        }
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
+        headers.forEach((header, index) => {
+            doc.text(header, colPositions[index], yPos);
+        });
+
+        // Draw header line
+        doc.line(margin, yPos + 3, pageWidth - margin, yPos + 3);
+        yPos += 10;
+
+        // Table rows
+        doc.setFont('helvetica', 'normal');
+        this.invoiceData.items.forEach((item) => {
+            if (yPos > doc.internal.pageSize.getHeight() - 50) {
+                doc.addPage();
+                yPos = 20;
+            }
+
+            doc.text(item.pos.toString(), colPositions[0], yPos);
+            doc.text(item.description.substring(0, 25) + (item.description.length > 25 ? '...' : ''), colPositions[1], yPos);
+            doc.text(item.remark.substring(0, 12) + (item.remark.length > 12 ? '...' : ''), colPositions[2], yPos);
+            doc.text(item.unit, colPositions[3], yPos);
+            doc.text(item.qty.toString(), colPositions[4], yPos);
+            doc.text(`£${item.price.toFixed(2)}`, colPositions[5], yPos);
+            doc.text(`£${item.total.toFixed(2)}`, colPositions[6], yPos);
+
+            yPos += 8;
+        });
+
+        // Totals
+        yPos += 10;
+        doc.line(margin, yPos, pageWidth - margin, yPos);
+        yPos += 10;
+
+        doc.setFont('helvetica', 'bold');
+        doc.text(`TOTAL GBP: £${this.invoiceData.totalGBP.toFixed(2)}`, pageWidth - 80, yPos);
+        yPos += 8;
+        doc.text(`Delivery fee: £${this.invoiceData.deliveryFee.toFixed(2)}`, pageWidth - 80, yPos);
+        yPos += 8;
+        doc.setFontSize(12);
+        doc.text(`GRAND TOTAL: £${this.invoiceData.grandTotal.toFixed(2)}`, pageWidth - 90, yPos);
+
+        // Save the PDF
+        const fileName = `HIMarine_Invoice_${this.invoiceData.invoiceNumber}_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(fileName);
+
+        this.loggingService.logExport('pdf_invoice_exported', {
+            fileName,
+            itemsIncluded: this.invoiceData.items.length,
+            totalAmount: this.invoiceData.grandTotal
         }, 'InvoiceComponent');
     }
 }
