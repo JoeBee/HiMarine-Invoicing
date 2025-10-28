@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, ProcessedDataRow } from '../../services/data.service';
 import { LoggingService } from '../../services/logging.service';
+import { FRESH_PROVISIONS_LIST } from '../../constants/fresh-provisions.constants';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
@@ -893,21 +894,8 @@ export class PriceListComponent implements OnInit, OnDestroy {
             return false;
         }
 
-        const freshProvisionsList = [
-            'APPLES', 'AVOCADO', 'BANANAS', 'BEANS', 'BEETROOTS', 'BROCOLI', 'BULGOR',
-            'CABBAGE', 'CARROTS', 'CASSAVA', 'CAULIFLOWER', 'CELERY', 'CHARCOAL',
-            'CHICKPEAS', 'COCO', 'CORN', 'CUCUMBERS', 'DILL', 'EGGPLANTS', 'ENDIVES',
-            'FLOUR', 'FRIES', 'GARLIC', 'GINGER', 'GRAPEFRUITS', 'GRAPES', 'GUAVA',
-            'KALE', 'KIWI', 'LEEKS', 'LEMONGRASS', 'LEMONS', 'LENTILS', 'LETTUCE',
-            'LIME', 'MACARONI', 'MANGO', 'MARROWS', 'MELON', 'MINT', 'MUSHROOMS',
-            'NOODLES', 'ONIONS', 'ORANGES', 'PAPAYA', 'PARSLEY', 'PEARS', 'PEAS',
-            'PEPPER', 'PINEAPPLES', 'POTATOES', 'PUMPKINS', 'RADISHES', 'RICE',
-            'SEMOLINA', 'SPAGHETTIES', 'SPINACH', 'SPROUT', 'STARCH', 'SWISSCHARD',
-            'TANGERINES', 'TOMATOES', 'VEGETABLES', 'WHEAT', 'ZUCCHINI'
-        ];
-
         const desc = item.description.toUpperCase();
-        return freshProvisionsList.some(keyword => desc.includes(keyword));
+        return FRESH_PROVISIONS_LIST.some(keyword => desc.includes(keyword));
     }
 
     private isBondItem(item: ProcessedDataRow): boolean {
