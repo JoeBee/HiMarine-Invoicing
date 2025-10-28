@@ -78,16 +78,16 @@ header {
 
     // History tab - Green theme
     a:last-child {
-        color: #388e3c;
+        color: #2e7d32;
 
         &:hover {
             color: #1b5e20;
-            background-color: #e8f5e8;
+            background-color: #e0f2e0;
         }
 
         &.active {
             color: #1b5e20;
-            background-color: #e8f5e8;
+            background-color: #e0f2e0;
         }
     }
 }

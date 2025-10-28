@@ -1,61 +1,64 @@
 <div class="captains-request-container">
-    <h1>Captain's Request</h1>
+    <div class="content-wrapper">
+        <h1>Captain's Request</h1>
 
-    <!-- Dropzone for Excel file upload -->
-    <div class="dropzone-container">
-        <div class="dropzone" [class.drag-over]="isDragOver" (dragover)="onDragOver($event)"
-            (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="fileInput.click()">
-            <div class="dropzone-content">
-                <i class="upload-icon">📁</i>
-                <p class="dropzone-text">
-                    {{ uploadedFile ? uploadedFile.name : 'Drop Excel file here or click to browse' }}
-                </p>
-                <p class="dropzone-subtext">Only .xlsx and .xls files are accepted</p>
+        <!-- Dropzone for Excel file upload -->
+        <div class="dropzone-container">
+            <div class="dropzone" [class.drag-over]="isDragOver" (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="fileInput.click()">
+                <div class="dropzone-content">
+                    <i class="upload-icon">📁</i>
+                    <p class="dropzone-text">
+                        {{ uploadedFile ? uploadedFile.name : 'Drop Excel file here or click to browse' }}
+                    </p>
+                    <p class="dropzone-subtext">Only .xlsx and .xls files are accepted</p>
+                </div>
+            </div>
+            <input #fileInput type="file" accept=".xlsx,.xls" (change)="onFileSelected($event)" style="display: none;">
+        </div>
+
+        <!-- Processing status -->
+        <div *ngIf="isProcessing" class="processing-status">
+            <div class="spinner"></div>
+            <p>Processing Excel file...</p>
+        </div>
+
+        <!-- Results display -->
+        <div *ngIf="excelData && !isProcessing" class="results-container">
+            <h2>Excel File Analysis Results</h2>
+
+            <div class="results-table-container">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Tab Name</th>
+                            <th>Count of Items</th>
+                            <th>Sum of All Totals</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let tab of ['PROVISIONS', 'FRESH PROVISIONS', 'BOND']">
+                            <td *ngIf="excelData[tab]" class="tab-name">{{ tab }}</td>
+                            <td *ngIf="excelData[tab]" class="records-count">{{ excelData[tab].recordsWithTotal }}</td>
+                            <td *ngIf="excelData[tab]" class="total-amount">${{ excelData[tab].sumOfTotals |
+                                number:'1.2-2'
+                                }}</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td><strong>Grand Total</strong></td>
+                            <td><strong>{{ getTotalRecords() }}</strong></td>
+                            <td><strong>${{ getGrandTotal() | number:'1.2-2' }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         </div>
-        <input #fileInput type="file" accept=".xlsx,.xls" (change)="onFileSelected($event)" style="display: none;">
-    </div>
 
-    <!-- Processing status -->
-    <div *ngIf="isProcessing" class="processing-status">
-        <div class="spinner"></div>
-        <p>Processing Excel file...</p>
-    </div>
-
-    <!-- Results display -->
-    <div *ngIf="excelData && !isProcessing" class="results-container">
-        <h2>Excel File Analysis Results</h2>
-
-        <div class="results-table-container">
-            <table class="results-table">
-                <thead>
-                    <tr>
-                        <th>Tab Name</th>
-                        <th>Count of Items</th>
-                        <th>Sum of All Totals</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let tab of ['PROVISIONS', 'FRESH PROVISIONS', 'BOND']">
-                        <td *ngIf="excelData[tab]" class="tab-name">{{ tab }}</td>
-                        <td *ngIf="excelData[tab]" class="records-count">{{ excelData[tab].recordsWithTotal }}</td>
-                        <td *ngIf="excelData[tab]" class="total-amount">${{ excelData[tab].sumOfTotals | number:'1.2-2'
-                            }}</td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr class="total-row">
-                        <td><strong>Grand Total</strong></td>
-                        <td><strong>{{ getTotalRecords() }}</strong></td>
-                        <td><strong>${{ getGrandTotal() | number:'1.2-2' }}</strong></td>
-                    </tr>
-                </tfoot>
-            </table>
+        <!-- Error display -->
+        <div *ngIf="errorMessage" class="error-message">
+            <p>{{ errorMessage }}</p>
         </div>
-    </div>
-
-    <!-- Error display -->
-    <div *ngIf="errorMessage" class="error-message">
-        <p>{{ errorMessage }}</p>
     </div>
 </div>

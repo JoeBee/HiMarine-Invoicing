@@ -1,7 +1,14 @@
 .history-container {
-    padding: 20px;
-    max-width: 1400px;
-    margin: 0 auto;
+    background-color: #f0fff0;
+    /* Very light green background - more distinctly green */
+    min-height: calc(100vh - 120px);
+    margin: -40px -20px;
+    padding: 60px 40px;
+
+    .content-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
 }
 
 .history-header {
