@@ -30,13 +30,6 @@ export class AppComponent {
             .subscribe((event) => {
                 const navigationEvent = event as NavigationEnd;
                 this.updateActiveMainTab(navigationEvent.url);
-
-                // Log navigation
-                this.loggingService.logNavigation(
-                    this.router.url,
-                    navigationEvent.url,
-                    'AppComponent'
-                );
             });
     }
 

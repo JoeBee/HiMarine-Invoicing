@@ -6,7 +6,7 @@ export interface LogEntry {
     id?: string;
     timestamp: Date;
     level: 'info' | 'warn' | 'error' | 'debug';
-    category: 'user_action' | 'file_upload' | 'data_processing' | 'export' | 'navigation' | 'error' | 'system';
+    category: 'user_action' | 'file_upload' | 'data_processing' | 'export' | 'error' | 'system';
     action: string;
     details: any;
     userId?: string;
@@ -127,21 +127,46 @@ export class LoggingService {
         this.addToQueue(logEntry);
     }
 
-    logNavigation(fromUrl: string, toUrl: string, component: string): void {
-        const logEntry = this.createLogEntry('info', 'navigation', 'navigation', {
-            fromUrl,
-            toUrl
-        }, component);
-        this.addToQueue(logEntry);
-    }
 
-    logError(error: Error, context: string, component: string, additionalDetails?: any): void {
+    logError(error: Error | string, context: string, component: string, additionalDetails?: any): void {
+        let errorMessage: string;
+        let errorStack: string | undefined;
+        let errorName: string | undefined;
+
+        if (error instanceof Error) {
+            errorMessage = error.message;
+            errorStack = error.stack;
+            errorName = error.name;
+        } else {
+            errorMessage = error;
+            errorStack = undefined;
+            errorName = 'StringError';
+        }
+
         const logEntry = this.createLogEntry('error', 'error', 'error_occurred', {
-            errorMessage: error.message,
-            errorStack: error.stack,
+            errorMessage,
+            errorStack,
+            errorName,
             context,
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            url: window.location.href,
+            screenResolution: `${screen.width}x${screen.height}`,
+            windowSize: `${window.innerWidth}x${window.innerHeight}`,
+            language: navigator.language,
+            platform: navigator.platform,
+            cookieEnabled: navigator.cookieEnabled,
+            onLine: navigator.onLine,
             additionalDetails
         }, component);
+
+        // Also log to console for immediate debugging
+        console.error(`[${component}] ${context}:`, {
+            error: error instanceof Error ? error : new Error(error),
+            additionalDetails,
+            timestamp: new Date().toISOString()
+        });
+
         this.addToQueue(logEntry);
     }
 
@@ -248,6 +273,13 @@ export class LoggingService {
             return logs;
         } catch (error) {
             console.error('Error fetching logs:', error);
+            // Create a temporary log entry for this error without adding to queue to avoid recursion
+            console.error('[LoggingService] Failed to retrieve logs from Firestore:', {
+                error: error instanceof Error ? error : new Error(String(error)),
+                limitCount,
+                timestamp: new Date().toISOString(),
+                url: window.location.href
+            });
             return [];
         }
     }
@@ -287,6 +319,14 @@ export class LoggingService {
             return logs;
         } catch (error) {
             console.error('Error fetching logs by category:', error);
+            // Create a temporary log entry for this error without adding to queue to avoid recursion
+            console.error('[LoggingService] Failed to retrieve logs by category from Firestore:', {
+                error: error instanceof Error ? error : new Error(String(error)),
+                category,
+                limitCount,
+                timestamp: new Date().toISOString(),
+                url: window.location.href
+            });
             return [];
         }
     }
@@ -327,6 +367,15 @@ export class LoggingService {
             return logs;
         } catch (error) {
             console.error('Error fetching logs by date range:', error);
+            // Create a temporary log entry for this error without adding to queue to avoid recursion
+            console.error('[LoggingService] Failed to retrieve logs by date range from Firestore:', {
+                error: error instanceof Error ? error : new Error(String(error)),
+                startDate: startDate.toISOString(),
+                endDate: endDate.toISOString(),
+                limitCount,
+                timestamp: new Date().toISOString(),
+                url: window.location.href
+            });
             return [];
         }
     }

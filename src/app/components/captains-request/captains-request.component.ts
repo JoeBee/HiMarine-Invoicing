@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService, ExcelProcessedData, ExcelItemData } from '../../services/data.service';
+import { LoggingService } from '../../services/logging.service';
 import * as XLSX from 'xlsx';
 
 interface TabData {
@@ -26,7 +27,13 @@ export class CaptainsRequestComponent {
     excelData: ExcelData | null = null;
     errorMessage = '';
 
-    constructor(private dataService: DataService) { }
+    constructor(private dataService: DataService, private loggingService: LoggingService) {
+        // Log component initialization
+        this.loggingService.logSystemEvent('component_initialized', {
+            component: 'CaptainsRequestComponent',
+            timestamp: new Date().toISOString()
+        }, 'CaptainsRequestComponent');
+    }
 
     onDragOver(event: DragEvent): void {
         event.preventDefault();
@@ -59,6 +66,9 @@ export class CaptainsRequestComponent {
     }
 
     private handleFile(file: File): void {
+        // Log file upload attempt
+        this.loggingService.logFileUpload(file.name, file.size, file.type, 'captains_request', 'CaptainsRequestComponent');
+
         // Validate file type
         const validTypes = [
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
@@ -67,6 +77,17 @@ export class CaptainsRequestComponent {
 
         if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls)$/i)) {
             this.errorMessage = 'Please upload a valid Excel file (.xlsx or .xls)';
+            this.loggingService.logError(
+                `Invalid file type: ${file.type}`,
+                'file_validation',
+                'CaptainsRequestComponent',
+                {
+                    fileName: file.name,
+                    fileSize: file.size,
+                    fileType: file.type,
+                    expectedTypes: validTypes
+                }
+            );
             return;
         }
 
@@ -87,8 +108,19 @@ export class CaptainsRequestComponent {
             const detailedData = await this.readExcelFileWithItems(file);
             this.dataService.setExcelData(detailedData);
         } catch (error) {
-            console.error('Error processing Excel file:', error);
             this.errorMessage = 'Error processing Excel file. Please ensure it has the required tabs and format.';
+            this.loggingService.logError(
+                error as Error,
+                'excel_file_processing',
+                'CaptainsRequestComponent',
+                {
+                    fileName: file.name,
+                    fileSize: file.size,
+                    fileType: file.type,
+                    processingStep: 'excel_processing',
+                    expectedTabs: ['COVER SHEET', 'PROVISIONS', 'FRESH PROVISIONS', 'BOND']
+                }
+            );
         } finally {
             this.isProcessing = false;
         }
@@ -116,11 +148,35 @@ export class CaptainsRequestComponent {
 
                     resolve(result);
                 } catch (error) {
+                    this.loggingService.logError(
+                        error as Error,
+                        'excel_file_reading',
+                        'CaptainsRequestComponent',
+                        {
+                            fileName: file.name,
+                            processingStep: 'read_excel_file',
+                            requiredTabs: ['COVER SHEET', 'PROVISIONS', 'FRESH PROVISIONS', 'BOND']
+                        }
+                    );
                     reject(error);
                 }
             };
 
-            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.onerror = () => {
+                const error = new Error('Failed to read file');
+                this.loggingService.logError(
+                    error,
+                    'file_reader_error',
+                    'CaptainsRequestComponent',
+                    {
+                        fileName: file.name,
+                        fileSize: file.size,
+                        fileType: file.type,
+                        readerType: 'FileReader'
+                    }
+                );
+                reject(error);
+            };
             reader.readAsBinaryString(file);
         });
     }
@@ -147,11 +203,36 @@ export class CaptainsRequestComponent {
 
                     resolve(result);
                 } catch (error) {
+                    this.loggingService.logError(
+                        error as Error,
+                        'excel_file_reading_with_items',
+                        'CaptainsRequestComponent',
+                        {
+                            fileName: file.name,
+                            processingStep: 'read_excel_file_with_items',
+                            requiredTabs: ['COVER SHEET', 'PROVISIONS', 'FRESH PROVISIONS', 'BOND']
+                        }
+                    );
                     reject(error);
                 }
             };
 
-            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.onerror = () => {
+                const error = new Error('Failed to read file with items');
+                this.loggingService.logError(
+                    error,
+                    'file_reader_error_with_items',
+                    'CaptainsRequestComponent',
+                    {
+                        fileName: file.name,
+                        fileSize: file.size,
+                        fileType: file.type,
+                        readerType: 'FileReader',
+                        processingMode: 'with_items'
+                    }
+                );
+                reject(error);
+            };
             reader.readAsBinaryString(file);
         });
     }

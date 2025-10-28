@@ -19,13 +19,12 @@
     .top-section {
         display: flex;
         align-items: flex-start;
+        justify-content: space-between;
         margin-bottom: 30px;
         border-bottom: 2px solid #000;
         padding-bottom: 20px;
 
         .company-logo {
-            margin-right: 30px;
-
             .top-logo {
                 height: 80px;
                 width: auto;
@@ -33,6 +32,8 @@
         }
 
         .company-info {
+            text-align: right;
+
             h1 {
                 font-size: 24px;
                 font-weight: bold;
@@ -205,21 +206,10 @@
         border-top: 2px solid #000;
         padding-top: 20px;
 
-        .bottom-logo {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            .company-name {
-                font-size: 18px;
-                font-weight: bold;
-                color: #000;
-            }
-
-            .bottom-logo {
-                height: 40px;
-                width: auto;
-            }
+        .bottom-logo-image {
+            width: 100%;
+            height: auto;
+            display: block;
         }
     }
 }

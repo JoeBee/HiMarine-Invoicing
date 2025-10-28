@@ -13,7 +13,6 @@ The application now includes a complete logging system that captures all user in
 - **File Operations**: File uploads, downloads, processing
 - **Data Processing**: File analysis, data transformation, calculations
 - **Exports**: Excel and PDF generation
-- **Navigation**: Route changes, tab switches
 - **Errors**: Application errors with context and stack traces
 - **System Events**: Component initialization, data updates
 
@@ -22,8 +21,7 @@ The application now includes a complete logging system that captures all user in
 - `file_upload`: File upload and processing events
 - `data_processing`: Data transformation and analysis
 - `export`: File generation and downloads
-- `navigation`: Route and tab navigation
-- `error`: Application errors and exceptions
+- `error`: Application errors and exceptions (with comprehensive error details)
 - `system`: System-level events and initialization
 
 ### 3. Log Levels
@@ -51,11 +49,9 @@ logDataProcessing(action: string, details: any, component: string)
 // Exports
 logExport(action: string, details: any, component: string)
 
-// Navigation
-logNavigation(fromUrl: string, toUrl: string, component: string)
 
-// Errors
-logError(error: Error, context: string, component: string, additionalDetails?: any)
+// Errors (Enhanced with comprehensive information)
+logError(error: Error | string, context: string, component: string, additionalDetails?: any)
 
 // Button clicks
 logButtonClick(buttonName: string, component: string, additionalDetails?: any)
@@ -118,7 +114,7 @@ The History tab (`src/app/components/history/history.component.ts`) provides:
 - **Export**: Download logs as CSV files
 
 #### Filter Options
-- Category: user_action, file_upload, data_processing, export, navigation, error, system
+- Category: user_action, file_upload, data_processing, export, error, system
 - Level: info, warn, error, debug
 - Component: All Angular components
 - Date Range: Start and end date selection
@@ -220,6 +216,38 @@ Update the Firebase configuration in environment files with your actual API keys
 - Regularly review security rules
 - Monitor for suspicious activity
 - Implement proper access controls
+
+## Enhanced Error Logging
+
+The logging system now provides comprehensive error information including:
+
+### Error Information Captured
+- **Error Message**: The actual error message
+- **Error Stack**: Full stack trace for debugging
+- **Error Name**: Type of error (e.g., TypeError, ReferenceError)
+- **Context**: Specific context where the error occurred
+- **Environment Details**:
+  - Timestamp (ISO format)
+  - User Agent (browser information)
+  - Current URL
+  - Screen resolution
+  - Window size
+  - Language settings
+  - Platform information
+  - Cookie and online status
+- **Additional Details**: Custom context provided by the component
+
+### Error Logging Methods
+- Accepts both `Error` objects and string messages
+- Automatically logs to console for immediate debugging
+- Stores comprehensive information in Firestore
+- Includes component-specific context
+
+### Error Logging Best Practices
+1. Always provide meaningful context strings
+2. Include relevant additional details (file names, operation types, etc.)
+3. Log errors at the point where they can be handled meaningfully
+4. Use consistent error categories across components
 
 ## Future Enhancements
 

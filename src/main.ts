@@ -12,5 +12,12 @@ bootstrapApplication(AppComponent, {
         provideFirebaseApp(() => initializeApp(environment.firebase)),
         provideFirestore(() => getFirestore())
     ]
-}).catch(err => console.error(err));
+}).catch(err => {
+    console.error('Application bootstrap failed:', {
+        error: err,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        url: window.location.href
+    });
+});
 

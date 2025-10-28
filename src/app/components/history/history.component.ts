@@ -64,7 +64,22 @@ export class HistoryComponent implements OnInit, OnDestroy {
             this.updatePagination();
         } catch (error) {
             this.error = 'Failed to load logs. Please try again.';
-            console.error('Error loading logs:', error);
+            this.loggingService.logError(
+                error as Error,
+                'log_loading_failure',
+                'HistoryComponent',
+                {
+                    attempted_limit: 1000,
+                    current_logs_count: this.logs.length,
+                    filters: {
+                        category: this.selectedCategory,
+                        level: this.selectedLevel,
+                        component: this.selectedComponent,
+                        searchText: this.searchText,
+                        dateRange: this.dateRange
+                    }
+                }
+            );
         } finally {
             this.isLoading = false;
         }
@@ -175,7 +190,6 @@ export class HistoryComponent implements OnInit, OnDestroy {
             case 'file_upload': return '📁';
             case 'data_processing': return '⚙️';
             case 'export': return '📤';
-            case 'navigation': return '🧭';
             case 'error': return '❌';
             case 'system': return '🔧';
             default: return '📝';
@@ -228,12 +242,6 @@ export class HistoryComponent implements OnInit, OnDestroy {
                     return `Export generated: ${details.format.toUpperCase()}`;
                 }
                 return `Export: ${action.replace(/_/g, ' ')}`;
-
-            case 'navigation':
-                if (details && details.route) {
-                    return `Navigated to: ${details.route}`;
-                }
-                return `Navigation: ${action.replace(/_/g, ' ')}`;
 
             case 'error':
                 if (details && details.error) {
