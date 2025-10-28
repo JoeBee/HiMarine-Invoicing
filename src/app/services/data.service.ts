@@ -32,6 +32,24 @@ export interface ProcessedDataRow {
     originalHeaders?: string[]; // Store original column headers
 }
 
+export interface ExcelItemData {
+    pos: number;
+    description: string;
+    remark: string;
+    unit: string;
+    qty: number;
+    price: number;
+    total: number;
+}
+
+export interface ExcelProcessedData {
+    [tabName: string]: {
+        recordsWithTotal: number;
+        sumOfTotals: number;
+        items: ExcelItemData[];
+    };
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -39,10 +57,12 @@ export class DataService {
     private supplierFilesSubject = new BehaviorSubject<SupplierFileInfo[]>([]);
     private processedDataSubject = new BehaviorSubject<ProcessedDataRow[]>([]);
     private priceMultipleSubject = new BehaviorSubject<number>(1.22);
+    private excelDataSubject = new BehaviorSubject<ExcelProcessedData | null>(null);
 
     supplierFiles$: Observable<SupplierFileInfo[]> = this.supplierFilesSubject.asObservable();
     processedData$: Observable<ProcessedDataRow[]> = this.processedDataSubject.asObservable();
     priceMultiple$: Observable<number> = this.priceMultipleSubject.asObservable();
+    excelData$: Observable<ExcelProcessedData | null> = this.excelDataSubject.asObservable();
 
     constructor() { }
 
@@ -361,6 +381,18 @@ export class DataService {
 
     getPriceMultiple(): number {
         return this.priceMultipleSubject.value;
+    }
+
+    setExcelData(data: ExcelProcessedData): void {
+        this.excelDataSubject.next(data);
+    }
+
+    getExcelData(): ExcelProcessedData | null {
+        return this.excelDataSubject.value;
+    }
+
+    clearExcelData(): void {
+        this.excelDataSubject.next(null);
     }
 }
 

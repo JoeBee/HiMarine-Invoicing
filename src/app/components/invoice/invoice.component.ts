@@ -1,21 +1,73 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DataService, ProcessedDataRow } from '../../services/data.service';
+import { FormsModule } from '@angular/forms';
+import { DataService, ProcessedDataRow, ExcelProcessedData, ExcelItemData } from '../../services/data.service';
 import { LoggingService } from '../../services/logging.service';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 
+interface InvoiceItem {
+    pos: number;
+    description: string;
+    remark: string;
+    unit: string;
+    qty: number;
+    price: number;
+    total: number;
+}
+
+interface InvoiceData {
+    invoiceNumber: string;
+    invoiceDate: string;
+    vessel: string;
+    country: string;
+    port: string;
+    category: string;
+    invoiceDue: string;
+    items: InvoiceItem[];
+    totalGBP: number;
+    deliveryFee: number;
+    grandTotal: number;
+    bankName: string;
+    bankAddress: string;
+    iban: string;
+    swiftCode: string;
+    accountTitle: string;
+    accountNumber: string;
+    sortCode: string;
+}
+
 @Component({
     selector: 'app-invoice',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, FormsModule],
     templateUrl: './invoice.component.html',
     styleUrls: ['./invoice.component.scss']
 })
 export class InvoiceComponent implements OnInit {
     processedData: ProcessedDataRow[] = [];
     hasDataToInvoice = false;
+    invoiceData: InvoiceData = {
+        invoiceNumber: '8749',
+        invoiceDate: 'September 25, 2024',
+        vessel: 'LAN BAO HAI',
+        country: 'UK',
+        port: 'Immingham',
+        category: 'Provisions',
+        invoiceDue: 'CASH',
+        items: [],
+        totalGBP: 0,
+        deliveryFee: 225.00,
+        grandTotal: 0,
+        bankName: 'Lloyds Bank plc',
+        bankAddress: '6 Market Place, Oldham, OL11JG, United Kingdom',
+        iban: 'GB84LOYD30962678553260',
+        swiftCode: 'LOYDGB21446',
+        accountTitle: 'HI MARINE COMPANY LIMITED',
+        accountNumber: '78553260',
+        sortCode: '30-96-26'
+    };
 
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
@@ -25,17 +77,73 @@ export class InvoiceComponent implements OnInit {
             timestamp: new Date().toISOString()
         }, 'InvoiceComponent');
 
+        // Subscribe to Excel data from captains-request component
+        this.dataService.excelData$.subscribe(data => {
+            if (data) {
+                this.convertExcelDataToInvoiceItems(data);
+                this.hasDataToInvoice = this.invoiceData.items.length > 0;
+
+                this.loggingService.logDataProcessing('invoice_data_updated', {
+                    totalItems: this.invoiceData.items.length,
+                    totalAmount: this.invoiceData.totalGBP,
+                    finalAmount: this.invoiceData.grandTotal
+                }, 'InvoiceComponent');
+            }
+        });
+
+        // Also subscribe to processed data for backward compatibility
         this.dataService.processedData$.subscribe(data => {
             this.processedData = data;
-            this.hasDataToInvoice = data.some(row => row.count > 0);
-
-            this.loggingService.logDataProcessing('invoice_data_updated', {
-                totalItems: data.length,
-                itemsToInvoice: data.filter(row => row.count > 0).length,
-                totalAmount: this.totalAmount,
-                finalAmount: this.finalTotalAmount
-            }, 'InvoiceComponent');
+            if (!this.dataService.getExcelData()) {
+                this.convertToInvoiceItems(data);
+                this.hasDataToInvoice = data.some(row => row.count > 0);
+            }
         });
+    }
+
+    private convertExcelDataToInvoiceItems(data: ExcelProcessedData): void {
+        const allItems: ExcelItemData[] = [];
+
+        // Combine items from all tabs (PROVISIONS, FRESH PROVISIONS, BOND)
+        const tabs = ['PROVISIONS', 'FRESH PROVISIONS', 'BOND'];
+        tabs.forEach(tabName => {
+            if (data[tabName] && data[tabName].items) {
+                allItems.push(...data[tabName].items);
+            }
+        });
+
+        // Convert to invoice items
+        this.invoiceData.items = allItems.map((item, index) => ({
+            pos: index + 1,
+            description: item.description,
+            remark: item.remark,
+            unit: item.unit,
+            qty: item.qty,
+            price: item.price,
+            total: item.total
+        }));
+
+        this.calculateTotals();
+    }
+
+    private convertToInvoiceItems(data: ProcessedDataRow[]): void {
+        const includedItems = data.filter(row => row.count > 0);
+        this.invoiceData.items = includedItems.map((row, index) => ({
+            pos: index + 1,
+            description: row.description,
+            remark: row.remarks || '',
+            unit: row.unit || 'EACH',
+            qty: row.count,
+            price: row.price,
+            total: row.count * row.price
+        }));
+
+        this.calculateTotals();
+    }
+
+    private calculateTotals(): void {
+        this.invoiceData.totalGBP = this.invoiceData.items.reduce((sum, item) => sum + item.total, 0);
+        this.invoiceData.grandTotal = this.invoiceData.totalGBP + this.invoiceData.deliveryFee;
     }
 
     get includedItems(): ProcessedDataRow[] {

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DataService, ExcelProcessedData, ExcelItemData } from '../../services/data.service';
 import * as XLSX from 'xlsx';
 
 interface TabData {
@@ -24,6 +25,8 @@ export class CaptainsRequestComponent {
     isProcessing = false;
     excelData: ExcelData | null = null;
     errorMessage = '';
+
+    constructor(private dataService: DataService) { }
 
     onDragOver(event: DragEvent): void {
         event.preventDefault();
@@ -79,6 +82,10 @@ export class CaptainsRequestComponent {
         try {
             const data = await this.readExcelFile(file);
             this.excelData = data;
+
+            // Also process with detailed items for invoice
+            const detailedData = await this.readExcelFileWithItems(file);
+            this.dataService.setExcelData(detailedData);
         } catch (error) {
             console.error('Error processing Excel file:', error);
             this.errorMessage = 'Error processing Excel file. Please ensure it has the required tabs and format.';
@@ -118,6 +125,37 @@ export class CaptainsRequestComponent {
         });
     }
 
+    private readExcelFileWithItems(file: File): Promise<ExcelProcessedData> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                try {
+                    const data = e.target?.result;
+                    const workbook = XLSX.read(data, { type: 'binary' });
+
+                    const result: ExcelProcessedData = {};
+                    const requiredTabs = ['COVER SHEET', 'PROVISIONS', 'FRESH PROVISIONS', 'BOND'];
+
+                    // Process each required tab
+                    requiredTabs.forEach(tabName => {
+                        const worksheet = workbook.Sheets[tabName];
+                        if (worksheet) {
+                            result[tabName] = this.processTabDataWithItems(worksheet);
+                        }
+                    });
+
+                    resolve(result);
+                } catch (error) {
+                    reject(error);
+                }
+            };
+
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsBinaryString(file);
+        });
+    }
+
     private processTabData(worksheet: XLSX.WorkSheet): TabData {
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
@@ -142,6 +180,48 @@ export class CaptainsRequestComponent {
         return {
             recordsWithTotal,
             sumOfTotals
+        };
+    }
+
+    private processTabDataWithItems(worksheet: XLSX.WorkSheet): { recordsWithTotal: number; sumOfTotals: number; items: ExcelItemData[] } {
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        let recordsWithTotal = 0;
+        let sumOfTotals = 0;
+        const items: ExcelItemData[] = [];
+
+        // Skip header row (index 0)
+        for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i] as any[];
+
+            // Check if row has enough columns (at least 7 for Total column)
+            if (row && row.length >= 7) {
+                const totalValue = this.parseNumericValue(row[6]); // Total is column G (index 6)
+
+                if (totalValue > 0) {
+                    recordsWithTotal++;
+                    sumOfTotals += totalValue;
+
+                    // Extract item data (assuming columns: Pos, Description, Remark, Unit, Qty, Price, Total)
+                    const item: ExcelItemData = {
+                        pos: this.parseNumericValue(row[0]) || (recordsWithTotal),
+                        description: String(row[1] || ''),
+                        remark: String(row[2] || ''),
+                        unit: String(row[3] || 'EACH'),
+                        qty: this.parseNumericValue(row[4]) || 1,
+                        price: this.parseNumericValue(row[5]) || 0,
+                        total: totalValue
+                    };
+
+                    items.push(item);
+                }
+            }
+        }
+
+        return {
+            recordsWithTotal,
+            sumOfTotals,
+            items
         };
     }
 

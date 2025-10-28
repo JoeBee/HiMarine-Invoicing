@@ -1,2 +1,159 @@
 <div class="invoice-container">
+    <!-- Top Logo Section -->
+    <div class="top-section">
+        <div class="company-logo">
+            <img src="assets/images/HIMarineTopImage.png" alt="HI Marine Company" class="top-logo">
+        </div>
+        <div class="company-info">
+            <h1>HI MARINE COMPANY LIMITED</h1>
+            <p>Wearfield, Enterprise Park East,</p>
+            <p>Sunderland, Tyne and Wear, SR5 2TA</p>
+            <p>United Kingdom</p>
+            <p>office&#64;himarinecompany.com</p>
+        </div>
+    </div>
+
+    <!-- Main Content Section -->
+    <div class="main-content">
+        <!-- Left Side - Bank Details -->
+        <div class="left-section">
+            <div class="bank-details">
+                <h3>Bank Details</h3>
+                <div class="bank-field">
+                    <label>Bank Name:</label>
+                    <input type="text" [(ngModel)]="invoiceData.bankName" class="editable-field">
+                </div>
+                <div class="bank-field">
+                    <label>Bank Address:</label>
+                    <input type="text" [(ngModel)]="invoiceData.bankAddress" class="editable-field">
+                </div>
+                <div class="bank-field">
+                    <label>IBAN:</label>
+                    <input type="text" [(ngModel)]="invoiceData.iban" class="editable-field">
+                </div>
+                <div class="bank-field">
+                    <label>Swift Code:</label>
+                    <input type="text" [(ngModel)]="invoiceData.swiftCode" class="editable-field">
+                </div>
+                <div class="bank-field">
+                    <label>Title on Account:</label>
+                    <input type="text" [(ngModel)]="invoiceData.accountTitle" class="editable-field">
+                </div>
+            </div>
+
+            <div class="uk-domestic-wires">
+                <h3>UK DOMESTIC WIRES:</h3>
+                <div class="bank-field">
+                    <label>Account number:</label>
+                    <input type="text" [(ngModel)]="invoiceData.accountNumber" class="editable-field">
+                </div>
+                <div class="bank-field">
+                    <label>Sort code:</label>
+                    <input type="text" [(ngModel)]="invoiceData.sortCode" class="editable-field">
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Invoice Details -->
+        <div class="right-section">
+            <div class="invoice-details">
+                <div class="invoice-field">
+                    <label>No</label>
+                    <input type="text" [(ngModel)]="invoiceData.invoiceNumber" class="editable-field">
+                </div>
+                <div class="invoice-field">
+                    <label>Invoice Date</label>
+                    <input type="text" [(ngModel)]="invoiceData.invoiceDate" class="editable-field">
+                </div>
+                <div class="invoice-field">
+                    <label>Vessel</label>
+                    <input type="text" [(ngModel)]="invoiceData.vessel" class="editable-field">
+                </div>
+                <div class="invoice-field">
+                    <label>Country</label>
+                    <input type="text" [(ngModel)]="invoiceData.country" class="editable-field">
+                </div>
+                <div class="invoice-field">
+                    <label>Port</label>
+                    <input type="text" [(ngModel)]="invoiceData.port" class="editable-field">
+                </div>
+                <div class="invoice-field">
+                    <label>Category</label>
+                    <input type="text" [(ngModel)]="invoiceData.category" class="editable-field">
+                </div>
+                <div class="invoice-field">
+                    <label>Invoice Due</label>
+                    <input type="text" [(ngModel)]="invoiceData.invoiceDue" class="editable-field">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="items-section">
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Pos</th>
+                    <th>Description</th>
+                    <th>Remark</th>
+                    <th>Unit</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of invoiceData.items">
+                    <td>{{ item.pos }}</td>
+                    <td>{{ item.description }}</td>
+                    <td>{{ item.remark }}</td>
+                    <td>{{ item.unit }}</td>
+                    <td>{{ item.qty }}</td>
+                    <td>£ {{ item.price | number:'1.2-2' }}</td>
+                    <td>£ {{ item.total | number:'1.2-2' }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Totals Section -->
+    <div class="totals-section">
+        <div class="totals-right">
+            <div class="total-line">
+                <span>TOTAL GBP</span>
+                <span>£ {{ invoiceData.totalGBP | number:'1.2-2' }}</span>
+            </div>
+            <div class="total-line">
+                <span>Delivery fee</span>
+                <span>£ {{ invoiceData.deliveryFee | number:'1.2-2' }}</span>
+            </div>
+            <div class="total-line grand-total">
+                <span>£ {{ invoiceData.grandTotal | number:'1.2-2' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms and Conditions -->
+    <div class="terms-section">
+        <h3>By placing the order according to the above quotation you are accepting the following terms:</h3>
+        <ol>
+            <li>Credit days: 30 calendar days.</li>
+            <li>Accounts not paid in this time frame will be charged 10% interest rate per month, any discount given
+                will be null and void.</li>
+            <li>Should collection or legal action be required to collect past dues, fees for such action will be added
+                to your account.</li>
+            <li>Subject to unsold. Final weights are subject to vendor packing standards.</li>
+            <li>If the transaction is canceled after the order is authorized, we have the right to collect the invoice
+                without claim.</li>
+        </ol>
+    </div>
+
+    <!-- Bottom Logo Section -->
+    <div class="bottom-section">
+        <div class="bottom-logo">
+            <span class="company-name">hi marine company</span>
+            <img src="assets/images/HIMarineBottomBorder.png" alt="HI Marine Company" class="bottom-logo">
+        </div>
+    </div>
 </div>
