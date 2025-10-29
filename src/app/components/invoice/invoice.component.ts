@@ -57,6 +57,12 @@ interface InvoiceData {
     sortCode: string;
     achRouting?: string; // For US bank details
     intermediaryBic?: string; // For EOS bank details
+    // Fees
+    portFee: number;
+    agencyFee: number;
+    transportCustomsLaunchFees: number;
+    launchFee: number;
+    discountPercent: number;
 }
 
 @Component({
@@ -203,7 +209,13 @@ export class InvoiceComponent implements OnInit {
         accountNumber: '',
         sortCode: '',
         achRouting: '',
-        intermediaryBic: ''
+        intermediaryBic: '',
+        // Fees
+        portFee: 0,
+        agencyFee: 0,
+        transportCustomsLaunchFees: 0,
+        launchFee: 0,
+        discountPercent: 0
     };
 
     constructor(private dataService: DataService, private loggingService: LoggingService) { }

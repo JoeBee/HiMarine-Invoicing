@@ -19,30 +19,66 @@
             </div>
         </div>
 
-        <!-- Bank Selection Radio Buttons -->
-        <div class="bank-selection-section">
-            <h3>Details Categories:</h3>
-            <div class="radio-group">
-                <label class="radio-option">
-                    <input type="radio" name="bankSelection" value="" [(ngModel)]="selectedBank"
-                        (change)="onBankSelectionChange()">
-                    <span class="radio-label">Blank</span>
-                </label>
-                <label class="radio-option">
-                    <input type="radio" name="bankSelection" value="US" [(ngModel)]="selectedBank"
-                        (change)="onBankSelectionChange()">
-                    <span class="radio-label">US</span>
-                </label>
-                <label class="radio-option">
-                    <input type="radio" name="bankSelection" value="UK" [(ngModel)]="selectedBank"
-                        (change)="onBankSelectionChange()">
-                    <span class="radio-label">UK</span>
-                </label>
-                <label class="radio-option">
-                    <input type="radio" name="bankSelection" value="EOS" [(ngModel)]="selectedBank"
-                        (change)="onBankSelectionChange()">
-                    <span class="radio-label">EOS</span>
-                </label>
+        <!-- Selection and Fees Section -->
+        <div class="selection-fees-section">
+            <!-- Bank Selection Radio Buttons - Left Half -->
+            <div class="bank-selection-section">
+                <h3>Categories:</h3>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="bankSelection" value="" [(ngModel)]="selectedBank"
+                            (change)="onBankSelectionChange()">
+                        <span class="radio-label">Blank</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="bankSelection" value="US" [(ngModel)]="selectedBank"
+                            (change)="onBankSelectionChange()">
+                        <span class="radio-label">US</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="bankSelection" value="UK" [(ngModel)]="selectedBank"
+                            (change)="onBankSelectionChange()">
+                        <span class="radio-label">UK</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="bankSelection" value="EOS" [(ngModel)]="selectedBank"
+                            (change)="onBankSelectionChange()">
+                        <span class="radio-label">EOS</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Fees Section - Right Half -->
+            <div class="fees-section">
+                <h3>Fees & Discounts:</h3>
+                <div class="fees-grid">
+                    <div class="fee-field">
+                        <label>Delivery fee:</label>
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.deliveryFee" class="editable-field">
+                    </div>
+                    <div class="fee-field">
+                        <label>Port fee:</label>
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.portFee" class="editable-field">
+                    </div>
+                    <div class="fee-field">
+                        <label>Agency fee:</label>
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.agencyFee" class="editable-field">
+                    </div>
+                    <div class="fee-field">
+                        <label>Transport, Customs, Launch fees:</label>
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.transportCustomsLaunchFees"
+                            class="editable-field">
+                    </div>
+                    <div class="fee-field">
+                        <label>Launch:</label>
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.launchFee" class="editable-field">
+                    </div>
+                    <div class="fee-field">
+                        <label>Discount (%):</label>
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.discountPercent"
+                            class="editable-field">
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -119,7 +155,7 @@
                         </div>
                     </div>
 
-                    <div class="uk-domestic-wires">
+                    <div class="uk-domestic-wires" *ngIf="selectedBank === 'UK'">
                         <h3>UK DOMESTIC WIRES:</h3>
                         <div class="bank-field">
                             <label>Account number:</label>
@@ -210,7 +246,12 @@
                         </div>
                         <div class="invoice-field">
                             <label>Invoice Due</label>
-                            <input type="text" [(ngModel)]="invoiceData.invoiceDue" class="editable-field">
+                            <select [(ngModel)]="invoiceData.invoiceDue" class="editable-field">
+                                <option value=""></option>
+                                <option value="CASH">CASH</option>
+                                <option value="CREDIT">CREDIT</option>
+                                <option value="30 DAYS">30 DAYS</option>
+                            </select>
                         </div>
                     </div>
                 </div>
