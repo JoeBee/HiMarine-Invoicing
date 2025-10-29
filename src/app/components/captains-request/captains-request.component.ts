@@ -192,7 +192,7 @@ export class CaptainsRequestComponent {
                     requiredTabs.forEach(tabName => {
                         const worksheet = workbook.Sheets[tabName];
                         if (worksheet) {
-                            result[tabName] = this.processTabDataWithItems(worksheet);
+                            result[tabName] = this.processTabDataWithItems(worksheet, tabName);
                         }
                     });
 
@@ -259,12 +259,56 @@ export class CaptainsRequestComponent {
         };
     }
 
-    private processTabDataWithItems(worksheet: XLSX.WorkSheet): { recordsWithTotal: number; sumOfTotals: number; items: ExcelItemData[] } {
+    private processTabDataWithItems(worksheet: XLSX.WorkSheet, tabName: string): { recordsWithTotal: number; sumOfTotals: number; items: ExcelItemData[] } {
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
         let recordsWithTotal = 0;
         let sumOfTotals = 0;
         const items: ExcelItemData[] = [];
+
+        // Detect currency from the first price or total value found
+        let detectedCurrency = '£'; // Default to GBP
+        for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i] as any[];
+            if (row && row.length >= 7) {
+                // Check price column (index 5)
+                const priceValue = row[5];
+                if (priceValue && typeof priceValue === 'string') {
+                    const priceStr = String(priceValue).trim();
+                    console.log(`Price value: "${priceStr}"`);
+                    if (priceStr.includes('$')) {
+                        detectedCurrency = '$';
+                        break;
+                    } else if (priceStr.includes('€')) {
+                        detectedCurrency = '€';
+                        break;
+                    } else if (priceStr.includes('£')) {
+                        detectedCurrency = '£';
+                        break;
+                    }
+                }
+
+                // Also check total column (index 6) if price didn't have currency
+                if (detectedCurrency === '£') {
+                    const totalValue = row[6];
+                    if (totalValue && typeof totalValue === 'string') {
+                        const totalStr = String(totalValue).trim();
+                        if (totalStr.includes('$')) {
+                            detectedCurrency = '$';
+                            break;
+                        } else if (totalStr.includes('€')) {
+                            detectedCurrency = '€';
+                            break;
+                        } else if (totalStr.includes('£')) {
+                            detectedCurrency = '£';
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        console.log(`Detected currency for tab ${tabName}: ${detectedCurrency}`);
 
         // Skip header row (index 0)
         for (let i = 1; i < jsonData.length; i++) {
@@ -286,7 +330,9 @@ export class CaptainsRequestComponent {
                         unit: String(row[3] || 'EACH'),
                         qty: this.parseNumericValue(row[4]) || 1,
                         price: this.parseNumericValue(row[5]) || 0,
-                        total: totalValue
+                        total: totalValue,
+                        tabName: tabName,
+                        currency: detectedCurrency
                     };
 
                     items.push(item);

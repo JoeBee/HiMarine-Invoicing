@@ -1,118 +1,217 @@
 <div class="invoice-container">
     <div class="content-wrapper">
-        <!-- Top Logo Section -->
+        <!-- Top Logo Section with Export Buttons -->
         <div class="top-section">
             <div class="company-logo">
                 <img src="assets/images/HIMarineTopImage.png" alt="HI Marine Company" class="top-logo">
             </div>
-            <div class="company-info">
-                <h1>HI MARINE COMPANY LIMITED</h1>
-                <p>Wearfield, Enterprise Park East,</p>
-                <p>Sunderland, Tyne and Wear, SR5 2TA</p>
-                <p>United Kingdom</p>
-                <p>office&#64;himarinecompany.com</p>
+            <div class="export-buttons-section">
+                <button class="export-btn excel-btn" [disabled]="invoiceData.items.length === 0"
+                    (click)="exportInvoiceToExcel()">
+                    <span class="btn-icon">📊</span>
+                    Export to Excel
+                </button>
+                <button class="export-btn pdf-btn" [disabled]="invoiceData.items.length === 0"
+                    (click)="exportInvoiceToPDF()">
+                    <span class="btn-icon">📄</span>
+                    Export to PDF
+                </button>
             </div>
         </div>
 
-        <!-- Export Buttons Section -->
-        <div class="export-buttons-section">
-            <button class="export-btn excel-btn" [disabled]="invoiceData.items.length === 0"
-                (click)="exportInvoiceToExcel()">
-                <span class="btn-icon">📊</span>
-                Export to Excel
-            </button>
-            <button class="export-btn pdf-btn" [disabled]="invoiceData.items.length === 0"
-                (click)="exportInvoiceToPDF()">
-                <span class="btn-icon">📄</span>
-                Export to PDF
-            </button>
+        <!-- Bank Selection Radio Buttons -->
+        <div class="bank-selection-section">
+            <h3>Details Categories:</h3>
+            <div class="radio-group">
+                <label class="radio-option">
+                    <input type="radio" name="bankSelection" value="" [(ngModel)]="selectedBank"
+                        (change)="onBankSelectionChange()">
+                    <span class="radio-label">Blank</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="bankSelection" value="US" [(ngModel)]="selectedBank"
+                        (change)="onBankSelectionChange()">
+                    <span class="radio-label">US</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="bankSelection" value="UK" [(ngModel)]="selectedBank"
+                        (change)="onBankSelectionChange()">
+                    <span class="radio-label">UK</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="bankSelection" value="EOS" [(ngModel)]="selectedBank"
+                        (change)="onBankSelectionChange()">
+                    <span class="radio-label">EOS</span>
+                </label>
+            </div>
         </div>
 
         <!-- Main Content Section -->
         <div class="main-content">
-            <!-- Left Side - Bank Details -->
+            <!-- Left Side - Our Company Details and Bank Details -->
             <div class="left-section">
-                <div class="bank-details">
-                    <h3>Bank Details</h3>
-                    <div class="bank-field">
-                        <label>Bank Name:</label>
-                        <input type="text" [(ngModel)]="invoiceData.bankName" class="editable-field">
-                    </div>
-                    <div class="bank-field">
-                        <label>Bank Address:</label>
-                        <input type="text" [(ngModel)]="invoiceData.bankAddress" class="editable-field">
-                    </div>
-                    <div class="bank-field">
-                        <label>IBAN:</label>
-                        <input type="text" [(ngModel)]="invoiceData.iban" class="editable-field">
-                    </div>
-                    <div class="bank-field">
-                        <label>Swift Code:</label>
-                        <input type="text" [(ngModel)]="invoiceData.swiftCode" class="editable-field">
-                    </div>
-                    <div class="bank-field">
-                        <label>Title on Account:</label>
-                        <input type="text" [(ngModel)]="invoiceData.accountTitle" class="editable-field">
+                <!-- Our Company Details Section -->
+                <div class="section-box">
+                    <h2 class="section-title">Our Company Details</h2>
+                    <div class="company-details">
+                        <div class="detail-field">
+                            <label>Name:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyName" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Address:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyAddress" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Address2:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyAddress2" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>City:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyCity" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Country:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyCountry" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Phone:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyPhone" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Email:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyEmail" class="editable-field">
+                        </div>
                     </div>
                 </div>
 
-                <div class="uk-domestic-wires">
-                    <h3>UK DOMESTIC WIRES:</h3>
-                    <div class="bank-field">
-                        <label>Account number:</label>
-                        <input type="text" [(ngModel)]="invoiceData.accountNumber" class="editable-field">
+                <!-- Bank Details Section -->
+                <div class="section-box">
+                    <h2 class="section-title">Bank Details</h2>
+                    <div class="bank-details">
+                        <div class="bank-field">
+                            <label>Bank Name:</label>
+                            <input type="text" [(ngModel)]="invoiceData.bankName" class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>Bank Address:</label>
+                            <input type="text" [(ngModel)]="invoiceData.bankAddress" class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>IBAN:</label>
+                            <input type="text" [(ngModel)]="invoiceData.iban" class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>Swift Code:</label>
+                            <input type="text" [(ngModel)]="invoiceData.swiftCode" class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>Title on Account:</label>
+                            <input type="text" [(ngModel)]="invoiceData.accountTitle" class="editable-field">
+                        </div>
+                        <div class="bank-field" *ngIf="selectedBank === 'US'">
+                            <label>ACH Routing:</label>
+                            <input type="text" [(ngModel)]="invoiceData.achRouting" class="editable-field">
+                        </div>
+                        <div class="bank-field" *ngIf="selectedBank === 'EOS'">
+                            <label>Intermediary BIC:</label>
+                            <input type="text" [(ngModel)]="invoiceData.intermediaryBic" class="editable-field">
+                        </div>
                     </div>
-                    <div class="bank-field">
-                        <label>Sort code:</label>
-                        <input type="text" [(ngModel)]="invoiceData.sortCode" class="editable-field">
+
+                    <div class="uk-domestic-wires">
+                        <h3>UK DOMESTIC WIRES:</h3>
+                        <div class="bank-field">
+                            <label>Account number:</label>
+                            <input type="text" [(ngModel)]="invoiceData.accountNumber" class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>Sort code:</label>
+                            <input type="text" [(ngModel)]="invoiceData.sortCode" class="editable-field">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Side - Invoice Details -->
+            <!-- Right Side - Vessel Details and Invoice Details -->
             <div class="right-section">
-                <div class="invoice-details">
-                    <div class="invoice-field">
-                        <label>No</label>
-                        <input type="text" [(ngModel)]="invoiceData.invoiceNumber" class="editable-field">
+                <!-- Vessel Details Section -->
+                <div class="section-box">
+                    <h2 class="section-title">Vessel Details</h2>
+                    <div class="vessel-details">
+                        <div class="detail-field">
+                            <label>Name:</label>
+                            <input type="text" [(ngModel)]="invoiceData.vesselName" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Name2:</label>
+                            <input type="text" [(ngModel)]="invoiceData.vesselName2" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Address:</label>
+                            <input type="text" [(ngModel)]="invoiceData.vesselAddress" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Address2:</label>
+                            <input type="text" [(ngModel)]="invoiceData.vesselAddress2" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>City:</label>
+                            <input type="text" [(ngModel)]="invoiceData.vesselCity" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Country:</label>
+                            <input type="text" [(ngModel)]="invoiceData.vesselCountry" class="editable-field">
+                        </div>
                     </div>
-                    <div class="invoice-field">
-                        <label>Invoice Date</label>
-                        <input type="date" [(ngModel)]="invoiceData.invoiceDate" class="editable-field">
-                    </div>
-                    <div class="invoice-field">
-                        <label>Vessel</label>
-                        <input type="text" [(ngModel)]="invoiceData.vessel" class="editable-field">
-                    </div>
-                    <div class="invoice-field">
-                        <label>Country</label>
-                        <select [(ngModel)]="invoiceData.country" (ngModelChange)="onCountryChange()"
-                            class="editable-field">
-                            <option value="">Select Country</option>
-                            <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
-                        </select>
-                    </div>
-                    <div class="invoice-field">
-                        <label>Port</label>
-                        <!-- Text input with datalist for suggestions -->
-                        <input type="text" [(ngModel)]="invoiceData.port" class="editable-field"
-                            placeholder="Enter or select port name"
-                            [attr.list]="availablePorts.length > 0 ? 'port-suggestions' : null">
-                        <!-- Datalist for port suggestions when country is selected -->
-                        <datalist *ngIf="availablePorts.length > 0" id="port-suggestions">
-                            <option *ngFor="let port of availablePorts" [value]="port">
-                        </datalist>
-                    </div>
-                    <div class="invoice-field">
-                        <label>Category</label>
-                        <select [(ngModel)]="invoiceData.category" class="editable-field">
-                            <option value="">Select Category</option>
-                            <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
-                        </select>
-                    </div>
-                    <div class="invoice-field">
-                        <label>Invoice Due</label>
-                        <input type="text" [(ngModel)]="invoiceData.invoiceDue" class="editable-field">
+                </div>
+
+                <!-- Invoice Details Section -->
+                <div class="section-box">
+                    <h2 class="section-title">Invoice Details</h2>
+                    <div class="invoice-details">
+                        <div class="invoice-field">
+                            <label>No</label>
+                            <input type="text" [(ngModel)]="invoiceData.invoiceNumber" class="editable-field">
+                        </div>
+                        <div class="invoice-field">
+                            <label>Invoice Date</label>
+                            <input type="date" [(ngModel)]="invoiceData.invoiceDate" class="editable-field">
+                        </div>
+                        <div class="invoice-field">
+                            <label>Vessel</label>
+                            <input type="text" [(ngModel)]="invoiceData.vessel" class="editable-field">
+                        </div>
+                        <div class="invoice-field">
+                            <label>Country</label>
+                            <select [(ngModel)]="invoiceData.country" (ngModelChange)="onCountryChange()"
+                                class="editable-field">
+                                <option value="">Select Country</option>
+                                <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
+                            </select>
+                        </div>
+                        <div class="invoice-field">
+                            <label>Port</label>
+                            <!-- Text input with datalist for suggestions -->
+                            <input type="text" [(ngModel)]="invoiceData.port" class="editable-field"
+                                placeholder="Enter or select port name"
+                                [attr.list]="availablePorts.length > 0 ? 'port-suggestions' : null">
+                            <!-- Datalist for port suggestions when country is selected -->
+                            <datalist *ngIf="availablePorts.length > 0" id="port-suggestions">
+                                <option *ngFor="let port of availablePorts" [value]="port">
+                            </datalist>
+                        </div>
+                        <div class="invoice-field">
+                            <label>Category</label>
+                            <select [(ngModel)]="invoiceData.category" class="editable-field">
+                                <option value="">Select Category</option>
+                                <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+                            </select>
+                        </div>
+                        <div class="invoice-field">
+                            <label>Invoice Due</label>
+                            <input type="text" [(ngModel)]="invoiceData.invoiceDue" class="editable-field">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -124,6 +223,7 @@
                 <thead>
                     <tr>
                         <th>Pos</th>
+                        <th>Tab</th>
                         <th>Description</th>
                         <th>Remark</th>
                         <th>Unit</th>
@@ -135,12 +235,13 @@
                 <tbody>
                     <tr *ngFor="let item of invoiceData.items">
                         <td>{{ item.pos }}</td>
+                        <td>{{ item.tabName }}</td>
                         <td>{{ item.description }}</td>
                         <td>{{ item.remark }}</td>
                         <td>{{ item.unit }}</td>
                         <td>{{ item.qty }}</td>
-                        <td>£ {{ item.price | number:'1.2-2' }}</td>
-                        <td>£ {{ item.total | number:'1.2-2' }}</td>
+                        <td>{{ item.currency }} {{ item.price | number:'1.2-2' }}</td>
+                        <td>{{ item.currency }} {{ item.total | number:'1.2-2' }}</td>
                     </tr>
                 </tbody>
             </table>

@@ -40,6 +40,8 @@ export interface ExcelItemData {
     qty: number;
     price: number;
     total: number;
+    tabName: string;
+    currency: string;
 }
 
 export interface ExcelProcessedData {

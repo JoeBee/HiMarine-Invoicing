@@ -16,6 +16,8 @@ interface InvoiceItem {
     qty: number;
     price: number;
     total: number;
+    tabName: string;
+    currency: string;
 }
 
 interface InvoiceData {
@@ -30,6 +32,22 @@ interface InvoiceData {
     totalGBP: number;
     deliveryFee: number;
     grandTotal: number;
+    // Our Company Details
+    ourCompanyName: string;
+    ourCompanyAddress: string;
+    ourCompanyAddress2: string;
+    ourCompanyCity: string;
+    ourCompanyCountry: string;
+    ourCompanyPhone: string;
+    ourCompanyEmail: string;
+    // Vessel Details
+    vesselName: string;
+    vesselName2: string;
+    vesselAddress: string;
+    vesselAddress2: string;
+    vesselCity: string;
+    vesselCountry: string;
+    // Bank Details
     bankName: string;
     bankAddress: string;
     iban: string;
@@ -37,6 +55,8 @@ interface InvoiceData {
     accountTitle: string;
     accountNumber: string;
     sortCode: string;
+    achRouting?: string; // For US bank details
+    intermediaryBic?: string; // For EOS bank details
 }
 
 @Component({
@@ -49,6 +69,7 @@ interface InvoiceData {
 export class InvoiceComponent implements OnInit {
     processedData: ProcessedDataRow[] = [];
     hasDataToInvoice = false;
+    selectedBank: string = ''; // Default to blank
 
     // Country dropdown options
     countries = [
@@ -158,13 +179,31 @@ export class InvoiceComponent implements OnInit {
         totalGBP: 0,
         deliveryFee: 225.00,
         grandTotal: 0,
-        bankName: 'Lloyds Bank plc',
-        bankAddress: '6 Market Place, Oldham, OL11JG, United Kingdom',
-        iban: 'GB84LOYD30962678553260',
-        swiftCode: 'LOYDGB21446',
-        accountTitle: 'HI MARINE COMPANY LIMITED',
-        accountNumber: '78553260',
-        sortCode: '30-96-26'
+        // Our Company Details
+        ourCompanyName: '',
+        ourCompanyAddress: '',
+        ourCompanyAddress2: '',
+        ourCompanyCity: '',
+        ourCompanyCountry: '',
+        ourCompanyPhone: '',
+        ourCompanyEmail: '',
+        // Vessel Details
+        vesselName: '',
+        vesselName2: '',
+        vesselAddress: '',
+        vesselAddress2: '',
+        vesselCity: '',
+        vesselCountry: '',
+        // Bank Details
+        bankName: '',
+        bankAddress: '',
+        iban: '',
+        swiftCode: '',
+        accountTitle: '',
+        accountNumber: '',
+        sortCode: '',
+        achRouting: '',
+        intermediaryBic: ''
     };
 
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
@@ -184,6 +223,142 @@ export class InvoiceComponent implements OnInit {
         } else {
             this.availablePorts = [];
         }
+    }
+
+    onBankSelectionChange(): void {
+        // Clear all bank details first
+        this.clearBankDetails();
+
+        // Populate bank details based on selection
+        switch (this.selectedBank) {
+            case 'UK':
+                this.populateUKBankDetails();
+                break;
+            case 'US':
+                this.populateUSBankDetails();
+                break;
+            case 'EOS':
+                this.populateEOSBankDetails();
+                break;
+            case '':
+            default:
+                // Keep fields blank
+                break;
+        }
+    }
+
+    private clearBankDetails(): void {
+        // Clear Our Company Details
+        this.invoiceData.ourCompanyName = '';
+        this.invoiceData.ourCompanyAddress = '';
+        this.invoiceData.ourCompanyAddress2 = '';
+        this.invoiceData.ourCompanyCity = '';
+        this.invoiceData.ourCompanyCountry = '';
+        this.invoiceData.ourCompanyPhone = '';
+        this.invoiceData.ourCompanyEmail = '';
+
+        // Clear Vessel Details
+        this.invoiceData.vesselName = '';
+        this.invoiceData.vesselName2 = '';
+        this.invoiceData.vesselAddress = '';
+        this.invoiceData.vesselAddress2 = '';
+        this.invoiceData.vesselCity = '';
+        this.invoiceData.vesselCountry = '';
+
+        // Clear Bank Details
+        this.invoiceData.bankName = '';
+        this.invoiceData.bankAddress = '';
+        this.invoiceData.iban = '';
+        this.invoiceData.swiftCode = '';
+        this.invoiceData.accountTitle = '';
+        this.invoiceData.accountNumber = '';
+        this.invoiceData.sortCode = '';
+        this.invoiceData.achRouting = '';
+        this.invoiceData.intermediaryBic = '';
+    }
+
+    private populateUKBankDetails(): void {
+        // Our Company Details
+        this.invoiceData.ourCompanyName = 'HI MARINE COMPANY LIMITED';
+        this.invoiceData.ourCompanyAddress = '167-169 Great Portland Street';
+        this.invoiceData.ourCompanyAddress2 = '';
+        this.invoiceData.ourCompanyCity = 'London, London, W1W 5PF';
+        this.invoiceData.ourCompanyCountry = 'United Kingdom';
+        this.invoiceData.ourCompanyPhone = '';
+        this.invoiceData.ourCompanyEmail = 'office@himarinecompany.com';
+
+        // Vessel Details
+        this.invoiceData.vesselName = 'Ludogorets Maritime Ltd., Marshall Islands';
+        this.invoiceData.vesselName2 = 'c/o Navigation Maritime Bulgare';
+        this.invoiceData.vesselAddress = '1 Primorski Blvd,';
+        this.invoiceData.vesselAddress2 = '9000 Varna,';
+        this.invoiceData.vesselCity = '';
+        this.invoiceData.vesselCountry = 'Bulgaria';
+
+        // Bank Details
+        this.invoiceData.bankName = 'Lloyds Bank plc';
+        this.invoiceData.bankAddress = '6 Market Place, Oldham, OL11JG, United Kingdom';
+        this.invoiceData.iban = 'GB84LOYD30962678553260';
+        this.invoiceData.swiftCode = 'LOYDGB21446';
+        this.invoiceData.accountTitle = 'HI MARINE COMPANY LIMITED';
+        this.invoiceData.accountNumber = '78553260';
+        this.invoiceData.sortCode = '30-96-26';
+    }
+
+    private populateUSBankDetails(): void {
+        // Our Company Details
+        this.invoiceData.ourCompanyName = 'HI MARINE COMPANY INC.';
+        this.invoiceData.ourCompanyAddress = '9407 N.E. Vancouver Mall Drive, Suite 104';
+        this.invoiceData.ourCompanyAddress2 = '';
+        this.invoiceData.ourCompanyCity = 'Vancouver, WA  98662';
+        this.invoiceData.ourCompanyCountry = 'USA';
+        this.invoiceData.ourCompanyPhone = '+1 857 2045786';
+        this.invoiceData.ourCompanyEmail = 'office@himarinecompany.com';
+
+        // Vessel Details
+        this.invoiceData.vesselName = 'TOUGH JENS MARITIME S.A.,';
+        this.invoiceData.vesselName2 = 'M/V ZALIV';
+        this.invoiceData.vesselAddress = 'VIA ESPANA 122, DELTA TOWER FL 14';
+        this.invoiceData.vesselAddress2 = 'DILIGIANNI TH. 9, KIFISSIA, ATHENS';
+        this.invoiceData.vesselCity = '';
+        this.invoiceData.vesselCountry = 'Greece';
+
+        // Bank Details
+        this.invoiceData.bankName = 'Bank of America';
+        this.invoiceData.bankAddress = '100 West 33d Street New York, New York 10001';
+        this.invoiceData.accountNumber = '466002755612';
+        this.invoiceData.swiftCode = 'BofAUS3N';
+        this.invoiceData.achRouting = '011000138';
+        this.invoiceData.accountTitle = 'Hi Marine Company Inc.';
+    }
+
+    private populateEOSBankDetails(): void {
+        // Our Company Details
+        this.invoiceData.ourCompanyName = 'EOS SUPPLY LTD';
+        this.invoiceData.ourCompanyAddress = 'Wearfield, Enterprise Park East';
+        this.invoiceData.ourCompanyAddress2 = 'Sunderland, Tyne and Wear, SR5 2TA';
+        this.invoiceData.ourCompanyCity = '';
+        this.invoiceData.ourCompanyCountry = 'United Kingdom';
+        this.invoiceData.ourCompanyPhone = '';
+        this.invoiceData.ourCompanyEmail = 'office@eos-supply.co.uk';
+
+        // Vessel Details
+        this.invoiceData.vesselName = 'GLOBAL PACIFIC SHIPPING JOINT STOCK COMPANY';
+        this.invoiceData.vesselName2 = '';
+        this.invoiceData.vesselAddress = '10th Floor, Tower 1 of the Room Commercial Service -';
+        this.invoiceData.vesselAddress2 = 'Hotel area project (The Nexus), 3A-3B Ton Duc Thang Street,';
+        this.invoiceData.vesselCity = 'Sai Gon Ward, Ho Chi Minh City';
+        this.invoiceData.vesselCountry = 'Vietnam';
+
+        // Bank Details
+        this.invoiceData.bankName = 'Revolut Ltd';
+        this.invoiceData.bankAddress = '7 Westferry Circus, Canary Wharf, London, England, E14 4HD';
+        this.invoiceData.iban = 'GB64REVO00996912321885';
+        this.invoiceData.swiftCode = 'REVOGB21XXX';
+        this.invoiceData.intermediaryBic = 'CHASGB2L';
+        this.invoiceData.accountTitle = 'EOS SUPPLY LTD';
+        this.invoiceData.accountNumber = '69340501';
+        this.invoiceData.sortCode = '04-00-75';
     }
 
     ngOnInit(): void {
@@ -230,7 +405,9 @@ export class InvoiceComponent implements OnInit {
             unit: item.unit,
             qty: item.qty,
             price: item.price,
-            total: item.total
+            total: item.total,
+            tabName: item.tabName,
+            currency: item.currency
         }));
 
         this.calculateTotals();
@@ -245,7 +422,9 @@ export class InvoiceComponent implements OnInit {
             unit: row.unit || 'EACH',
             qty: row.count,
             price: row.price,
-            total: row.count * row.price
+            total: row.count * row.price,
+            tabName: 'LEGACY', // Default value for legacy data
+            currency: '£' // Default to GBP for legacy data
         }));
 
         this.calculateTotals();
@@ -555,12 +734,13 @@ export class InvoiceComponent implements OnInit {
 
             // Set column widths
             worksheet.getColumn('A').width = 6;   // Pos
-            worksheet.getColumn('B').width = 35;  // Description  
-            worksheet.getColumn('C').width = 15;  // Remark
-            worksheet.getColumn('D').width = 8;   // Unit
-            worksheet.getColumn('E').width = 6;   // Qty
-            worksheet.getColumn('F').width = 12;  // Price
-            worksheet.getColumn('G').width = 12;  // Total
+            worksheet.getColumn('B').width = 15;  // Tab
+            worksheet.getColumn('C').width = 35;  // Description  
+            worksheet.getColumn('D').width = 15;  // Remark
+            worksheet.getColumn('E').width = 8;   // Unit
+            worksheet.getColumn('F').width = 6;   // Qty
+            worksheet.getColumn('G').width = 12;  // Price
+            worksheet.getColumn('H').width = 12;  // Total
 
             // Company Header - Left aligned in column A starting at row 9 (ALL BOLD)
             const companyHeader = worksheet.getCell('A9');
@@ -680,12 +860,12 @@ export class InvoiceComponent implements OnInit {
             const tableStartRow = 25;
 
             // Table Headers
-            const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
+            const headers = ['Pos', 'Tab', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
             headers.forEach((header, index) => {
                 const cell = worksheet.getCell(tableStartRow, index + 1);
                 cell.value = header;
                 cell.font = { bold: true, size: 11, name: 'Arial', color: { argb: 'FFFFFFFF' } };
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF000000' } } as any;
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF808080' } } as any;
                 cell.alignment = { horizontal: 'center', vertical: 'middle' };
                 cell.border = {
                     top: { style: 'thin', color: { argb: 'FF000000' } },
@@ -711,8 +891,20 @@ export class InvoiceComponent implements OnInit {
                     right: { style: 'thin', color: { argb: 'FF000000' } }
                 } as any;
 
+                // Tab
+                const tabCell = worksheet.getCell(rowIndex, 2);
+                tabCell.value = item.tabName;
+                tabCell.font = { size: 10, name: 'Arial' };
+                tabCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                tabCell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                } as any;
+
                 // Description
-                const descCell = worksheet.getCell(rowIndex, 2);
+                const descCell = worksheet.getCell(rowIndex, 3);
                 descCell.value = item.description;
                 descCell.font = { size: 10, name: 'Arial' };
                 descCell.alignment = { horizontal: 'left', vertical: 'middle' };
@@ -724,7 +916,7 @@ export class InvoiceComponent implements OnInit {
                 } as any;
 
                 // Remark
-                const remarkCell = worksheet.getCell(rowIndex, 3);
+                const remarkCell = worksheet.getCell(rowIndex, 4);
                 remarkCell.value = item.remark;
                 remarkCell.font = { size: 10, name: 'Arial' };
                 remarkCell.alignment = { horizontal: 'left', vertical: 'middle' };
@@ -736,7 +928,7 @@ export class InvoiceComponent implements OnInit {
                 } as any;
 
                 // Unit
-                const unitCell = worksheet.getCell(rowIndex, 4);
+                const unitCell = worksheet.getCell(rowIndex, 5);
                 unitCell.value = item.unit;
                 unitCell.font = { size: 10, name: 'Arial' };
                 unitCell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -748,7 +940,7 @@ export class InvoiceComponent implements OnInit {
                 } as any;
 
                 // Qty
-                const qtyCell = worksheet.getCell(rowIndex, 5);
+                const qtyCell = worksheet.getCell(rowIndex, 6);
                 qtyCell.value = item.qty;
                 qtyCell.font = { size: 10, name: 'Arial' };
                 qtyCell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -760,11 +952,15 @@ export class InvoiceComponent implements OnInit {
                 } as any;
 
                 // Price
-                const priceCell = worksheet.getCell(rowIndex, 6);
+                const priceCell = worksheet.getCell(rowIndex, 7);
                 priceCell.value = item.price;
                 priceCell.font = { size: 10, name: 'Arial' };
                 priceCell.alignment = { horizontal: 'right', vertical: 'middle' };
-                priceCell.numFmt = '£#,##0.00';
+                // Use dynamic currency formatting based on item currency
+                const currencyFormat = item.currency === '$' ? '$#,##0.00' :
+                    item.currency === '€' ? '€#,##0.00' :
+                        '£#,##0.00';
+                priceCell.numFmt = currencyFormat;
                 priceCell.border = {
                     top: { style: 'thin', color: { argb: 'FF000000' } },
                     bottom: { style: 'thin', color: { argb: 'FF000000' } },
@@ -773,11 +969,11 @@ export class InvoiceComponent implements OnInit {
                 } as any;
 
                 // Total
-                const totalCell = worksheet.getCell(rowIndex, 7);
+                const totalCell = worksheet.getCell(rowIndex, 8);
                 totalCell.value = item.total;
                 totalCell.font = { size: 10, name: 'Arial' };
                 totalCell.alignment = { horizontal: 'right', vertical: 'middle' };
-                totalCell.numFmt = '£#,##0.00';
+                totalCell.numFmt = currencyFormat;
                 totalCell.border = {
                     top: { style: 'thin', color: { argb: 'FF000000' } },
                     bottom: { style: 'thin', color: { argb: 'FF000000' } },
@@ -951,7 +1147,7 @@ export class InvoiceComponent implements OnInit {
 
         yPos += 10;
         // Table header
-        const colWidths = [20, 60, 30, 20, 20, 25, 25];
+        const colWidths = [15, 20, 50, 25, 15, 15, 20, 20];
         const colPositions = [margin];
         for (let i = 1; i < colWidths.length; i++) {
             colPositions.push(colPositions[i - 1] + colWidths[i - 1]);
@@ -959,7 +1155,7 @@ export class InvoiceComponent implements OnInit {
 
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
+        const headers = ['Pos', 'Tab', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
         headers.forEach((header, index) => {
             doc.text(header, colPositions[index], yPos);
         });
@@ -977,12 +1173,13 @@ export class InvoiceComponent implements OnInit {
             }
 
             doc.text(item.pos.toString(), colPositions[0], yPos);
-            doc.text(item.description.substring(0, 25) + (item.description.length > 25 ? '...' : ''), colPositions[1], yPos);
-            doc.text(item.remark.substring(0, 12) + (item.remark.length > 12 ? '...' : ''), colPositions[2], yPos);
-            doc.text(item.unit, colPositions[3], yPos);
-            doc.text(item.qty.toString(), colPositions[4], yPos);
-            doc.text(`£${item.price.toFixed(2)}`, colPositions[5], yPos);
-            doc.text(`£${item.total.toFixed(2)}`, colPositions[6], yPos);
+            doc.text(item.tabName.substring(0, 8) + (item.tabName.length > 8 ? '...' : ''), colPositions[1], yPos);
+            doc.text(item.description.substring(0, 20) + (item.description.length > 20 ? '...' : ''), colPositions[2], yPos);
+            doc.text(item.remark.substring(0, 10) + (item.remark.length > 10 ? '...' : ''), colPositions[3], yPos);
+            doc.text(item.unit, colPositions[4], yPos);
+            doc.text(item.qty.toString(), colPositions[5], yPos);
+            doc.text(`${item.currency}${item.price.toFixed(2)}`, colPositions[6], yPos);
+            doc.text(`${item.currency}${item.total.toFixed(2)}`, colPositions[7], yPos);
 
             yPos += 8;
         });

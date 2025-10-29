@@ -16,9 +16,53 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
+    .bank-selection-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+
+        h3 {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            color: #000;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+
+            .radio-option {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+                font-size: 16px;
+                font-weight: 500;
+
+                input[type="radio"] {
+                    margin-right: 8px;
+                    transform: scale(1.2);
+                }
+
+                .radio-label {
+                    color: #000;
+                }
+
+                &:hover {
+                    .radio-label {
+                        color: #007bff;
+                    }
+                }
+            }
+        }
+    }
+
     .top-section {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         margin-bottom: 30px;
         border-bottom: 2px solid #000;
@@ -28,6 +72,77 @@
             .top-logo {
                 height: 80px;
                 width: auto;
+            }
+        }
+
+        .export-buttons-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+
+            .export-btn {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 12px 24px;
+                border: none;
+                border-radius: 6px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+                .btn-icon {
+                    font-size: 18px;
+                }
+
+                &:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+                }
+
+                &:active {
+                    transform: translateY(0);
+                }
+
+                &.excel-btn {
+                    background-color: #217346;
+                    color: white;
+
+                    &:hover {
+                        background-color: #1a5a36;
+                    }
+                }
+
+                &.pdf-btn {
+                    background-color: #d32f2f;
+                    color: white;
+
+                    &:hover {
+                        background-color: #b71c1c;
+                    }
+                }
+
+                // Disabled state styling
+                &:disabled {
+                    background-color: #cccccc !important;
+                    color: #666666 !important;
+                    cursor: not-allowed !important;
+                    opacity: 0.6;
+                    transform: none !important;
+                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+
+                    &:hover {
+                        background-color: #cccccc !important;
+                        transform: none !important;
+                        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+                    }
+
+                    .btn-icon {
+                        opacity: 0.5;
+                    }
+                }
             }
         }
 
@@ -57,6 +172,25 @@
         .left-section {
             flex: 1;
 
+            .section-box {
+                border: 2px solid #dee2e6;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 20px;
+                background-color: #f8f9fa;
+
+                .section-title {
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin: 0 0 15px 0;
+                    color: #000;
+                    border-bottom: 2px solid #007bff;
+                    padding-bottom: 8px;
+                }
+            }
+
+            .company-details,
+            .vessel-details,
             .bank-details,
             .uk-domestic-wires {
                 margin-bottom: 20px;
@@ -68,6 +202,7 @@
                     color: #000;
                 }
 
+                .detail-field,
                 .bank-field {
                     margin-bottom: 8px;
                     display: flex;
@@ -94,7 +229,27 @@
         .right-section {
             flex: 1;
 
+            .section-box {
+                border: 2px solid #dee2e6;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 20px;
+                background-color: #f8f9fa;
+
+                .section-title {
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin: 0 0 15px 0;
+                    color: #000;
+                    border-bottom: 2px solid #007bff;
+                    padding-bottom: 8px;
+                }
+            }
+
+            .vessel-details,
             .invoice-details {
+
+                .detail-field,
                 .invoice-field {
                     margin-bottom: 8px;
                     display: flex;
@@ -136,7 +291,7 @@
             }
 
             th {
-                background-color: #000000;
+                background-color: #808080;
                 color: #ffffff;
                 font-weight: bold;
                 text-align: center;
@@ -145,13 +300,14 @@
             td {
                 background-color: white;
 
-                &:first-child {
+                &:first-child,
+                &:nth-child(2) {
                     text-align: center;
                 }
 
-                &:nth-child(5),
                 &:nth-child(6),
-                &:nth-child(7) {
+                &:nth-child(7),
+                &:nth-child(8) {
                     text-align: right;
                 }
             }
@@ -203,79 +359,6 @@
         }
     }
 
-    .export-buttons-section {
-        display: flex;
-        gap: 15px;
-        justify-content: center;
-        margin-bottom: 30px;
-        padding: 20px 0;
-        border-bottom: 1px solid #ddd;
-
-        .export-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-            .btn-icon {
-                font-size: 18px;
-            }
-
-            &:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-            }
-
-            &:active {
-                transform: translateY(0);
-            }
-
-            &.excel-btn {
-                background-color: #217346;
-                color: white;
-
-                &:hover {
-                    background-color: #1a5a36;
-                }
-            }
-
-            &.pdf-btn {
-                background-color: #d32f2f;
-                color: white;
-
-                &:hover {
-                    background-color: #b71c1c;
-                }
-            }
-
-            // Disabled state styling
-            &:disabled {
-                background-color: #cccccc !important;
-                color: #666666 !important;
-                cursor: not-allowed !important;
-                opacity: 0.6;
-                transform: none !important;
-                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-
-                &:hover {
-                    background-color: #cccccc !important;
-                    transform: none !important;
-                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-                }
-
-                .btn-icon {
-                    opacity: 0.5;
-                }
-            }
-        }
-    }
 
     .bottom-section {
         border-top: 2px solid #000;
