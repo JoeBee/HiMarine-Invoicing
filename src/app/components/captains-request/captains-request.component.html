@@ -12,6 +12,7 @@
                         {{ uploadedFile ? uploadedFile.name : 'Drop Excel file here or click to browse' }}
                     </p>
                     <p class="dropzone-subtext">Only .xlsx and .xls files are accepted</p>
+                    <p class="dropzone-subtext">Successive uploades override previous ones</p>
                 </div>
             </div>
             <input #fileInput type="file" accept=".xlsx,.xls" (change)="onFileSelected($event)" style="display: none;">

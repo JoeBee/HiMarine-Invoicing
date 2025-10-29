@@ -86,12 +86,12 @@
             .fees-grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 15px;
+                gap: 8px; // reduced spacing between items
 
                 .fee-field {
                     display: flex;
                     align-items: center;
-                    gap: 10px;
+                    gap: 6px; // slightly tighter spacing inside each row
 
                     label {
                         font-weight: bold;

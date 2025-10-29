@@ -754,119 +754,132 @@ export class InvoiceComponent implements OnInit {
             worksheet.getColumn('G').width = 12;  // Price
             worksheet.getColumn('H').width = 12;  // Total
 
-            // Company Header - Left aligned in column A starting at row 9 (ALL BOLD)
+            // Our Company Details (Top-Left) - label + value in one cell
+            worksheet.mergeCells('A9:D9');
             const companyHeader = worksheet.getCell('A9');
-            companyHeader.value = 'HI MARINE COMPANY LIMITED';
-            companyHeader.font = { bold: true, size: 18, name: 'Arial' };
+            companyHeader.value = `Name: ${this.invoiceData.ourCompanyName || ''}`;
+            companyHeader.font = { size: 11, name: 'Arial', bold: true };
             companyHeader.alignment = { horizontal: 'left' };
 
-            // Company Address - Left aligned (ALL BOLD)
+            worksheet.mergeCells('A10:D10');
             const address1 = worksheet.getCell('A10');
-            address1.value = 'Wearfield, Enterprise Park East,';
-            address1.font = { bold: true, size: 12, name: 'Arial' };
+            address1.value = `Address: ${this.invoiceData.ourCompanyAddress || ''}`;
+            address1.font = { size: 11, name: 'Arial', bold: true };
             address1.alignment = { horizontal: 'left' };
 
+            worksheet.mergeCells('A11:D11');
             const address2 = worksheet.getCell('A11');
-            address2.value = 'Sunderland, Tyne and Wear, SR5 2TA';
-            address2.font = { bold: true, size: 12, name: 'Arial' };
+            address2.value = `Address2: ${this.invoiceData.ourCompanyAddress2 || ''}`;
+            address2.font = { size: 11, name: 'Arial', bold: true };
             address2.alignment = { horizontal: 'left' };
 
+            worksheet.mergeCells('A12:D12');
             const country = worksheet.getCell('A12');
-            country.value = 'United Kingdom';
-            country.font = { bold: true, size: 12, name: 'Arial' };
+            const leftCityLine = [this.invoiceData.ourCompanyCity, this.invoiceData.ourCompanyCountry]
+                .filter(Boolean)
+                .join(', ');
+            country.value = `City: ${leftCityLine}`;
+            country.font = { size: 11, name: 'Arial', bold: true };
             country.alignment = { horizontal: 'left' };
 
+            worksheet.mergeCells('A13:D13');
             const email = worksheet.getCell('A13');
-            email.value = 'office@himarinecompany.com';
-            email.font = { bold: true, size: 12, name: 'Arial' };
+            email.value = `Email: ${this.invoiceData.ourCompanyEmail || ''}`;
+            email.font = { size: 11, name: 'Arial', bold: true };
             email.alignment = { horizontal: 'left' };
+
+            // Vessel Details (Top-Right) under the logo - label + value in one cell
+            const vesselLabelStyle = { font: { bold: true, size: 11, name: 'Arial' } };
+            const vesselValueStyle = { font: { size: 11, name: 'Arial', bold: true } };
+            worksheet.getCell('E9').value = `Name: ${this.invoiceData.vesselName || ''}`;
+            worksheet.getCell('E9').font = vesselValueStyle.font;
+            worksheet.getCell('F9').value = null as any;
+            worksheet.getCell('G9').value = null as any;
+
+            worksheet.getCell('E10').value = `Name2: ${this.invoiceData.vesselName2 || ''}`;
+            worksheet.getCell('E10').font = vesselValueStyle.font;
+            worksheet.getCell('F10').value = null as any;
+            worksheet.getCell('G10').value = null as any;
+
+            worksheet.getCell('E11').value = `Address: ${this.invoiceData.vesselAddress || ''}`;
+            worksheet.getCell('E11').font = vesselValueStyle.font;
+            worksheet.getCell('F11').value = null as any;
+            worksheet.getCell('G11').value = null as any;
+
+            worksheet.getCell('E12').value = `Address2: ${this.invoiceData.vesselAddress2 || ''}`;
+            worksheet.getCell('E12').font = vesselValueStyle.font;
+            worksheet.getCell('F12').value = null as any;
+            worksheet.getCell('G12').value = null as any;
+
+            worksheet.getCell('E13').value = `City/Country: ${[this.invoiceData.vesselCity, this.invoiceData.vesselCountry].filter(Boolean).join(', ')}`;
+            worksheet.getCell('E13').font = vesselValueStyle.font;
+            worksheet.getCell('F13').value = null as any;
+            worksheet.getCell('G13').value = null as any;
 
             // Bank Details Section (Left side - Row 15-23)
             const bankDetailsStart = 15;
             const bankLabelStyle = { font: { bold: true, size: 11, name: 'Arial' } };
             const bankValueStyle = { font: { size: 11, name: 'Arial' } };
+            // Merge A:D and write rich text "Label: value" (label bold)
+            const writeBankLine = (row: number, label: string, value: string) => {
+                worksheet.mergeCells(`A${row}:D${row}`);
+                const cell = worksheet.getCell(`A${row}`);
+                cell.value = {
+                    richText: [
+                        { text: `${label}: `, font: { bold: true, size: 11, name: 'Arial' } },
+                        { text: `${value || ''}`, font: { size: 11, name: 'Arial', bold: true } }
+                    ]
+                } as any;
+            };
 
-            worksheet.getCell(`A${bankDetailsStart}`).value = 'Bank Name:';
-            worksheet.getCell(`A${bankDetailsStart}`).font = bankLabelStyle.font;
-            worksheet.getCell(`B${bankDetailsStart}`).value = this.invoiceData.bankName;
-            worksheet.getCell(`B${bankDetailsStart}`).font = bankValueStyle.font;
+            writeBankLine(bankDetailsStart, 'Bank Name', this.invoiceData.bankName);
+            writeBankLine(bankDetailsStart + 1, 'Bank Address', this.invoiceData.bankAddress);
+            writeBankLine(bankDetailsStart + 2, 'IBAN', this.invoiceData.iban);
+            writeBankLine(bankDetailsStart + 3, 'Swift Code', this.invoiceData.swiftCode);
+            writeBankLine(bankDetailsStart + 4, 'Title on Account', this.invoiceData.accountTitle);
 
-            worksheet.getCell(`A${bankDetailsStart + 1}`).value = 'Bank Address:';
-            worksheet.getCell(`A${bankDetailsStart + 1}`).font = bankLabelStyle.font;
-            worksheet.mergeCells(`B${bankDetailsStart + 1}:D${bankDetailsStart + 1}`);
-            worksheet.getCell(`B${bankDetailsStart + 1}`).value = this.invoiceData.bankAddress;
-            worksheet.getCell(`B${bankDetailsStart + 1}`).font = bankValueStyle.font;
+            // Conditional bank extras
+            if (this.selectedBank === 'UK') {
+                worksheet.mergeCells(`A${bankDetailsStart + 6}:D${bankDetailsStart + 6}`);
+                worksheet.getCell(`A${bankDetailsStart + 6}`).value = 'UK DOMESTIC WIRES:';
+                worksheet.getCell(`A${bankDetailsStart + 6}`).font = { bold: true, size: 11, name: 'Arial' };
 
-            worksheet.getCell(`A${bankDetailsStart + 2}`).value = 'IBAN:';
-            worksheet.getCell(`A${bankDetailsStart + 2}`).font = bankLabelStyle.font;
-            worksheet.mergeCells(`B${bankDetailsStart + 2}:D${bankDetailsStart + 2}`);
-            worksheet.getCell(`B${bankDetailsStart + 2}`).value = this.invoiceData.iban;
-            worksheet.getCell(`B${bankDetailsStart + 2}`).font = bankValueStyle.font;
-
-            worksheet.getCell(`A${bankDetailsStart + 3}`).value = 'Swift Code:';
-            worksheet.getCell(`A${bankDetailsStart + 3}`).font = bankLabelStyle.font;
-            worksheet.getCell(`B${bankDetailsStart + 3}`).value = this.invoiceData.swiftCode;
-            worksheet.getCell(`B${bankDetailsStart + 3}`).font = bankValueStyle.font;
-
-            worksheet.getCell(`A${bankDetailsStart + 4}`).value = 'Title on Account:';
-            worksheet.getCell(`A${bankDetailsStart + 4}`).font = bankLabelStyle.font;
-            worksheet.mergeCells(`B${bankDetailsStart + 4}:D${bankDetailsStart + 4}`);
-            worksheet.getCell(`B${bankDetailsStart + 4}`).value = this.invoiceData.accountTitle;
-            worksheet.getCell(`B${bankDetailsStart + 4}`).font = bankValueStyle.font;
-
-            worksheet.getCell(`A${bankDetailsStart + 6}`).value = 'UK DOMESTIC WIRES:';
-            worksheet.getCell(`A${bankDetailsStart + 6}`).font = { bold: true, size: 11, name: 'Arial' };
-
-            worksheet.getCell(`A${bankDetailsStart + 7}`).value = 'Account number:';
-            worksheet.getCell(`A${bankDetailsStart + 7}`).font = bankLabelStyle.font;
-            worksheet.getCell(`B${bankDetailsStart + 7}`).value = this.invoiceData.accountNumber;
-            worksheet.getCell(`B${bankDetailsStart + 7}`).font = bankValueStyle.font;
-
-            worksheet.getCell(`A${bankDetailsStart + 8}`).value = 'Sort code:';
-            worksheet.getCell(`A${bankDetailsStart + 8}`).font = bankLabelStyle.font;
-            worksheet.getCell(`B${bankDetailsStart + 8}`).value = this.invoiceData.sortCode;
-            worksheet.getCell(`B${bankDetailsStart + 8}`).font = bankValueStyle.font;
+                writeBankLine(bankDetailsStart + 7, 'Account number', this.invoiceData.accountNumber);
+                writeBankLine(bankDetailsStart + 8, 'Sort code', this.invoiceData.sortCode);
+            }
+            if (this.selectedBank === 'US') {
+                writeBankLine(bankDetailsStart + 6, 'ACH Routing', this.invoiceData.achRouting || '');
+            }
+            if (this.selectedBank === 'EOS') {
+                writeBankLine(bankDetailsStart + 6, 'Intermediary BIC', this.invoiceData.intermediaryBic || '');
+            }
 
             // Invoice Details Section (Right side - Row 15-21)
             const invoiceDetailsStart = 15;
             const invoiceLabelStyle = { font: { bold: true, size: 11, name: 'Arial' } };
             const invoiceValueStyle = { font: { size: 11, name: 'Arial' } };
+            // Helper to write invoice detail in merged E:G cell with bold label
+            const writeInvoiceDetail = (offset: number, label: string, value: string) => {
+                const row = invoiceDetailsStart + offset;
+                const cell = worksheet.getCell(`E${row}`);
+                cell.value = {
+                    richText: [
+                        { text: `${label}: `, font: { size: 11, name: 'Arial', bold: false } },
+                        { text: `${value || ''}`, font: { size: 11, name: 'Arial', bold: false } }
+                    ]
+                } as any;
+                cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
+                worksheet.getCell(`F${row}`).value = null as any;
+                worksheet.getCell(`G${row}`).value = null as any;
+            };
 
-            worksheet.getCell(`E${invoiceDetailsStart}`).value = 'No';
-            worksheet.getCell(`E${invoiceDetailsStart}`).font = invoiceLabelStyle.font;
-            worksheet.getCell(`F${invoiceDetailsStart}`).value = this.invoiceData.invoiceNumber;
-            worksheet.getCell(`F${invoiceDetailsStart}`).font = invoiceValueStyle.font;
-
-            worksheet.getCell(`E${invoiceDetailsStart + 1}`).value = 'Invoice Date';
-            worksheet.getCell(`E${invoiceDetailsStart + 1}`).font = invoiceLabelStyle.font;
-            worksheet.mergeCells(`F${invoiceDetailsStart + 1}:G${invoiceDetailsStart + 1}`);
-            worksheet.getCell(`F${invoiceDetailsStart + 1}`).value = this.invoiceData.invoiceDate;
-            worksheet.getCell(`F${invoiceDetailsStart + 1}`).font = invoiceValueStyle.font;
-
-            worksheet.getCell(`E${invoiceDetailsStart + 2}`).value = 'Vessel';
-            worksheet.getCell(`E${invoiceDetailsStart + 2}`).font = invoiceLabelStyle.font;
-            worksheet.getCell(`F${invoiceDetailsStart + 2}`).value = this.invoiceData.vessel;
-            worksheet.getCell(`F${invoiceDetailsStart + 2}`).font = invoiceValueStyle.font;
-
-            worksheet.getCell(`E${invoiceDetailsStart + 3}`).value = 'Country';
-            worksheet.getCell(`E${invoiceDetailsStart + 3}`).font = invoiceLabelStyle.font;
-            worksheet.getCell(`F${invoiceDetailsStart + 3}`).value = this.invoiceData.country;
-            worksheet.getCell(`F${invoiceDetailsStart + 3}`).font = invoiceValueStyle.font;
-
-            worksheet.getCell(`E${invoiceDetailsStart + 4}`).value = 'Port';
-            worksheet.getCell(`E${invoiceDetailsStart + 4}`).font = invoiceLabelStyle.font;
-            worksheet.getCell(`F${invoiceDetailsStart + 4}`).value = this.invoiceData.port;
-            worksheet.getCell(`F${invoiceDetailsStart + 4}`).font = invoiceValueStyle.font;
-
-            worksheet.getCell(`E${invoiceDetailsStart + 5}`).value = 'Category';
-            worksheet.getCell(`E${invoiceDetailsStart + 5}`).font = invoiceLabelStyle.font;
-            worksheet.getCell(`F${invoiceDetailsStart + 5}`).value = this.invoiceData.category;
-            worksheet.getCell(`F${invoiceDetailsStart + 5}`).font = invoiceValueStyle.font;
-
-            worksheet.getCell(`E${invoiceDetailsStart + 6}`).value = 'Invoice Due';
-            worksheet.getCell(`E${invoiceDetailsStart + 6}`).font = invoiceLabelStyle.font;
-            worksheet.getCell(`F${invoiceDetailsStart + 6}`).value = this.invoiceData.invoiceDue;
-            worksheet.getCell(`F${invoiceDetailsStart + 6}`).font = invoiceValueStyle.font;
+            writeInvoiceDetail(0, 'No', this.invoiceData.invoiceNumber);
+            writeInvoiceDetail(1, 'Invoice Date', this.invoiceData.invoiceDate);
+            writeInvoiceDetail(2, 'Vessel', this.invoiceData.vessel);
+            writeInvoiceDetail(3, 'Country', this.invoiceData.country);
+            writeInvoiceDetail(4, 'Port', this.invoiceData.port);
+            writeInvoiceDetail(5, 'Category', this.invoiceData.category);
+            writeInvoiceDetail(6, 'Invoice Due', this.invoiceData.invoiceDue);
 
             // Items Table (Starting from row 25)
             const tableStartRow = 25;
@@ -951,9 +964,9 @@ export class InvoiceComponent implements OnInit {
                     right: { style: 'thin', color: { argb: 'FF000000' } }
                 } as any;
 
-                // Qty
+                // Qty (default to 0)
                 const qtyCell = worksheet.getCell(rowIndex, 6);
-                qtyCell.value = item.qty;
+                qtyCell.value = (item.qty ?? 0);
                 qtyCell.font = { size: 10, name: 'Arial' };
                 qtyCell.alignment = { horizontal: 'center', vertical: 'middle' };
                 qtyCell.border = {
@@ -963,9 +976,9 @@ export class InvoiceComponent implements OnInit {
                     right: { style: 'thin', color: { argb: 'FF000000' } }
                 } as any;
 
-                // Price
+                // Price (rounded to nearest penny)
                 const priceCell = worksheet.getCell(rowIndex, 7);
-                priceCell.value = item.price;
+                priceCell.value = Math.round(item.price * 100) / 100;
                 priceCell.font = { size: 10, name: 'Arial' };
                 priceCell.alignment = { horizontal: 'right', vertical: 'middle' };
                 // Use dynamic currency formatting based on item currency
@@ -980,9 +993,9 @@ export class InvoiceComponent implements OnInit {
                     right: { style: 'thin', color: { argb: 'FF000000' } }
                 } as any;
 
-                // Total
+                // Total (formula = F * G)
                 const totalCell = worksheet.getCell(rowIndex, 8);
-                totalCell.value = item.total;
+                totalCell.value = { formula: `F${rowIndex}*G${rowIndex}` } as any;
                 totalCell.font = { size: 10, name: 'Arial' };
                 totalCell.alignment = { horizontal: 'right', vertical: 'middle' };
                 totalCell.numFmt = currencyFormat;
@@ -994,35 +1007,64 @@ export class InvoiceComponent implements OnInit {
                 } as any;
             });
 
-            // Totals Section
-            const totalsStartRow = tableStartRow + this.invoiceData.items.length + 3;
+            // Totals and Fees Section
+            let totalsStartRow = tableStartRow + this.invoiceData.items.length + 2; // slightly tighter spacing
 
-            // TOTAL GBP
+            // List non-zero fees & discount just above the Total
+            const feeLines: { label: string; value?: number; isPercent?: boolean }[] = [];
+            if (this.invoiceData.deliveryFee) feeLines.push({ label: 'Delivery fee:', value: this.invoiceData.deliveryFee });
+            if (this.invoiceData.portFee) feeLines.push({ label: 'Port fee:', value: this.invoiceData.portFee });
+            if (this.invoiceData.agencyFee) feeLines.push({ label: 'Agency fee:', value: this.invoiceData.agencyFee });
+            if (this.invoiceData.transportCustomsLaunchFees) feeLines.push({ label: 'Transport, Customs, Launch fees:', value: this.invoiceData.transportCustomsLaunchFees });
+            if (this.invoiceData.launchFee) feeLines.push({ label: 'Launch:', value: this.invoiceData.launchFee });
+            if (this.invoiceData.discountPercent) feeLines.push({ label: 'Discount:', isPercent: true });
+
+            // Track fee rows that contain numeric amounts for later SUM
+            const feeAmountRowRefs: string[] = [];
+            feeLines.forEach((fee, idx) => {
+                const rowIndex = totalsStartRow + idx;
+                const labelCell = worksheet.getCell(`F${rowIndex}`);
+                labelCell.value = fee.label;
+                labelCell.font = { bold: true, size: 11, name: 'Arial' };
+                labelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+
+                const valueCell = worksheet.getCell(`G${rowIndex}`);
+                if (!fee.isPercent) {
+                    valueCell.value = fee.value as number;
+                    valueCell.numFmt = '£#,##0.00';
+                    feeAmountRowRefs.push(`G${rowIndex}`);
+                } else {
+                    valueCell.value = `${this.invoiceData.discountPercent}%`;
+                }
+                valueCell.font = { bold: true, size: 11, name: 'Arial' };
+                valueCell.alignment = { horizontal: 'right', vertical: 'middle' };
+
+                // Use standard line height like the rest of the page
+                worksheet.getRow(rowIndex).height = 15; // typical default
+            });
+
+            totalsStartRow += feeLines.length;
+
+            // TOTAL (formula: sum of H column item totals + all monetary fee cells)
             worksheet.getCell(`F${totalsStartRow}`).value = 'TOTAL GBP';
             worksheet.getCell(`F${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
             worksheet.getCell(`F${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
-            worksheet.getCell(`G${totalsStartRow}`).value = this.invoiceData.totalGBP;
+
+            const firstDataRow = tableStartRow + 1;
+            const lastDataRow = tableStartRow + this.invoiceData.items.length;
+            const itemsSumFormula = `SUM(H${firstDataRow}:H${lastDataRow})`;
+            const feeSumPart = feeAmountRowRefs.length ? `+${feeAmountRowRefs.join('+')}` : '';
+            const discountFactor = this.invoiceData.discountPercent ? `(1-${this.invoiceData.discountPercent}/100)` : '1';
+            const totalFormula = `(${itemsSumFormula}*${discountFactor})${feeSumPart}`;
+            worksheet.getCell(`G${totalsStartRow}`).value = { formula: totalFormula } as any;
             worksheet.getCell(`G${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
             worksheet.getCell(`G${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
             worksheet.getCell(`G${totalsStartRow}`).numFmt = '£#,##0.00';
 
-            // Delivery fee
-            worksheet.getCell(`F${totalsStartRow + 1}`).value = 'Delivery fee';
-            worksheet.getCell(`F${totalsStartRow + 1}`).font = { bold: true, size: 11, name: 'Arial' };
-            worksheet.getCell(`F${totalsStartRow + 1}`).alignment = { horizontal: 'right', vertical: 'middle' };
-            worksheet.getCell(`G${totalsStartRow + 1}`).value = this.invoiceData.deliveryFee;
-            worksheet.getCell(`G${totalsStartRow + 1}`).font = { bold: true, size: 11, name: 'Arial' };
-            worksheet.getCell(`G${totalsStartRow + 1}`).alignment = { horizontal: 'right', vertical: 'middle' };
-            worksheet.getCell(`G${totalsStartRow + 1}`).numFmt = '£#,##0.00';
-
-            // Grand Total
-            worksheet.getCell(`G${totalsStartRow + 2}`).value = this.invoiceData.grandTotal;
-            worksheet.getCell(`G${totalsStartRow + 2}`).font = { bold: true, size: 12, name: 'Arial' };
-            worksheet.getCell(`G${totalsStartRow + 2}`).alignment = { horizontal: 'right', vertical: 'middle' };
-            worksheet.getCell(`G${totalsStartRow + 2}`).numFmt = '£#,##0.00';
+            // Removed separate grand total line; the TOTAL GBP row represents the final amount
 
             // Terms and Conditions
-            const termsStartRow = totalsStartRow + 5;
+            const termsStartRow = totalsStartRow + 4;
             worksheet.mergeCells(`A${termsStartRow}:G${termsStartRow}`);
             worksheet.getCell(`A${termsStartRow}`).value = 'By placing the order according to the above quotation you are accepting the following terms:';
             worksheet.getCell(`A${termsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
