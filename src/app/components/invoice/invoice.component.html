@@ -78,7 +78,7 @@
                     </div>
                     <div class="invoice-field">
                         <label>Invoice Date</label>
-                        <input type="text" [(ngModel)]="invoiceData.invoiceDate" class="editable-field">
+                        <input type="date" [(ngModel)]="invoiceData.invoiceDate" class="editable-field">
                     </div>
                     <div class="invoice-field">
                         <label>Vessel</label>
@@ -86,15 +86,29 @@
                     </div>
                     <div class="invoice-field">
                         <label>Country</label>
-                        <input type="text" [(ngModel)]="invoiceData.country" class="editable-field">
+                        <select [(ngModel)]="invoiceData.country" (ngModelChange)="onCountryChange()"
+                            class="editable-field">
+                            <option value="">Select Country</option>
+                            <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
+                        </select>
                     </div>
                     <div class="invoice-field">
                         <label>Port</label>
-                        <input type="text" [(ngModel)]="invoiceData.port" class="editable-field">
+                        <!-- Text input with datalist for suggestions -->
+                        <input type="text" [(ngModel)]="invoiceData.port" class="editable-field"
+                            placeholder="Enter or select port name"
+                            [attr.list]="availablePorts.length > 0 ? 'port-suggestions' : null">
+                        <!-- Datalist for port suggestions when country is selected -->
+                        <datalist *ngIf="availablePorts.length > 0" id="port-suggestions">
+                            <option *ngFor="let port of availablePorts" [value]="port">
+                        </datalist>
                     </div>
                     <div class="invoice-field">
                         <label>Category</label>
-                        <input type="text" [(ngModel)]="invoiceData.category" class="editable-field">
+                        <select [(ngModel)]="invoiceData.category" class="editable-field">
+                            <option value="">Select Category</option>
+                            <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+                        </select>
                     </div>
                     <div class="invoice-field">
                         <label>Invoice Due</label>

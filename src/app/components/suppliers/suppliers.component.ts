@@ -11,7 +11,7 @@ import { DataService } from '../../services/data.service';
     styleUrls: ['./suppliers.component.scss']
 })
 export class SuppliersComponent implements OnInit {
-    priceMultiple: number = 1.22;
+    priceDivider: number = 0.9;
     hasSupplierFiles = false;
     isProcessing = false;
     buttonDisabled = false;
@@ -21,8 +21,8 @@ export class SuppliersComponent implements OnInit {
     ngOnInit(): void {
         this.hasSupplierFiles = this.dataService.hasSupplierFiles();
 
-        // Load price multiple from data service
-        this.priceMultiple = this.dataService.getPriceMultiple();
+        // Load price divider from data service
+        this.priceDivider = this.dataService.getPriceDivider();
 
         // Subscribe to supplier files changes
         this.dataService.supplierFiles$.subscribe(files => {
@@ -30,9 +30,9 @@ export class SuppliersComponent implements OnInit {
         });
     }
 
-    onPriceMultipleChange(): void {
-        // Update price multiple in data service
-        this.dataService.setPriceMultiple(this.priceMultiple);
+    onPriceDividerChange(): void {
+        // Update price divider in data service
+        this.dataService.setPriceDivider(this.priceDivider);
     }
 
     async processSupplierFiles(): Promise<void> {

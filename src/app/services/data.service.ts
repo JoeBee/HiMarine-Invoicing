@@ -56,12 +56,12 @@ export interface ExcelProcessedData {
 export class DataService {
     private supplierFilesSubject = new BehaviorSubject<SupplierFileInfo[]>([]);
     private processedDataSubject = new BehaviorSubject<ProcessedDataRow[]>([]);
-    private priceMultipleSubject = new BehaviorSubject<number>(1.22);
+    private priceDividerSubject = new BehaviorSubject<number>(0.9);
     private excelDataSubject = new BehaviorSubject<ExcelProcessedData | null>(null);
 
     supplierFiles$: Observable<SupplierFileInfo[]> = this.supplierFilesSubject.asObservable();
     processedData$: Observable<ProcessedDataRow[]> = this.processedDataSubject.asObservable();
-    priceMultiple$: Observable<number> = this.priceMultipleSubject.asObservable();
+    priceDivider$: Observable<number> = this.priceDividerSubject.asObservable();
     excelData$: Observable<ExcelProcessedData | null> = this.excelDataSubject.asObservable();
 
     constructor() { }
@@ -315,10 +315,10 @@ export class DataService {
                             originalRowData.push(cell && cell.v ? cell.v : '');
                         }
 
-                        // Apply price multiple to the price
+                        // Apply price divider to the price
                         const originalPrice = Number(priceCell.v);
-                        const priceMultiple = this.priceMultipleSubject.value;
-                        const adjustedPrice = originalPrice * priceMultiple;
+                        const priceDivider = this.priceDividerSubject.value;
+                        const adjustedPrice = originalPrice / priceDivider;
 
                         rows.push({
                             fileName: fileInfo.fileName,
@@ -371,16 +371,16 @@ export class DataService {
         this.processedDataSubject.next([]);
     }
 
-    setPriceMultiple(multiple: number): void {
-        this.priceMultipleSubject.next(multiple);
-        // Automatically reprocess data when price multiple changes
+    setPriceDivider(divider: number): void {
+        this.priceDividerSubject.next(divider);
+        // Automatically reprocess data when price divider changes
         if (this.supplierFilesSubject.value.length > 0) {
             this.processSupplierFiles();
         }
     }
 
-    getPriceMultiple(): number {
-        return this.priceMultipleSubject.value;
+    getPriceDivider(): number {
+        return this.priceDividerSubject.value;
     }
 
     setExcelData(data: ExcelProcessedData): void {

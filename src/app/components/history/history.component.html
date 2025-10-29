@@ -93,6 +93,7 @@
                             <th>Category</th>
                             <th>Component</th>
                             <th>Action</th>
+                            <th>IP Address</th>
                             <th>Details</th>
                         </tr>
                     </thead>
@@ -108,6 +109,10 @@
                             </td>
                             <td class="component">{{ log.component }}</td>
                             <td class="action">{{ formatAction(log.action, log.category, log.details) }}</td>
+                            <td class="ip-address">
+                                <span class="ip-badge" [title]="log.ipAddress">{{ formatIpAddress(log.ipAddress)
+                                    }}</span>
+                            </td>
                             <td class="details">
                                 <div class="details-content" *ngIf="log.details">
                                     <div class="key-value-pairs">{{ formatDetails(log.details) }}</div>

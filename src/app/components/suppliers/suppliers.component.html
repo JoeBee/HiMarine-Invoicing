@@ -1,14 +1,13 @@
 <div class="suppliers-container">
     <h1>Suppliers</h1>
 
-    <!-- Price Multiple and Process Controls -->
+    <!-- Price Divider and Process Controls -->
     <div class="controls-section">
-        <div class="price-multiple-group">
-            <label for="priceMultiple">Price Multiple:</label>
-            <input type="number" id="priceMultiple" [(ngModel)]="priceMultiple"
-                (ngModelChange)="onPriceMultipleChange()" step="0.01" min="0" max="999.99" placeholder="1.22"
-                class="price-multiple-input">
-            <span class="price-multiple-label">(e.g., 1.22 for 22% markup)</span>
+        <div class="price-divider-group">
+            <label for="priceDivider">Price Divider:</label>
+            <input type="number" id="priceDivider" [(ngModel)]="priceDivider" (ngModelChange)="onPriceDividerChange()"
+                step="0.01" min="0" max="999.99" placeholder="0.9" class="price-divider-input">
+            <span class="price-divider-label">(e.g., 0.9 increases prices by ~11%)</span>
         </div>
 
         <button class="primary process-button" [disabled]="!hasSupplierFiles || isProcessing || buttonDisabled"
@@ -26,7 +25,7 @@
     </div>
 
     <div *ngIf="hasSupplierFiles && !isProcessing" class="success-state">
-        <p>✅ Supplier files are ready to be processed. Use the controls above to set your price multiple and process the
+        <p>✅ Supplier files are ready to be processed. Use the controls above to set your price divider and process the
             files.</p>
     </div>
 </div>

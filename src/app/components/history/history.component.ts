@@ -266,7 +266,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
 
     exportLogs(): void {
         // Create CSV content
-        const headers = ['Timestamp', 'Level', 'Category', 'Component', 'Action', 'Details'];
+        const headers = ['Timestamp', 'Level', 'Category', 'Component', 'Action', 'IP Address', 'Details'];
         const csvContent = [
             headers.join(','),
             ...this.filteredLogs.map(log => [
@@ -275,6 +275,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
                 log.category,
                 log.component,
                 this.formatAction(log.action, log.category, log.details),
+                log.ipAddress || 'Unknown',
                 `"${this.formatDetails(log.details).replace(/"/g, '""')}"`
             ].join(','))
         ].join('\n');
@@ -287,6 +288,13 @@ export class HistoryComponent implements OnInit, OnDestroy {
         link.download = `application_logs_${new Date().toISOString().split('T')[0]}.csv`;
         link.click();
         window.URL.revokeObjectURL(url);
+    }
+
+    formatIpAddress(ipAddress?: string): string {
+        if (!ipAddress || ipAddress === 'Unknown') {
+            return '🌐 Unknown';
+        }
+        return `🌐 ${ipAddress}`;
     }
 }
 

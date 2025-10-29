@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { collection, addDoc, query, orderBy, limit, getDocs, where, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase.config';
+import { catchError, timeout } from 'rxjs/operators';
+import { of, Observable } from 'rxjs';
 
 export interface LogEntry {
     id?: string;
@@ -28,11 +31,14 @@ export class LoggingService {
     private batchTimeout: number = 5000; // 5 seconds
     private retentionDays: number = 7; // Logs are retained for 1 week
     private batchTimer: any;
+    private cachedIpAddress: string | null = null;
+    private ipFetchInProgress: boolean = false;
 
-    constructor() {
+    constructor(private http: HttpClient) {
         this.sessionId = this.generateSessionId();
         this.setupOnlineListener();
         this.startBatchProcessor();
+        this.fetchIpAddress(); // Pre-fetch IP address on service initialization
     }
 
     private generateSessionId(): string {
@@ -97,17 +103,62 @@ export class LoggingService {
             sessionId: this.sessionId,
             component,
             url: window.location.href,
-            userAgent: navigator.userAgent
+            userAgent: navigator.userAgent,
+            ipAddress: this.cachedIpAddress || 'Unknown'
         };
+    }
+
+    private fetchIpAddress(): void {
+        if (this.ipFetchInProgress || this.cachedIpAddress) {
+            return;
+        }
+
+        this.ipFetchInProgress = true;
+
+        // Use ipify API to get public IP address
+        this.http.get<{ ip: string }>('https://api.ipify.org?format=json')
+            .pipe(
+                timeout(5000), // 5 second timeout
+                catchError(() => {
+                    // Fallback to another service if ipify fails
+                    return this.http.get<{ ip: string }>('https://httpbin.org/ip')
+                        .pipe(
+                            timeout(5000),
+                            catchError(() => {
+                                // Final fallback - return observable with 'Unknown'
+                                return of({ ip: 'Unknown' });
+                            })
+                        );
+                })
+            )
+            .subscribe({
+                next: (response) => {
+                    this.cachedIpAddress = response.ip;
+                    this.ipFetchInProgress = false;
+                },
+                error: () => {
+                    this.cachedIpAddress = 'Unknown';
+                    this.ipFetchInProgress = false;
+                }
+            });
+    }
+
+    private refreshIpAddressIfNeeded(): void {
+        // Refresh IP address every hour or if it's unknown
+        if (!this.cachedIpAddress || this.cachedIpAddress === 'Unknown') {
+            this.fetchIpAddress();
+        }
     }
 
     // Public logging methods
     logUserAction(action: string, details: any, component: string): void {
+        this.refreshIpAddressIfNeeded();
         const logEntry = this.createLogEntry('info', 'user_action', action, details, component);
         this.addToQueue(logEntry);
     }
 
     logFileUpload(fileName: string, fileSize: number, fileType: string, category: string, component: string): void {
+        this.refreshIpAddressIfNeeded();
         const logEntry = this.createLogEntry('info', 'file_upload', 'file_uploaded', {
             fileName,
             fileSize,
@@ -118,17 +169,20 @@ export class LoggingService {
     }
 
     logDataProcessing(action: string, details: any, component: string): void {
+        this.refreshIpAddressIfNeeded();
         const logEntry = this.createLogEntry('info', 'data_processing', action, details, component);
         this.addToQueue(logEntry);
     }
 
     logExport(action: string, details: any, component: string): void {
+        this.refreshIpAddressIfNeeded();
         const logEntry = this.createLogEntry('info', 'export', action, details, component);
         this.addToQueue(logEntry);
     }
 
 
     logError(error: Error | string, context: string, component: string, additionalDetails?: any): void {
+        this.refreshIpAddressIfNeeded();
         let errorMessage: string;
         let errorStack: string | undefined;
         let errorName: string | undefined;
@@ -171,11 +225,13 @@ export class LoggingService {
     }
 
     logSystemEvent(action: string, details: any, component: string): void {
+        this.refreshIpAddressIfNeeded();
         const logEntry = this.createLogEntry('info', 'system', action, details, component);
         this.addToQueue(logEntry);
     }
 
     logButtonClick(buttonName: string, component: string, additionalDetails?: any): void {
+        this.refreshIpAddressIfNeeded();
         const logEntry = this.createLogEntry('info', 'user_action', 'button_click', {
             buttonName,
             ...additionalDetails
@@ -184,6 +240,7 @@ export class LoggingService {
     }
 
     logFormSubmission(formName: string, formData: any, component: string): void {
+        this.refreshIpAddressIfNeeded();
         const logEntry = this.createLogEntry('info', 'user_action', 'form_submission', {
             formName,
             formData: this.sanitizeFormData(formData)
@@ -192,6 +249,7 @@ export class LoggingService {
     }
 
     logFilterChange(filterType: string, filterValue: any, component: string): void {
+        this.refreshIpAddressIfNeeded();
         const logEntry = this.createLogEntry('info', 'user_action', 'filter_change', {
             filterType,
             filterValue
@@ -200,6 +258,7 @@ export class LoggingService {
     }
 
     logSortChange(column: string, direction: string, component: string): void {
+        this.refreshIpAddressIfNeeded();
         const logEntry = this.createLogEntry('info', 'user_action', 'sort_change', {
             column,
             direction
@@ -208,6 +267,7 @@ export class LoggingService {
     }
 
     logDataSelection(selectionType: string, selectedCount: number, totalCount: number, component: string): void {
+        this.refreshIpAddressIfNeeded();
         const logEntry = this.createLogEntry('info', 'user_action', 'data_selection', {
             selectionType,
             selectedCount,

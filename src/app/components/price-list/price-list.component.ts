@@ -63,10 +63,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
             }, 'PriceListComponent');
         });
 
-        // Subscribe to price multiple changes to update the display
-        this.dataService.priceMultiple$.subscribe(() => {
+        // Subscribe to price divider changes to update the display
+        this.dataService.priceDivider$.subscribe(() => {
             // The processed data will be automatically updated by the data service
-            // when price multiple changes, so we just need to refresh our filtered data
+            // when price divider changes, so we just need to refresh our filtered data
             this.applyFilters();
         });
 

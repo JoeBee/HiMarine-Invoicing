@@ -227,6 +227,28 @@
                     min-width: 150px;
                 }
 
+                &.ip-address {
+                    font-family: monospace;
+                    font-size: 0.85rem;
+                    min-width: 130px;
+                    white-space: nowrap;
+
+                    .ip-badge {
+                        display: inline-block;
+                        padding: 2px 6px;
+                        background-color: #e3f2fd;
+                        border: 1px solid #90caf9;
+                        border-radius: 12px;
+                        color: #1976d2;
+                        font-size: 0.8rem;
+                        cursor: default;
+
+                        &:hover {
+                            background-color: #bbdefb;
+                        }
+                    }
+                }
+
                 &.details {
                     max-width: 300px;
                     min-width: 200px;

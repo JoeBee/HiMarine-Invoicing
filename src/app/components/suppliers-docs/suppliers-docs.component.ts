@@ -23,21 +23,21 @@ export class SuppliersDocsComponent implements OnInit {
     sortState: SortState = { column: '', direction: 'asc' };
     showConfirmDialog = false;
     hoveredDropzone: string | null = null;
-    priceMultiple: number = 1.22;
+    priceDivider: number = 0.9;
     hasSupplierFiles = false;
     buttonDisabled = true; // Always disabled since we removed the process button
     hasNewFiles = false;
-    priceMultipleChanged = false;
-    initialPriceMultiple: number = 1.22;
+    priceDividerChanged = false;
+    initialPriceDivider: number = 0.9;
 
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
     ngOnInit(): void {
         this.hasSupplierFiles = this.dataService.hasSupplierFiles();
 
-        // Load price multiple from data service
-        this.priceMultiple = this.dataService.getPriceMultiple();
-        this.initialPriceMultiple = this.priceMultiple;
+        // Load price divider from data service
+        this.priceDivider = this.dataService.getPriceDivider();
+        this.initialPriceDivider = this.priceDivider;
 
         this.dataService.supplierFiles$.subscribe(files => {
             this.supplierFiles = files;
@@ -137,8 +137,8 @@ export class SuppliersDocsComponent implements OnInit {
                 }, 'SuppliersDocsComponent');
 
                 this.hasNewFiles = false; // Reset since we processed immediately
-                this.priceMultipleChanged = false; // Reset since we processed immediately
-                this.initialPriceMultiple = this.priceMultiple; // Update initial value
+                this.priceDividerChanged = false; // Reset since we processed immediately
+                this.initialPriceDivider = this.priceDivider; // Update initial value
                 this.updateButtonState();
             } catch (error) {
                 this.loggingService.logError(error as Error, 'file_processing', 'SuppliersDocsComponent', {
@@ -183,7 +183,7 @@ export class SuppliersDocsComponent implements OnInit {
 
         // Reset flags when all files are cleared
         this.hasNewFiles = false;
-        this.priceMultipleChanged = false;
+        this.priceDividerChanged = false;
         this.updateButtonState();
     }
 
@@ -293,19 +293,19 @@ export class SuppliersDocsComponent implements OnInit {
         }, 1000);
     }
 
-    onPriceMultipleChange(): void {
-        this.loggingService.logFormSubmission('price_multiple_change', {
-            newValue: this.priceMultiple,
-            previousValue: this.initialPriceMultiple
+    onPriceDividerChange(): void {
+        this.loggingService.logFormSubmission('price_divider_change', {
+            newValue: this.priceDivider,
+            previousValue: this.initialPriceDivider
         }, 'SuppliersDocsComponent');
 
-        // Update price multiple in data service (this will automatically reprocess)
-        this.dataService.setPriceMultiple(this.priceMultiple);
+        // Update price divider in data service (this will automatically reprocess)
+        this.dataService.setPriceDivider(this.priceDivider);
 
         // Reset flags since processing happens automatically
         this.hasNewFiles = false;
-        this.priceMultipleChanged = false;
-        this.initialPriceMultiple = this.priceMultiple;
+        this.priceDividerChanged = false;
+        this.initialPriceDivider = this.priceDivider;
         this.updateButtonState();
     }
 
