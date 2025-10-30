@@ -43,6 +43,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
     invalidPriceRecords: ProcessedDataRow[] = [];
     showInvalidPriceDialog = false;
 
+    // Company selection for export
+    selectedCompany: string = 'EOS';
+
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
     ngOnInit(): void {
@@ -362,7 +365,11 @@ export class PriceListComponent implements OnInit, OnDestroy {
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
             const dateString = `${year}${month}${day}`;
-            const fileName = `EOS Supply LTD_Price List_${dateString}.xlsx`;
+
+            // Determine filename based on selected company
+            const fileName = this.selectedCompany === 'HI Marine'
+                ? `HI Marine_Price List_${dateString}.xlsx`
+                : `EOS Supply LTD_Price List_${dateString}.xlsx`;
 
             saveAs(data, fileName);
 
@@ -402,8 +409,11 @@ export class PriceListComponent implements OnInit, OnDestroy {
             size: 16
         };
 
-        // Add email (moved to B9 to match image)
-        worksheet.getCell('B9').value = 'office@eos-supply.co.uk';
+        // Add email (moved to B9 to match image) - based on selected company
+        const email = this.selectedCompany === 'HI Marine'
+            ? 'office@himarinecompany.com'
+            : 'office@eos-supply.co.uk';
+        worksheet.getCell('B9').value = email;
 
         // Add PROVISIONS row (B14:C14) with dark blue background and white text
         const provisionsRow = worksheet.getRow(14);

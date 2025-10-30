@@ -43,6 +43,11 @@ export class SuppliersDocsComponent implements OnInit {
             this.supplierFiles = files;
             this.hasSupplierFiles = this.dataService.hasSupplierFiles();
 
+            // Re-apply sort if user had selected a sort column
+            if (this.sortState.column) {
+                this.sortData(this.sortState.column);
+            }
+
             this.loggingService.logDataProcessing('files_updated', {
                 fileCount: files.length,
                 hasData: files.some(f => f.hasData === true)

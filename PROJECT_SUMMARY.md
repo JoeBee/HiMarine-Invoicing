@@ -33,7 +33,7 @@ A modern, single-page Angular web application for processing supplier XLSX files
 - `data.service.ts` - Centralized data management service
   - Manages supplier files
   - Processes XLSX data
-  - Handles data extraction and sorting
+  - Handles data extraction
   - Manages processed data state
 
 #### Components
@@ -70,7 +70,7 @@ A modern, single-page Angular web application for processing supplier XLSX files
 ### 2. Data Processing
 ✅ "Process Supplier Files" button (enabled when files uploaded)
 ✅ Extract data from XLSX files
-✅ Sort by description, then price (ascending)
+✅ Maintains original upload order
 ✅ Display in table with "Include" checkboxes
 ✅ Real-time checkbox state management
 
@@ -215,7 +215,7 @@ No questions! The application has been successfully created with all requested f
 5. ✅ XLSX file upload and processing
 6. ✅ Drag-and-drop file upload
 7. ✅ Automatic data detection
-8. ✅ Data extraction and sorting
+8. ✅ Data extraction
 9. ✅ Checkbox-based selection
 10. ✅ Excel invoice generation
 11. ✅ Info icon with modal instructions

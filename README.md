@@ -36,7 +36,7 @@ npm start
 ### Step 2: Review Data
 - Go to the "Price List" tab to review and select items
 - Click "Process Supplier Files"
-- Review the processed data (sorted by description, then price)
+- Review the processed data (maintains original upload order)
 - Check the "Include" checkbox for items you want to invoice
 
 ### Step 3: Generate Invoice

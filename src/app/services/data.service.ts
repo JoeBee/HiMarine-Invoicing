@@ -259,13 +259,7 @@ export class DataService {
         // Update supplier files with processing status
         this.supplierFilesSubject.next(updatedSupplierFiles);
 
-        // Sort by description, then by price
-        allData.sort((a, b) => {
-            const descCompare = a.description.localeCompare(b.description);
-            if (descCompare !== 0) return descCompare;
-            return a.price - b.price;
-        });
-
+        // Data is not sorted here - maintains original upload order
         this.processedDataSubject.next(allData);
     }
 

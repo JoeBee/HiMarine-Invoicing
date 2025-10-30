@@ -47,7 +47,7 @@
 5. Check the "Include" checkbox for each item you want to include in the invoice
 
 **What to expect:**
-- Data is automatically sorted by description first, then by price (low to high)
+- Data maintains the original order from uploaded files
 - Each row shows:
   - Include checkbox
   - File name
@@ -97,7 +97,7 @@ Click the blue Info icon in the top-right corner of any page to view these instr
 
 - **File Format:** Only XLSX and XLS files are supported
 - **Multiple Uploads:** You can upload files multiple times on the Suppliers tab
-- **Data Sorting:** Data is automatically sorted to help you find and compare items
+- **Data Order:** Data maintains the original order from uploaded files
 - **Column Detection:** The system looks for common column headers like "Description", "Item", "Price", "Cost", etc.
 - **Checkboxes:** Only items with "Include" checked will appear in the generated invoice
 

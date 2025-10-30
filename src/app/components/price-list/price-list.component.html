@@ -3,9 +3,17 @@
 
     <!-- Export Section -->
     <div class="action-section" *ngIf="hasProcessedFiles">
-        <button class="primary" [disabled]="processedData.length === 0" (click)="exportToExcel()">
-            Export to Excel
-        </button>
+        <div class="export-controls">
+            <div class="radio-group">
+                <input type="radio" id="radioEOS" name="company" value="EOS" [(ngModel)]="selectedCompany">
+                <label for="radioEOS">EOS</label>
+                <input type="radio" id="radioHIMarine" name="company" value="HI Marine" [(ngModel)]="selectedCompany">
+                <label for="radioHIMarine">HI Marine</label>
+            </div>
+            <button class="primary" [disabled]="processedData.length === 0" (click)="exportToExcel()">
+                Export to Excel
+            </button>
+        </div>
         <button class="secondary" [disabled]="processedData.length === 0" (click)="showInvalidPricesDialog()">
             Show Invalid Price Records
         </button>
