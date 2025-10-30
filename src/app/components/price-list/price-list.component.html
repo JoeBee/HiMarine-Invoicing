@@ -10,9 +10,21 @@
                 <input type="radio" id="radioHIMarine" name="company" value="HI Marine" [(ngModel)]="selectedCompany">
                 <label for="radioHIMarine">HI Marine</label>
             </div>
-            <button class="primary" [disabled]="processedData.length === 0" (click)="exportToExcel()">
-                Export to Excel
-            </button>
+            <div class="radio-group currency-group">
+                <input type="radio" id="radioEUR" name="currency" value="EUR" [(ngModel)]="selectedCurrency">
+                <label for="radioEUR">EUR (€)</label>
+                <input type="radio" id="radioAUD" name="currency" value="AUD" [(ngModel)]="selectedCurrency">
+                <label for="radioAUD">AUD (A$)</label>
+                <input type="radio" id="radioNZD" name="currency" value="NZD" [(ngModel)]="selectedCurrency">
+                <label for="radioNZD">NZD (NZ$)</label>
+                <input type="radio" id="radioUSD" name="currency" value="USD" [(ngModel)]="selectedCurrency">
+                <label for="radioUSD">USD ($)</label>
+                <input type="radio" id="radioCAD" name="currency" value="CAD" [(ngModel)]="selectedCurrency">
+                <label for="radioCAD">CAD (C$)</label>
+            </div>
+            <button class="primary" [disabled]="processedData.length === 0 || !selectedCurrency"
+                (click)="exportToExcel()">
+                Export Price List </button>
         </div>
         <button class="secondary" [disabled]="processedData.length === 0" (click)="showInvalidPricesDialog()">
             Show Invalid Price Records
@@ -106,7 +118,8 @@
                         <td>{{ row.description }}</td>
                         <td>{{ row.unit }}</td>
                         <td>{{ row.remarks }}</td>
-                        <td>{{ row.price | currency }}</td>
+                        <td>{{ selectedCurrency ? (row.price | currency:selectedCurrency:'symbol':'1.2-2') : (row.price
+                            | number:'1.2-2') }}</td>
                     </tr>
 
                     <!-- Expanded row showing original XLSX data -->

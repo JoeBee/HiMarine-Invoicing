@@ -10,7 +10,7 @@
                 <button class="export-btn excel-btn" [disabled]="invoiceData.items.length === 0"
                     (click)="exportInvoiceToExcel()">
                     <span class="btn-icon">📊</span>
-                    Export to Excel
+                    Export Invoice
                 </button>
                 <button class="export-btn pdf-btn" *ngIf="false" [disabled]="invoiceData.items.length === 0"
                     (click)="exportInvoiceToPDF()">

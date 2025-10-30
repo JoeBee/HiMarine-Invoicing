@@ -46,6 +46,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
     // Company selection for export
     selectedCompany: string = 'EOS';
 
+    // Currency selection
+    selectedCurrency: string = '';
+
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
     ngOnInit(): void {
@@ -466,7 +469,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 fgColor: { argb: 'FFFFFFFF' }
             };
             provisionsRow.getCell(3).alignment = { horizontal: 'center' };
-            provisionsRow.getCell(3).numFmt = '$#,##0.00';
+            provisionsRow.getCell(3).numFmt = this.getCurrencyFormat();
             provisionsRow.getCell(3).border = {
                 top: { style: 'thin', color: { argb: 'FF000000' } },
                 left: { style: 'thin', color: { argb: 'FF000000' } },
@@ -522,7 +525,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 fgColor: { argb: 'FFFFFFFF' }
             };
             freshProvisionsRow.getCell(3).alignment = { horizontal: 'center' };
-            freshProvisionsRow.getCell(3).numFmt = '$#,##0.00';
+            freshProvisionsRow.getCell(3).numFmt = this.getCurrencyFormat();
             freshProvisionsRow.getCell(3).border = {
                 top: { style: 'thin', color: { argb: 'FF000000' } },
                 left: { style: 'thin', color: { argb: 'FF000000' } },
@@ -578,7 +581,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 fgColor: { argb: 'FFFFFFFF' }
             };
             bondRow.getCell(3).alignment = { horizontal: 'center' };
-            bondRow.getCell(3).numFmt = '$#,##0.00';
+            bondRow.getCell(3).numFmt = this.getCurrencyFormat();
             bondRow.getCell(3).border = {
                 top: { style: 'thin', color: { argb: 'FF000000' } },
                 left: { style: 'thin', color: { argb: 'FF000000' } },
@@ -589,7 +592,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
         // Add TOTAL ORDER row - dynamically positioned
         const totalRow = worksheet.getRow(19);
-        totalRow.getCell(2).value = 'TOTAL ORDER, USD';
+        totalRow.getCell(2).value = `TOTAL ORDER, ${this.getCurrencyCode()}`;
         // Build dynamic SUM formula based on which rows are present
         let sumFormula = '=';
         if (hasProvisionsData && hasBondData) {
@@ -617,7 +620,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
             color: { argb: 'FF000000' }
         };
         totalRow.getCell(3).alignment = { horizontal: 'center' };
-        totalRow.getCell(3).numFmt = '$#,##0.00';
+        totalRow.getCell(3).numFmt = this.getCurrencyFormat();
     }
 
     private createProvisionsSheet(workbook: ExcelJS.Workbook): void {
@@ -661,7 +664,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 item.remarks || '-',
                 item.unit,
                 0, // Qty column - set to 0 instead of empty string
-                item.price, // Price as number for formula calculation
+                this.roundToTwoDecimals(item.price), // Price as number for formula calculation, rounded to 2 decimals
                 '' // Empty Total column - will be filled with formula
             ]);
 
@@ -671,9 +674,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
             // Format Price column (F) and Total column (G) with Accounting format
             const priceCell = worksheet.getCell(`F${rowNumber}`);
-            priceCell.numFmt = '$#,##0.00';
+            priceCell.numFmt = this.getCurrencyFormat();
 
-            totalCell.numFmt = '$#,##0.00';
+            totalCell.numFmt = this.getCurrencyFormat();
 
             // Style data rows with simple borders
             dataRow.eachCell((cell, colNumber) => {
@@ -700,9 +703,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
         const lastDataRow = provisionsData.length + 1; // +1 for header row
         const totalRowNumber = lastDataRow + 2; // Two rows below last data
 
-        // Add TOTAL USD label in column F
+        // Add TOTAL currency label in column F
         const totalLabelCell = worksheet.getCell(`F${totalRowNumber}`);
-        totalLabelCell.value = 'TOTAL USD';
+        totalLabelCell.value = `TOTAL ${this.getCurrencyCode()}`;
         totalLabelCell.font = { bold: true };
         totalLabelCell.alignment = { horizontal: 'left' };
 
@@ -713,7 +716,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         } else {
             totalValueCell.value = 0; // No data, so total is 0
         }
-        totalValueCell.numFmt = '$#,##0.00';
+        totalValueCell.numFmt = this.getCurrencyFormat();
         totalValueCell.font = { bold: true };
         totalValueCell.alignment = { horizontal: 'right' };
     }
@@ -759,7 +762,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 item.remarks || '-',
                 item.unit,
                 0, // Qty column - set to 0 instead of empty string
-                item.price, // Price as number for formula calculation
+                this.roundToTwoDecimals(item.price), // Price as number for formula calculation, rounded to 2 decimals
                 '' // Empty Total column - will be filled with formula
             ]);
 
@@ -769,9 +772,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
             // Format Price column (F) and Total column (G) with Accounting format
             const priceCell = worksheet.getCell(`F${rowNumber}`);
-            priceCell.numFmt = '$#,##0.00';
+            priceCell.numFmt = this.getCurrencyFormat();
 
-            totalCell.numFmt = '$#,##0.00';
+            totalCell.numFmt = this.getCurrencyFormat();
 
             // Style data rows with simple borders
             dataRow.eachCell((cell, colNumber) => {
@@ -798,9 +801,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
         const lastDataRow = freshProvisionsData.length + 1; // +1 for header row
         const totalRowNumber = lastDataRow + 2; // Two rows below last data
 
-        // Add TOTAL USD label in column F
+        // Add TOTAL currency label in column F
         const totalLabelCell = worksheet.getCell(`F${totalRowNumber}`);
-        totalLabelCell.value = 'TOTAL USD';
+        totalLabelCell.value = `TOTAL ${this.getCurrencyCode()}`;
         totalLabelCell.font = { bold: true };
         totalLabelCell.alignment = { horizontal: 'left' };
 
@@ -811,7 +814,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         } else {
             totalValueCell.value = 0; // No data, so total is 0
         }
-        totalValueCell.numFmt = '$#,##0.00';
+        totalValueCell.numFmt = this.getCurrencyFormat();
         totalValueCell.font = { bold: true };
         totalValueCell.alignment = { horizontal: 'right' };
     }
@@ -857,7 +860,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 item.remarks || '-',
                 item.unit,
                 0, // Qty column - set to 0 instead of empty string
-                item.price, // Price as number for formula calculation
+                this.roundToTwoDecimals(item.price), // Price as number for formula calculation, rounded to 2 decimals
                 '' // Empty Total column - will be filled with formula
             ]);
 
@@ -867,9 +870,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
             // Format Price column (F) and Total column (G) with Accounting format
             const priceCell = worksheet.getCell(`F${rowNumber}`);
-            priceCell.numFmt = '$#,##0.00';
+            priceCell.numFmt = this.getCurrencyFormat();
 
-            totalCell.numFmt = '$#,##0.00';
+            totalCell.numFmt = this.getCurrencyFormat();
 
             // Style data rows with simple borders
             dataRow.eachCell((cell, colNumber) => {
@@ -896,9 +899,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
         const lastDataRow = bondData.length + 1; // +1 for header row
         const totalRowNumber = lastDataRow + 2; // Two rows below last data
 
-        // Add TOTAL USD label in column F
+        // Add TOTAL currency label in column F
         const totalLabelCell = worksheet.getCell(`F${totalRowNumber}`);
-        totalLabelCell.value = 'TOTAL USD';
+        totalLabelCell.value = `TOTAL ${this.getCurrencyCode()}`;
         totalLabelCell.font = { bold: true };
         totalLabelCell.alignment = { horizontal: 'left' };
 
@@ -909,7 +912,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         } else {
             totalValueCell.value = 0; // No data, so total is 0
         }
-        totalValueCell.numFmt = '$#,##0.00';
+        totalValueCell.numFmt = this.getCurrencyFormat();
         totalValueCell.font = { bold: true };
         totalValueCell.alignment = { horizontal: 'right' };
     }
@@ -944,6 +947,34 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Check if there are any bond items with valid prices and included
         const validData = this.getValidPriceRecords();
         return validData.some(item => this.isBondItem(item) && item.included);
+    }
+
+    private getCurrencyFormat(): string {
+        // Return Excel number format string based on selected currency
+        switch (this.selectedCurrency) {
+            case 'EUR':
+                return '"€"#,##0.00';
+            case 'AUD':
+                return '"A$"#,##0.00';
+            case 'NZD':
+                return '"NZ$"#,##0.00';
+            case 'USD':
+                return '$#,##0.00';
+            case 'CAD':
+                return '"C$"#,##0.00';
+            default:
+                return '$#,##0.00'; // Default to USD
+        }
+    }
+
+    private getCurrencyCode(): string {
+        // Return currency code for labels
+        return this.selectedCurrency || 'USD';
+    }
+
+    private roundToTwoDecimals(value: number): number {
+        // Round number to 2 decimal places
+        return Math.round(value * 100) / 100;
     }
 
 }
