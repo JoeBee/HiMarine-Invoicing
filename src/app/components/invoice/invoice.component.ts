@@ -934,12 +934,6 @@ export class InvoiceComponent implements OnInit {
                 const headerFillColor = this.selectedBank === 'EOS' ? 'FF0B2E66' : 'FF808080';
                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: headerFillColor } } as any;
                 cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                cell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } },
-                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                    left: { style: 'thin', color: { argb: 'FF000000' } },
-                    right: { style: 'thin', color: { argb: 'FF000000' } }
-                } as any;
             });
 
             // Table Data
@@ -951,72 +945,36 @@ export class InvoiceComponent implements OnInit {
                 posCell.value = item.pos;
                 posCell.font = { size: 10, name: 'Arial' };
                 posCell.alignment = { horizontal: 'center', vertical: 'middle' };
-                posCell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } },
-                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                    left: { style: 'thin', color: { argb: 'FF000000' } },
-                    right: { style: 'thin', color: { argb: 'FF000000' } }
-                } as any;
 
                 // Tab
                 const tabCell = worksheet.getCell(rowIndex, 2);
                 tabCell.value = item.tabName;
                 tabCell.font = { size: 10, name: 'Arial' };
                 tabCell.alignment = { horizontal: 'center', vertical: 'middle' };
-                tabCell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } },
-                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                    left: { style: 'thin', color: { argb: 'FF000000' } },
-                    right: { style: 'thin', color: { argb: 'FF000000' } }
-                } as any;
 
                 // Description
                 const descCell = worksheet.getCell(rowIndex, 3);
                 descCell.value = item.description;
                 descCell.font = { size: 10, name: 'Arial' };
                 descCell.alignment = { horizontal: 'left', vertical: 'middle' };
-                descCell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } },
-                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                    left: { style: 'thin', color: { argb: 'FF000000' } },
-                    right: { style: 'thin', color: { argb: 'FF000000' } }
-                } as any;
 
                 // Remark
                 const remarkCell = worksheet.getCell(rowIndex, 4);
                 remarkCell.value = item.remark;
                 remarkCell.font = { size: 10, name: 'Arial' };
                 remarkCell.alignment = { horizontal: 'left', vertical: 'middle' };
-                remarkCell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } },
-                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                    left: { style: 'thin', color: { argb: 'FF000000' } },
-                    right: { style: 'thin', color: { argb: 'FF000000' } }
-                } as any;
 
                 // Unit
                 const unitCell = worksheet.getCell(rowIndex, 5);
                 unitCell.value = item.unit;
                 unitCell.font = { size: 10, name: 'Arial' };
                 unitCell.alignment = { horizontal: 'center', vertical: 'middle' };
-                unitCell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } },
-                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                    left: { style: 'thin', color: { argb: 'FF000000' } },
-                    right: { style: 'thin', color: { argb: 'FF000000' } }
-                } as any;
 
                 // Qty (default to 0)
                 const qtyCell = worksheet.getCell(rowIndex, 6);
                 qtyCell.value = (item.qty ?? 0);
                 qtyCell.font = { size: 10, name: 'Arial' };
                 qtyCell.alignment = { horizontal: 'center', vertical: 'middle' };
-                qtyCell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } },
-                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                    left: { style: 'thin', color: { argb: 'FF000000' } },
-                    right: { style: 'thin', color: { argb: 'FF000000' } }
-                } as any;
 
                 // Price (rounded to nearest penny)
                 const priceCell = worksheet.getCell(rowIndex, 7);
@@ -1028,12 +986,6 @@ export class InvoiceComponent implements OnInit {
                     item.currency === '€' ? '€#,##0.00' :
                         '£#,##0.00';
                 priceCell.numFmt = currencyFormat;
-                priceCell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } },
-                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                    left: { style: 'thin', color: { argb: 'FF000000' } },
-                    right: { style: 'thin', color: { argb: 'FF000000' } }
-                } as any;
 
                 // Total (formula = F * G)
                 const totalCell = worksheet.getCell(rowIndex, 8);
@@ -1041,12 +993,6 @@ export class InvoiceComponent implements OnInit {
                 totalCell.font = { size: 10, name: 'Arial' };
                 totalCell.alignment = { horizontal: 'right', vertical: 'middle' };
                 totalCell.numFmt = currencyFormat;
-                totalCell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } },
-                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                    left: { style: 'thin', color: { argb: 'FF000000' } },
-                    right: { style: 'thin', color: { argb: 'FF000000' } }
-                } as any;
             });
 
             // Totals and Fees Section
@@ -1066,15 +1012,15 @@ export class InvoiceComponent implements OnInit {
             const feeAmountRowRefs: string[] = [];
             feeLines.forEach((fee, idx) => {
                 const rowIndex = totalsStartRow + idx;
-                const labelCell = worksheet.getCell(`F${rowIndex}`);
+                const labelCell = worksheet.getCell(`G${rowIndex}`);
                 labelCell.value = fee.label;
                 labelCell.font = { bold: true, size: 11, name: 'Arial' };
                 labelCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
-                const valueCell = worksheet.getCell(`G${rowIndex}`);
+                const valueCell = worksheet.getCell(`H${rowIndex}`);
                 valueCell.value = fee.value as number;
                 valueCell.numFmt = '£#,##0.00';
-                if (fee.includeInSum) feeAmountRowRefs.push(`G${rowIndex}`);
+                if (fee.includeInSum) feeAmountRowRefs.push(`H${rowIndex}`);
                 valueCell.font = { bold: true, size: 11, name: 'Arial' };
                 valueCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
@@ -1083,6 +1029,14 @@ export class InvoiceComponent implements OnInit {
             });
 
             totalsStartRow += feeLines.length;
+
+            // Draw a line above "TOTAL GBP" across columns F-H
+            for (let col = 6; col <= 8; col++) { // Column F=6, G=7, H=8
+                const cell = worksheet.getCell(totalsStartRow, col);
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } }
+                } as any;
+            }
 
             // TOTAL (formula: sum of H column item totals + all monetary fee cells)
             worksheet.getCell(`G${totalsStartRow}`).value = 'TOTAL GBP';
@@ -1099,18 +1053,6 @@ export class InvoiceComponent implements OnInit {
             worksheet.getCell(`H${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
             worksheet.getCell(`H${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
             worksheet.getCell(`H${totalsStartRow}`).numFmt = '£#,##0.00';
-
-            // Draw a black horizontal separating line above "TOTAL GBP" across the sheet
-            for (let col = 5; col <= 8; col++) {
-                const cell = worksheet.getCell(totalsStartRow, col);
-                const existing = cell.border || {} as any;
-                cell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } },
-                    left: existing.left,
-                    right: existing.right,
-                    bottom: existing.bottom
-                } as any;
-            }
 
             // Removed separate grand total line; the TOTAL GBP row represents the final amount
 
@@ -1180,6 +1122,11 @@ export class InvoiceComponent implements OnInit {
                     ext: { width: 667, height: 80 } // 2/3 of previous width: 667x80 pixels
                 });
             }
+
+            // Set print area: columns A-H starting from row 1, ending 3 rows below the bottom image
+            // bottomImageRowPosition is 0-based, so add 1 to convert to 1-based, then add 3 more rows
+            const printAreaEndRow = bottomImageRowPosition + 1 + 3;
+            worksheet.pageSetup.printArea = `A1:H${printAreaEndRow}`;
 
             // Generate Excel file
             const buffer = await workbook.xlsx.writeBuffer();

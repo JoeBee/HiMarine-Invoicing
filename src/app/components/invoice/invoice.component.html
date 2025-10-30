@@ -1,4 +1,4 @@
-<div class="invoice-container">
+<div class="invoice-container" [ngClass]="{ 'eos-theme': selectedBank === 'EOS' }">
     <div class="content-wrapper">
         <!-- Top Logo Section with Export Buttons -->
         <div class="top-section">
@@ -56,22 +56,26 @@
                     <div class="fee-field">
                         <label>Delivery fee:</label>
                         <input type="number" step="0.1" [(ngModel)]="invoiceData.deliveryFee"
-                            (ngModelChange)="calculateTotals()" class="editable-field">
+                            (ngModelChange)="calculateTotals()" class="editable-field"
+                            [ngClass]="selectedBank === 'EOS' ? 'eos-highlight' : ''">
                     </div>
                     <div class="fee-field">
                         <label>Port fee:</label>
                         <input type="number" step="0.1" [(ngModel)]="invoiceData.portFee"
-                            (ngModelChange)="calculateTotals()" class="editable-field">
+                            (ngModelChange)="calculateTotals()" class="editable-field"
+                            [ngClass]="selectedBank === 'EOS' ? 'eos-highlight' : ''">
                     </div>
                     <div class="fee-field">
                         <label>Agency fee:</label>
                         <input type="number" step="0.1" [(ngModel)]="invoiceData.agencyFee"
-                            (ngModelChange)="calculateTotals()" class="editable-field">
+                            (ngModelChange)="calculateTotals()" class="editable-field"
+                            [ngClass]="selectedBank === 'EOS' ? 'eos-highlight' : ''">
                     </div>
                     <div class="fee-field">
                         <label>Transport, Customs, Launch fees:</label>
                         <input type="number" step="0.1" [(ngModel)]="invoiceData.transportCustomsLaunchFees"
-                            (ngModelChange)="calculateTotals()" class="editable-field">
+                            (ngModelChange)="calculateTotals()" class="editable-field"
+                            [ngClass]="selectedBank === 'EOS' ? 'eos-highlight' : ''">
                     </div>
                     <div class="fee-field">
                         <label>Launch:</label>

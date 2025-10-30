@@ -437,4 +437,16 @@
             display: block;
         }
     }
+
+    // EOS highlight for targeted inputs
+    .editable-field.eos-highlight {
+        background-color: #d9edf7; // light blue
+    }
+
+    // When EOS is selected at the root, shade all editable fields light blue
+    &.eos-theme {
+        .editable-field {
+            background-color: #d9edf7 !important;
+        }
+    }
 }
