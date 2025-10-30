@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LoggingService, LogEntry } from '../../services/logging.service';
@@ -10,7 +10,7 @@ import { LoggingService, LogEntry } from '../../services/logging.service';
     templateUrl: './history.component.html',
     styleUrls: ['./history.component.scss']
 })
-export class HistoryComponent implements OnInit, OnDestroy {
+export class HistoryComponent implements OnInit {
     logs: LogEntry[] = [];
     filteredLogs: LogEntry[] = [];
     isLoading = false;
@@ -36,21 +36,10 @@ export class HistoryComponent implements OnInit, OnDestroy {
     itemsPerPage = 50;
     totalPages = 1;
 
-    // Auto-refresh
-    private refreshInterval: any;
-    private readonly REFRESH_INTERVAL = 30000; // 30 seconds
-
     constructor(private loggingService: LoggingService) { }
 
     ngOnInit(): void {
         this.loadLogs();
-        this.setupAutoRefresh();
-    }
-
-    ngOnDestroy(): void {
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
-        }
     }
 
     private async loadLogs(): Promise<void> {
@@ -83,12 +72,6 @@ export class HistoryComponent implements OnInit, OnDestroy {
         } finally {
             this.isLoading = false;
         }
-    }
-
-    private setupAutoRefresh(): void {
-        this.refreshInterval = setInterval(() => {
-            this.loadLogs();
-        }, this.REFRESH_INTERVAL);
     }
 
     private updateFilterOptions(): void {
