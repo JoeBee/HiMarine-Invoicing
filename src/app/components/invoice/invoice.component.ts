@@ -183,7 +183,7 @@ export class InvoiceComponent implements OnInit {
         invoiceDue: '',
         items: [],
         totalGBP: 0,
-        deliveryFee: 225.00,
+        deliveryFee: 0,
         grandTotal: 0,
         // Our Company Details
         ourCompanyName: '',
@@ -299,13 +299,13 @@ export class InvoiceComponent implements OnInit {
         this.invoiceData.ourCompanyPhone = '';
         this.invoiceData.ourCompanyEmail = 'office@himarinecompany.com';
 
-        // Vessel Details
-        this.invoiceData.vesselName = 'Ludogorets Maritime Ltd., Marshall Islands';
-        this.invoiceData.vesselName2 = 'c/o Navigation Maritime Bulgare';
-        this.invoiceData.vesselAddress = '1 Primorski Blvd,';
-        this.invoiceData.vesselAddress2 = '9000 Varna,';
+        // Vessel Details (do not auto-populate; keep blank by default)
+        this.invoiceData.vesselName = '';
+        this.invoiceData.vesselName2 = '';
+        this.invoiceData.vesselAddress = '';
+        this.invoiceData.vesselAddress2 = '';
         this.invoiceData.vesselCity = '';
-        this.invoiceData.vesselCountry = 'Bulgaria';
+        this.invoiceData.vesselCountry = '';
 
         // Bank Details
         this.invoiceData.bankName = 'Lloyds Bank plc';
@@ -327,13 +327,13 @@ export class InvoiceComponent implements OnInit {
         this.invoiceData.ourCompanyPhone = '+1 857 2045786';
         this.invoiceData.ourCompanyEmail = 'office@himarinecompany.com';
 
-        // Vessel Details
-        this.invoiceData.vesselName = 'TOUGH JENS MARITIME S.A.,';
-        this.invoiceData.vesselName2 = 'M/V ZALIV';
-        this.invoiceData.vesselAddress = 'VIA ESPANA 122, DELTA TOWER FL 14';
-        this.invoiceData.vesselAddress2 = 'DILIGIANNI TH. 9, KIFISSIA, ATHENS';
+        // Vessel Details (do not auto-populate; keep blank by default)
+        this.invoiceData.vesselName = '';
+        this.invoiceData.vesselName2 = '';
+        this.invoiceData.vesselAddress = '';
+        this.invoiceData.vesselAddress2 = '';
         this.invoiceData.vesselCity = '';
-        this.invoiceData.vesselCountry = 'Greece';
+        this.invoiceData.vesselCountry = '';
 
         // Bank Details
         this.invoiceData.bankName = 'Bank of America';
@@ -354,13 +354,13 @@ export class InvoiceComponent implements OnInit {
         this.invoiceData.ourCompanyPhone = '';
         this.invoiceData.ourCompanyEmail = 'office@eos-supply.co.uk';
 
-        // Vessel Details
-        this.invoiceData.vesselName = 'GLOBAL PACIFIC SHIPPING JOINT STOCK COMPANY';
+        // Vessel Details (do not auto-populate; keep blank by default)
+        this.invoiceData.vesselName = '';
         this.invoiceData.vesselName2 = '';
-        this.invoiceData.vesselAddress = '10th Floor, Tower 1 of the Room Commercial Service -';
-        this.invoiceData.vesselAddress2 = 'Hotel area project (The Nexus), 3A-3B Ton Duc Thang Street,';
-        this.invoiceData.vesselCity = 'Sai Gon Ward, Ho Chi Minh City';
-        this.invoiceData.vesselCountry = 'Vietnam';
+        this.invoiceData.vesselAddress = '';
+        this.invoiceData.vesselAddress2 = '';
+        this.invoiceData.vesselCity = '';
+        this.invoiceData.vesselCountry = '';
 
         // Bank Details
         this.invoiceData.bankName = 'Revolut Ltd';
@@ -442,9 +442,24 @@ export class InvoiceComponent implements OnInit {
         this.calculateTotals();
     }
 
-    private calculateTotals(): void {
+    calculateTotals(): void {
+        // Sum of all item totals (pre-discount)
         this.invoiceData.totalGBP = this.invoiceData.items.reduce((sum, item) => sum + item.total, 0);
-        this.invoiceData.grandTotal = this.invoiceData.totalGBP + this.invoiceData.deliveryFee;
+
+        // Discount is applied only to the items total
+        const discountFactor = 1 - (this.invoiceData.discountPercent || 0) / 100;
+        const discountedItemsTotal = this.invoiceData.totalGBP * discountFactor;
+
+        // Sum all fee components
+        const feesTotal =
+            (this.invoiceData.deliveryFee || 0) +
+            (this.invoiceData.portFee || 0) +
+            (this.invoiceData.agencyFee || 0) +
+            (this.invoiceData.transportCustomsLaunchFees || 0) +
+            (this.invoiceData.launchFee || 0);
+
+        // Final amount = discounted items total + fees
+        this.invoiceData.grandTotal = discountedItemsTotal + feesTotal;
     }
 
     get includedItems(): ProcessedDataRow[] {
@@ -1010,14 +1025,15 @@ export class InvoiceComponent implements OnInit {
             // Totals and Fees Section
             let totalsStartRow = tableStartRow + this.invoiceData.items.length + 2; // slightly tighter spacing
 
-            // List non-zero fees & discount just above the Total
-            const feeLines: { label: string; value?: number; isPercent?: boolean }[] = [];
-            if (this.invoiceData.deliveryFee) feeLines.push({ label: 'Delivery fee:', value: this.invoiceData.deliveryFee });
-            if (this.invoiceData.portFee) feeLines.push({ label: 'Port fee:', value: this.invoiceData.portFee });
-            if (this.invoiceData.agencyFee) feeLines.push({ label: 'Agency fee:', value: this.invoiceData.agencyFee });
-            if (this.invoiceData.transportCustomsLaunchFees) feeLines.push({ label: 'Transport, Customs, Launch fees:', value: this.invoiceData.transportCustomsLaunchFees });
-            if (this.invoiceData.launchFee) feeLines.push({ label: 'Launch:', value: this.invoiceData.launchFee });
-            if (this.invoiceData.discountPercent) feeLines.push({ label: 'Discount:', isPercent: true });
+            // List discount (amount) and non-zero fees just above the Total
+            const feeLines: { label: string; value?: number; includeInSum?: boolean }[] = [];
+            const discountAmount = this.invoiceData.totalGBP * (this.invoiceData.discountPercent || 0) / 100;
+            if (discountAmount > 0) feeLines.push({ label: 'Discount:', value: -discountAmount, includeInSum: false });
+            if (this.invoiceData.deliveryFee) feeLines.push({ label: 'Delivery fee:', value: this.invoiceData.deliveryFee, includeInSum: true });
+            if (this.invoiceData.portFee) feeLines.push({ label: 'Port fee:', value: this.invoiceData.portFee, includeInSum: true });
+            if (this.invoiceData.agencyFee) feeLines.push({ label: 'Agency fee:', value: this.invoiceData.agencyFee, includeInSum: true });
+            if (this.invoiceData.transportCustomsLaunchFees) feeLines.push({ label: 'Transport, Customs, Launch fees:', value: this.invoiceData.transportCustomsLaunchFees, includeInSum: true });
+            if (this.invoiceData.launchFee) feeLines.push({ label: 'Launch:', value: this.invoiceData.launchFee, includeInSum: true });
 
             // Track fee rows that contain numeric amounts for later SUM
             const feeAmountRowRefs: string[] = [];
@@ -1029,13 +1045,9 @@ export class InvoiceComponent implements OnInit {
                 labelCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
                 const valueCell = worksheet.getCell(`G${rowIndex}`);
-                if (!fee.isPercent) {
-                    valueCell.value = fee.value as number;
-                    valueCell.numFmt = '£#,##0.00';
-                    feeAmountRowRefs.push(`G${rowIndex}`);
-                } else {
-                    valueCell.value = `${this.invoiceData.discountPercent}%`;
-                }
+                valueCell.value = fee.value as number;
+                valueCell.numFmt = '£#,##0.00';
+                if (fee.includeInSum) feeAmountRowRefs.push(`G${rowIndex}`);
                 valueCell.font = { bold: true, size: 11, name: 'Arial' };
                 valueCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
@@ -1238,18 +1250,31 @@ export class InvoiceComponent implements OnInit {
             yPos += 8;
         });
 
-        // Totals
+        // Totals and Fees
         yPos += 10;
         doc.line(margin, yPos, pageWidth - margin, yPos);
         yPos += 10;
 
         doc.setFont('helvetica', 'bold');
-        doc.text(`TOTAL GBP: £${this.invoiceData.totalGBP.toFixed(2)}`, pageWidth - 80, yPos);
+        doc.text(`TOTAL GBP: £${this.invoiceData.totalGBP.toFixed(2)}`, pageWidth - 100, yPos);
         yPos += 8;
-        doc.text(`Delivery fee: £${this.invoiceData.deliveryFee.toFixed(2)}`, pageWidth - 80, yPos);
-        yPos += 8;
+        doc.setFont('helvetica', 'normal');
+        const discountAmountForPdf = this.invoiceData.totalGBP * (this.invoiceData.discountPercent || 0) / 100;
+        if (discountAmountForPdf > 0) {
+            doc.text(`Discount: -£${discountAmountForPdf.toFixed(2)}`, pageWidth - 100, yPos);
+            yPos += 8;
+        }
+        if ((this.invoiceData.deliveryFee || 0) > 0) { doc.text(`Delivery fee: £${(this.invoiceData.deliveryFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
+        if ((this.invoiceData.portFee || 0) > 0) { doc.text(`Port fee: £${(this.invoiceData.portFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
+        if ((this.invoiceData.agencyFee || 0) > 0) { doc.text(`Agency fee: £${(this.invoiceData.agencyFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
+        if ((this.invoiceData.transportCustomsLaunchFees || 0) > 0) { doc.text(`Transport/Customs/Launch: £${(this.invoiceData.transportCustomsLaunchFees || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
+        if ((this.invoiceData.launchFee || 0) > 0) { doc.text(`Launch: £${(this.invoiceData.launchFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
+        yPos += 10;
+        doc.line(margin, yPos, pageWidth - margin, yPos);
+        yPos += 10;
+        doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
-        doc.text(`GRAND TOTAL: £${this.invoiceData.grandTotal.toFixed(2)}`, pageWidth - 90, yPos);
+        doc.text(`GRAND TOTAL: £${this.invoiceData.grandTotal.toFixed(2)}`, pageWidth - 110, yPos);
 
         // Save the PDF
         const fileName = `HIMarine_Invoice_${this.invoiceData.invoiceNumber}_${new Date().toISOString().split('T')[0]}.pdf`;

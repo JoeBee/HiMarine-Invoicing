@@ -54,29 +54,33 @@
                 <div class="fees-grid">
                     <div class="fee-field">
                         <label>Delivery fee:</label>
-                        <input type="number" step="0.1" [(ngModel)]="invoiceData.deliveryFee" class="editable-field">
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.deliveryFee"
+                            (ngModelChange)="calculateTotals()" class="editable-field">
                     </div>
                     <div class="fee-field">
                         <label>Port fee:</label>
-                        <input type="number" step="0.1" [(ngModel)]="invoiceData.portFee" class="editable-field">
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.portFee"
+                            (ngModelChange)="calculateTotals()" class="editable-field">
                     </div>
                     <div class="fee-field">
                         <label>Agency fee:</label>
-                        <input type="number" step="0.1" [(ngModel)]="invoiceData.agencyFee" class="editable-field">
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.agencyFee"
+                            (ngModelChange)="calculateTotals()" class="editable-field">
                     </div>
                     <div class="fee-field">
                         <label>Transport, Customs, Launch fees:</label>
                         <input type="number" step="0.1" [(ngModel)]="invoiceData.transportCustomsLaunchFees"
-                            class="editable-field">
+                            (ngModelChange)="calculateTotals()" class="editable-field">
                     </div>
                     <div class="fee-field">
                         <label>Launch:</label>
-                        <input type="number" step="0.1" [(ngModel)]="invoiceData.launchFee" class="editable-field">
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.launchFee"
+                            (ngModelChange)="calculateTotals()" class="editable-field">
                     </div>
                     <div class="fee-field">
                         <label>Discount (%):</label>
                         <input type="number" step="0.1" [(ngModel)]="invoiceData.discountPercent"
-                            class="editable-field">
+                            (ngModelChange)="calculateTotals()" class="editable-field">
                     </div>
                 </div>
             </div>
@@ -99,7 +103,7 @@
                             <input type="text" [(ngModel)]="invoiceData.ourCompanyAddress" class="editable-field">
                         </div>
                         <div class="detail-field">
-                            <label>Address2:</label>
+                            <label>Address 2:</label>
                             <input type="text" [(ngModel)]="invoiceData.ourCompanyAddress2" class="editable-field">
                         </div>
                         <div class="detail-field">
@@ -180,7 +184,7 @@
                             <input type="text" [(ngModel)]="invoiceData.vesselName" class="editable-field">
                         </div>
                         <div class="detail-field">
-                            <label>Name2:</label>
+                            <label>Name 2:</label>
                             <input type="text" [(ngModel)]="invoiceData.vesselName2" class="editable-field">
                         </div>
                         <div class="detail-field">
@@ -188,7 +192,7 @@
                             <input type="text" [(ngModel)]="invoiceData.vesselAddress" class="editable-field">
                         </div>
                         <div class="detail-field">
-                            <label>Address2:</label>
+                            <label>Address 2:</label>
                             <input type="text" [(ngModel)]="invoiceData.vesselAddress2" class="editable-field">
                         </div>
                         <div class="detail-field">
@@ -296,8 +300,29 @@
                     <span>£ {{ invoiceData.totalGBP | number:'1.2-2' }}</span>
                 </div>
                 <div class="total-line">
+                    <span *ngIf="(invoiceData.discountPercent || 0) > 0">Discount</span>
+                    <span *ngIf="(invoiceData.discountPercent || 0) > 0">- £ {{ (invoiceData.totalGBP *
+                        (invoiceData.discountPercent || 0) / 100) | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-line" *ngIf="(invoiceData.deliveryFee || 0) > 0">
                     <span>Delivery fee</span>
                     <span>£ {{ invoiceData.deliveryFee | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-line" *ngIf="(invoiceData.portFee || 0) > 0">
+                    <span>Port fee</span>
+                    <span>£ {{ invoiceData.portFee | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-line" *ngIf="(invoiceData.agencyFee || 0) > 0">
+                    <span>Agency fee</span>
+                    <span>£ {{ invoiceData.agencyFee | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-line" *ngIf="(invoiceData.transportCustomsLaunchFees || 0) > 0">
+                    <span>Transport, Customs, Launch fees</span>
+                    <span>£ {{ invoiceData.transportCustomsLaunchFees | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-line" *ngIf="(invoiceData.launchFee || 0) > 0">
+                    <span>Launch</span>
+                    <span>£ {{ invoiceData.launchFee | number:'1.2-2' }}</span>
                 </div>
                 <div class="total-line grand-total">
                     <span>£ {{ invoiceData.grandTotal | number:'1.2-2' }}</span>
