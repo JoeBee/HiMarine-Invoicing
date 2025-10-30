@@ -27,7 +27,7 @@
     <div class="modal-overlay" *ngIf="showInfoModal" (click)="closeInfoModal()">
         <div class="modal" (click)="$event.stopPropagation()">
             <button class="modal-close" (click)="closeInfoModal()" aria-label="Close modal">&times;</button>
-            <h2>HI Marine Invoicing - User Instructions</h2>
+            <h2>Invoicing - User Instructions</h2>
 
             <h3>🏢 Suppliers Tab</h3>
             <h4>Supplier Docs</h4>
@@ -35,34 +35,41 @@
                 <li><strong>File Upload:</strong> Drag and drop Excel files (.xlsx/.xls) into the categorized drop
                     zones:
                     <ul>
-                        <li><strong>Bonded:</strong> For bonded/restricted items</li>
+                        <li><strong>Bonded:</strong> For bonded/restricted items (alcohol, tobacco, etc.)</li>
                         <li><strong>Provisions:</strong> For general provisions and fresh provisions</li>
                     </ul>
                 </li>
-                <li><strong>Automatic Processing:</strong> Files are automatically analyzed and processed upon upload
+                <li><strong>Automatic Processing:</strong> Files are automatically analyzed and processed immediately
+                    upon upload
                 </li>
                 <li><strong>File Analysis:</strong> The system automatically detects:
                     <ul>
                         <li>File name (without extension)</li>
                         <li>Top left cell where the data table starts</li>
-                        <li>Description column (searches for "description", "product", "item")</li>
+                        <li>Description column (searches for "description", "product", "item", "name")</li>
                         <li>Price column (searches for "price", "cost", "amount", "value")</li>
                         <li>Unit column (searches for "unit", "units")</li>
                         <li>Remarks column (searches for "remark", "comment")</li>
                         <li>Number of data rows found</li>
                     </ul>
                 </li>
-                <li><strong>Price Divider:</strong> Set a price divisor (default: 0.9 for ~11% markup)</li>
+                <li><strong>Price Divider:</strong> Set a price divisor (default: 0.9 for ~11% markup). Changes
+                    automatically reprocess all files</li>
                 <li><strong>File Management:</strong> View all uploaded files in a sortable table with status indicators
+                    (✓ success, ✗ error, - pending)</li>
+                <li><strong>File Preview:</strong> Click on any filename to open the original Excel file in a new tab
                 </li>
-                <li><strong>File Preview:</strong> Click on any filename to open the original Excel file</li>
+                <li><strong>Clear All Files:</strong> Remove all uploaded files and processed data with confirmation
+                    dialog</li>
             </ul>
 
             <h4>Price List</h4>
             <ul>
                 <li><strong>Data Review:</strong> Review all processed data from uploaded files</li>
                 <li><strong>Item Selection:</strong> Use checkboxes to include/exclude items from exports</li>
-                <li><strong>Bulk Selection:</strong> Use "Select All" checkbox for bulk operations</li>
+                <li><strong>Bulk Selection:</strong> Use "Select All" checkbox for bulk operations on filtered results
+                </li>
+                <li><strong>Company Selection:</strong> Choose EOS or HI Marine company branding for exports</li>
                 <li><strong>Advanced Filtering:</strong>
                     <ul>
                         <li>Filter by file name (dropdown with all uploaded files)</li>
@@ -72,13 +79,15 @@
                     </ul>
                 </li>
                 <li><strong>Column Sorting:</strong> Click any column header to sort (ascending/descending)</li>
-                <li><strong>Row Expansion:</strong> Click any row to view complete original Excel data</li>
+                <li><strong>Row Expansion:</strong> Click any row to view complete original Excel data in original
+                    format</li>
                 <li><strong>Excel Export:</strong> Generate comprehensive Excel workbook with:
                     <ul>
-                        <li>Cover sheet with totals by category</li>
-                        <li>PROVISIONS sheet (general provisions)</li>
-                        <li>FRESH PROVISIONS sheet (fresh produce items)</li>
+                        <li>Cover sheet with totals by category and company branding</li>
+                        <li>PROVISIONS sheet (general provisions items)</li>
+                        <li>FRESH PROVISIONS sheet (fresh produce items detected automatically)</li>
                         <li>BOND sheet (bonded items)</li>
+                        <li>Professional formatting with formulas for automatic calculations</li>
                     </ul>
                 </li>
                 <li><strong>Invalid Price Detection:</strong> View and manage records with invalid pricing data</li>
@@ -87,35 +96,69 @@
             <h3>📄 Invoicing Tab</h3>
             <h4>Captain's Request</h4>
             <ul>
-                <li><strong>Placeholder:</strong> Future functionality for managing captain requests and orders</li>
+                <li><strong>Excel File Upload:</strong> Drag and drop or click to browse for Excel files (.xlsx/.xls)
+                </li>
+                <li><strong>File Processing:</strong> Automatically analyzes Excel files with tabs: COVER SHEET,
+                    PROVISIONS, FRESH PROVISIONS, BOND</li>
+                <li><strong>Data Analysis:</strong> Displays:
+                    <ul>
+                        <li>Count of items with totals > 0 for each tab</li>
+                        <li>Sum of all totals for each tab</li>
+                        <li>Grand total across all tabs</li>
+                    </ul>
+                </li>
+                <li><strong>Currency Detection:</strong> Automatically detects currency symbols ($, €, £) from price and
+                    total columns</li>
+                <li><strong>Successive Uploads:</strong> New uploads override previous ones</li>
+                <li><strong>Data Transfer:</strong> Processed items automatically populate the Invoice tab</li>
             </ul>
 
 
             <h4>Invoice</h4>
             <ul>
-                <li><strong>Invoice Generation:</strong> Create invoices in two formats:
+                <li><strong>Invoice Generation:</strong> Create professional invoices in two formats:
                     <ul>
-                        <li><strong>Excel Format:</strong> Professional Excel invoice with formulas</li>
+                        <li><strong>Excel Format:</strong> Comprehensive Excel invoice with formulas, company branding,
+                            and bank details</li>
                         <li><strong>PDF Format:</strong> Print-ready PDF invoice</li>
                     </ul>
                 </li>
-                <li><strong>Item Selection:</strong> Only items with count > 0 are included in invoices</li>
-                <li><strong>Price Calculation:</strong> Automatic price adjustment (1.10/0.9 multiplier applied)</li>
-                <li><strong>Invoice Preview:</strong> Review selected items and totals before generation</li>
-                <li><strong>Summary Information:</strong>
+                <li><strong>Company Selection:</strong> Choose between UK, US, EOS, or Blank company/bank details</li>
+                <li><strong>Dynamic Content:</strong> Company details, bank information, vessel details, and invoice
+                    information all auto-populate based on selection</li>
+                <li><strong>Invoice Items:</strong> Items populated from Captain's Request with currency support (USD,
+                    EUR, GBP)</li>
+                <li><strong>Fees & Discounts:</strong> Configure:
                     <ul>
-                        <li>Total items processed</li>
-                        <li>Items selected for invoice</li>
-                        <li>Subtotal and final total amounts</li>
+                        <li>Delivery fee</li>
+                        <li>Port fee</li>
+                        <li>Agency fee</li>
+                        <li>Transport, Customs, Launch fees</li>
+                        <li>Launch fee</li>
+                        <li>Discount percentage</li>
                     </ul>
                 </li>
-                <li><strong>File Naming:</strong> Invoices are automatically named with current date</li>
+                <li><strong>Country & Port Selection:</strong> Choose from extensive lists with automatic port
+                    suggestions</li>
+                <li><strong>Terms & Conditions:</strong> Professional terms automatically included in invoice</li>
+                <li><strong>File Naming:</strong> Invoices automatically named with company prefix, invoice number, and
+                    date</li>
+                <li><strong>Professional Formatting:</strong> Company headers, bank details, and branding included in
+                    exports</li>
             </ul>
 
             <h3>⏰ History Tab</h3>
             <ul>
-                <li><strong>Placeholder:</strong> Reserved for future historical data and reporting functionality</li>
-                <li><strong>Visual Element:</strong> Features historical imagery related to marine invoicing</li>
+                <li><strong>Application Logs:</strong> Comprehensive logging system tracking all user actions and system
+                    events</li>
+                <li><strong>Log Categories:</strong> File uploads, button clicks, form submissions, data processing,
+                    exports, errors</li>
+                <li><strong>Advanced Filtering:</strong> Filter by category, level, component, date range, and search
+                    text</li>
+                <li><strong>CSV Export:</strong> Download logs for external analysis</li>
+                <li><strong>Pagination:</strong> Navigate through large log datasets efficiently</li>
+                <li><strong>IP Address Tracking:</strong> Monitor user locations and sessions</li>
+                <li><strong>Visual Elements:</strong> Historical imagery related to marine invoicing</li>
             </ul>
 
             <h3>🔧 Key Features & Tips</h3>
@@ -125,26 +168,37 @@
                 <li><strong>Category Management:</strong> Use Bonded vs Provisions drop zones to organize items by type
                 </li>
                 <li><strong>Fresh Provisions Detection:</strong> Items with fresh produce keywords are automatically
-                    categorized</li>
+                    categorized into FRESH PROVISIONS sheet</li>
                 <li><strong>Price Validation:</strong> Invalid price records are identified and excluded from exports
                 </li>
                 <li><strong>Data Integrity:</strong> Original Excel data is preserved and accessible for verification
                 </li>
+                <li><strong>Multi-Currency Support:</strong> Automatic currency detection and formatting ($, €, £)</li>
+                <li><strong>Real-time Calculations:</strong> Automatic totals, discount application, and fee inclusion
+                </li>
                 <li><strong>Responsive Design:</strong> Works on desktop and mobile devices</li>
                 <li><strong>File Compatibility:</strong> Supports both .xlsx and .xls Excel formats</li>
                 <li><strong>Real-time Updates:</strong> All changes are immediately reflected across tabs</li>
-                <li><strong>Export Options:</strong> Multiple export formats (Excel workbooks, PDF invoices)</li>
+                <li><strong>Export Options:</strong> Multiple export formats (Excel workbooks, PDF invoices, CSV logs)
+                </li>
+                <li><strong>Professional Branding:</strong> Company logos, headers, and footers in all exports</li>
                 <li><strong>Error Handling:</strong> Clear status indicators and error messages guide troubleshooting
                 </li>
+                <li><strong>Comprehensive Logging:</strong> Track all actions for audit and debugging purposes</li>
             </ul>
 
             <h3>📋 Workflow Summary</h3>
             <ol>
-                <li><strong>Upload:</strong> Drag Excel files to appropriate drop zones (Bonded/Provisions)</li>
-                <li><strong>Review:</strong> Check file analysis results in Supplier Docs tab</li>
-                <li><strong>Select:</strong> Use Price List tab to select items for inclusion</li>
-                <li><strong>Generate:</strong> Create invoices in Excel or PDF format</li>
-                <li><strong>Export:</strong> Download comprehensive price lists and invoices</li>
+                <li><strong>Upload Supplier Files:</strong> Drag Excel files to appropriate drop zones
+                    (Bonded/Provisions) in Supplier Docs tab</li>
+                <li><strong>Review Analysis:</strong> Check file analysis results and pricing in Supplier Docs tab</li>
+                <li><strong>Select Items:</strong> Use Price List tab to select items for inclusion and export price
+                    lists</li>
+                <li><strong>Captain's Request:</strong> Upload processed price lists in Captain's Request tab</li>
+                <li><strong>Configure Invoice:</strong> Select company, fill in vessel details, add fees, and review
+                    items</li>
+                <li><strong>Generate Invoice:</strong> Export professional invoices in Excel or PDF format</li>
+                <li><strong>Monitor Activity:</strong> Review logs in History tab for audit and troubleshooting</li>
             </ol>
 
             <button class="primary close-button" (click)="closeInfoModal()">Close</button>

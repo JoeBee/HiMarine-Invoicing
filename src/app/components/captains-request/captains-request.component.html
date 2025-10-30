@@ -7,7 +7,7 @@
             <div class="dropzone" [class.drag-over]="isDragOver" (dragover)="onDragOver($event)"
                 (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="fileInput.click()">
                 <div class="dropzone-content">
-                    <i class="upload-icon">📁</i>
+                    <span class="upload-icon" aria-hidden="true">🧑‍✈️</span>
                     <p class="dropzone-text">
                         {{ uploadedFile ? uploadedFile.name : 'Drop Excel file here or click to browse' }}
                     </p>

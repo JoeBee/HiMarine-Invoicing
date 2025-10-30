@@ -59,9 +59,11 @@
 
     .dropzone-content {
         .upload-icon {
-            font-size: 48px;
+            font-size: 144px;
             margin-bottom: 16px;
             display: block;
+            font-style: normal;
+            line-height: 1;
         }
 
         .dropzone-text {
