@@ -343,17 +343,22 @@ export class PriceListComponent implements OnInit, OnDestroy {
         try {
             const workbook = new ExcelJS.Workbook();
 
-            // Create Cover Sheet
-            this.createCoverSheet(workbook);
+            // Check which data types we have
+            const hasProvisionsData = this.hasProvisionsData();
+            const hasBondData = this.hasBondData();
 
-            // Create Provisions sheet
-            this.createProvisionsSheet(workbook);
+            // Create Cover Sheet (pass data availability flags)
+            this.createCoverSheet(workbook, hasProvisionsData, hasBondData);
 
-            // Create Fresh Provisions sheet
-            this.createFreshProvisionsSheet(workbook);
+            // Create sheets only if they have data
+            if (hasProvisionsData) {
+                this.createProvisionsSheet(workbook);
+                this.createFreshProvisionsSheet(workbook);
+            }
 
-            // Create Bond sheet
-            this.createBondSheet(workbook);
+            if (hasBondData) {
+                this.createBondSheet(workbook);
+            }
 
             // Generate Excel file
             const buffer = await workbook.xlsx.writeBuffer();
@@ -384,7 +389,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         }
     }
 
-    private createCoverSheet(workbook: ExcelJS.Workbook): void {
+    private createCoverSheet(workbook: ExcelJS.Workbook, hasProvisionsData: boolean, hasBondData: boolean): void {
         const worksheet = workbook.addWorksheet('COVER SHEET');
 
         // Set tab color - white with green underline (using light green for tab color)
@@ -415,167 +420,188 @@ export class PriceListComponent implements OnInit, OnDestroy {
             : 'office@eos-supply.co.uk';
         worksheet.getCell('B9').value = email;
 
-        // Add PROVISIONS row (B14:C14) with dark blue background and white text
-        const provisionsRow = worksheet.getRow(14);
-        provisionsRow.getCell(2).value = 'PROVISIONS';
-        // Calculate the total row number dynamically based on data length (only included items with valid prices)
-        const provisionsDataLength = this.getValidPriceRecords().filter(item => this.isProvisionItem(item) && !this.isFreshProvisionItem(item) && item.included).length;
-        const provisionsTotalRow = provisionsDataLength + 3; // +1 for header, +2 for two rows below last data
-        if (provisionsDataLength > 0) {
-            provisionsRow.getCell(3).value = { formula: `PROVISIONS!G${provisionsTotalRow}` };
-        } else {
-            provisionsRow.getCell(3).value = 0; // No data, so total is 0
+        // Add PROVISIONS row (B14:C14) with dark blue background and white text - only if we have provisions data
+        let currentRow = 14;
+        if (hasProvisionsData) {
+            const provisionsRow = worksheet.getRow(currentRow);
+            provisionsRow.getCell(2).value = 'PROVISIONS';
+            // Calculate the total row number dynamically based on data length (only included items with valid prices)
+            const provisionsDataLength = this.getValidPriceRecords().filter(item => this.isProvisionItem(item) && !this.isFreshProvisionItem(item) && item.included).length;
+            const provisionsTotalRow = provisionsDataLength + 3; // +1 for header, +2 for two rows below last data
+            if (provisionsDataLength > 0) {
+                provisionsRow.getCell(3).value = { formula: `PROVISIONS!G${provisionsTotalRow}` };
+            } else {
+                provisionsRow.getCell(3).value = 0; // No data, so total is 0
+            }
+
+            // Style PROVISIONS row - dark blue background with white text
+            provisionsRow.getCell(2).font = {
+                name: 'Cambria',
+                bold: true,
+                size: 16,
+                color: { argb: 'FFFFFFFF' }
+            };
+            provisionsRow.getCell(2).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF4472C4' }
+            };
+            provisionsRow.getCell(2).alignment = { horizontal: 'left' };
+            provisionsRow.getCell(2).border = {
+                top: { style: 'thin', color: { argb: 'FF000000' } },
+                left: { style: 'thin', color: { argb: 'FF000000' } },
+                bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                right: { style: 'thin', color: { argb: 'FF000000' } }
+            };
+
+            provisionsRow.getCell(3).font = {
+                name: 'Cambria',
+                bold: true,
+                size: 16,
+                color: { argb: 'FF000000' }
+            };
+            provisionsRow.getCell(3).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFFFFFFF' }
+            };
+            provisionsRow.getCell(3).alignment = { horizontal: 'center' };
+            provisionsRow.getCell(3).numFmt = '$#,##0.00';
+            provisionsRow.getCell(3).border = {
+                top: { style: 'thin', color: { argb: 'FF000000' } },
+                left: { style: 'thin', color: { argb: 'FF000000' } },
+                bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                right: { style: 'thin', color: { argb: 'FF000000' } }
+            };
+
+            currentRow++;
         }
 
-        // Style PROVISIONS row - dark blue background with white text
-        provisionsRow.getCell(2).font = {
-            name: 'Cambria',
-            bold: true,
-            size: 16,
-            color: { argb: 'FFFFFFFF' }
-        };
-        provisionsRow.getCell(2).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FF4472C4' }
-        };
-        provisionsRow.getCell(2).alignment = { horizontal: 'left' };
-        provisionsRow.getCell(2).border = {
-            top: { style: 'thin', color: { argb: 'FF000000' } },
-            left: { style: 'thin', color: { argb: 'FF000000' } },
-            bottom: { style: 'thin', color: { argb: 'FF000000' } },
-            right: { style: 'thin', color: { argb: 'FF000000' } }
-        };
+        // Add FRESH PROVISIONS row - only if we have provisions data
+        if (hasProvisionsData) {
+            const freshProvisionsRow = worksheet.getRow(currentRow);
+            freshProvisionsRow.getCell(2).value = 'FRESH PROVISIONS';
+            // Calculate the total row number dynamically based on data length (only included items with valid prices)
+            const freshProvisionsDataLength = this.getValidPriceRecords().filter(item => this.isFreshProvisionItem(item) && item.included).length;
+            const freshProvisionsTotalRow = freshProvisionsDataLength + 3; // +1 for header, +2 for two rows below last data
+            if (freshProvisionsDataLength > 0) {
+                freshProvisionsRow.getCell(3).value = { formula: `'FRESH PROVISIONS'!G${freshProvisionsTotalRow}` };
+            } else {
+                freshProvisionsRow.getCell(3).value = 0; // No data, so total is 0
+            }
 
-        provisionsRow.getCell(3).font = {
-            name: 'Cambria',
-            bold: true,
-            size: 16,
-            color: { argb: 'FF000000' }
-        };
-        provisionsRow.getCell(3).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFFFFFFF' }
-        };
-        provisionsRow.getCell(3).alignment = { horizontal: 'center' };
-        provisionsRow.getCell(3).numFmt = '$#,##0.00';
-        provisionsRow.getCell(3).border = {
-            top: { style: 'thin', color: { argb: 'FF000000' } },
-            left: { style: 'thin', color: { argb: 'FF000000' } },
-            bottom: { style: 'thin', color: { argb: 'FF000000' } },
-            right: { style: 'thin', color: { argb: 'FF000000' } }
-        };
+            // Style FRESH PROVISIONS row - light blue background with black text
+            freshProvisionsRow.getCell(2).font = {
+                name: 'Cambria',
+                bold: true,
+                size: 16,
+                color: { argb: 'FF000000' }
+            };
+            freshProvisionsRow.getCell(2).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFB4C6E7' }
+            };
+            freshProvisionsRow.getCell(2).alignment = { horizontal: 'left' };
+            freshProvisionsRow.getCell(2).border = {
+                top: { style: 'thin', color: { argb: 'FF000000' } },
+                left: { style: 'thin', color: { argb: 'FF000000' } },
+                bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                right: { style: 'thin', color: { argb: 'FF000000' } }
+            };
 
-        // Add FRESH PROVISIONS row (B15:C15) with light blue background and black text
-        const freshProvisionsRow = worksheet.getRow(15);
-        freshProvisionsRow.getCell(2).value = 'FRESH PROVISIONS';
-        // Calculate the total row number dynamically based on data length (only included items with valid prices)
-        const freshProvisionsDataLength = this.getValidPriceRecords().filter(item => this.isFreshProvisionItem(item) && item.included).length;
-        const freshProvisionsTotalRow = freshProvisionsDataLength + 3; // +1 for header, +2 for two rows below last data
-        if (freshProvisionsDataLength > 0) {
-            freshProvisionsRow.getCell(3).value = { formula: `'FRESH PROVISIONS'!G${freshProvisionsTotalRow}` };
-        } else {
-            freshProvisionsRow.getCell(3).value = 0; // No data, so total is 0
+            freshProvisionsRow.getCell(3).font = {
+                name: 'Cambria',
+                bold: true,
+                size: 16,
+                color: { argb: 'FF000000' }
+            };
+            freshProvisionsRow.getCell(3).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFFFFFFF' }
+            };
+            freshProvisionsRow.getCell(3).alignment = { horizontal: 'center' };
+            freshProvisionsRow.getCell(3).numFmt = '$#,##0.00';
+            freshProvisionsRow.getCell(3).border = {
+                top: { style: 'thin', color: { argb: 'FF000000' } },
+                left: { style: 'thin', color: { argb: 'FF000000' } },
+                bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                right: { style: 'thin', color: { argb: 'FF000000' } }
+            };
+
+            currentRow++;
         }
 
-        // Style FRESH PROVISIONS row - light blue background with black text
-        freshProvisionsRow.getCell(2).font = {
-            name: 'Cambria',
-            bold: true,
-            size: 16,
-            color: { argb: 'FF000000' }
-        };
-        freshProvisionsRow.getCell(2).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFB4C6E7' }
-        };
-        freshProvisionsRow.getCell(2).alignment = { horizontal: 'left' };
-        freshProvisionsRow.getCell(2).border = {
-            top: { style: 'thin', color: { argb: 'FF000000' } },
-            left: { style: 'thin', color: { argb: 'FF000000' } },
-            bottom: { style: 'thin', color: { argb: 'FF000000' } },
-            right: { style: 'thin', color: { argb: 'FF000000' } }
-        };
+        // Add BOND row - only if we have bond data
+        if (hasBondData) {
+            const bondRow = worksheet.getRow(currentRow);
+            bondRow.getCell(2).value = 'BOND';
+            // Calculate the total row number dynamically based on data length (only included items with valid prices)
+            const bondDataLength = this.getValidPriceRecords().filter(item => this.isBondItem(item) && item.included).length;
+            const bondTotalRow = bondDataLength + 3; // +1 for header, +2 for two rows below last data
+            if (bondDataLength > 0) {
+                bondRow.getCell(3).value = { formula: `BOND!G${bondTotalRow}` };
+            } else {
+                bondRow.getCell(3).value = 0; // No data, so total is 0
+            }
 
-        freshProvisionsRow.getCell(3).font = {
-            name: 'Cambria',
-            bold: true,
-            size: 16,
-            color: { argb: 'FF000000' }
-        };
-        freshProvisionsRow.getCell(3).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFFFFFFF' }
-        };
-        freshProvisionsRow.getCell(3).alignment = { horizontal: 'center' };
-        freshProvisionsRow.getCell(3).numFmt = '$#,##0.00';
-        freshProvisionsRow.getCell(3).border = {
-            top: { style: 'thin', color: { argb: 'FF000000' } },
-            left: { style: 'thin', color: { argb: 'FF000000' } },
-            bottom: { style: 'thin', color: { argb: 'FF000000' } },
-            right: { style: 'thin', color: { argb: 'FF000000' } }
-        };
+            // Style BOND row - light blue background with black text
+            bondRow.getCell(2).font = {
+                name: 'Cambria',
+                bold: true,
+                size: 16,
+                color: { argb: 'FF000000' }
+            };
+            bondRow.getCell(2).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFB4C6E7' }
+            };
+            bondRow.getCell(2).alignment = { horizontal: 'left' };
+            bondRow.getCell(2).border = {
+                top: { style: 'thin', color: { argb: 'FF000000' } },
+                left: { style: 'thin', color: { argb: 'FF000000' } },
+                bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                right: { style: 'thin', color: { argb: 'FF000000' } }
+            };
 
-        // Add BOND row (B16:C16) with light blue background and black text
-        const bondRow = worksheet.getRow(16);
-        bondRow.getCell(2).value = 'BOND';
-        // Calculate the total row number dynamically based on data length (only included items with valid prices)
-        const bondDataLength = this.getValidPriceRecords().filter(item => this.isBondItem(item) && item.included).length;
-        const bondTotalRow = bondDataLength + 3; // +1 for header, +2 for two rows below last data
-        if (bondDataLength > 0) {
-            bondRow.getCell(3).value = { formula: `BOND!G${bondTotalRow}` };
-        } else {
-            bondRow.getCell(3).value = 0; // No data, so total is 0
+            bondRow.getCell(3).font = {
+                name: 'Cambria',
+                bold: true,
+                size: 16,
+                color: { argb: 'FF000000' }
+            };
+            bondRow.getCell(3).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFFFFFFF' }
+            };
+            bondRow.getCell(3).alignment = { horizontal: 'center' };
+            bondRow.getCell(3).numFmt = '$#,##0.00';
+            bondRow.getCell(3).border = {
+                top: { style: 'thin', color: { argb: 'FF000000' } },
+                left: { style: 'thin', color: { argb: 'FF000000' } },
+                bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                right: { style: 'thin', color: { argb: 'FF000000' } }
+            };
         }
 
-        // Style BOND row - light blue background with black text
-        bondRow.getCell(2).font = {
-            name: 'Cambria',
-            bold: true,
-            size: 16,
-            color: { argb: 'FF000000' }
-        };
-        bondRow.getCell(2).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFB4C6E7' }
-        };
-        bondRow.getCell(2).alignment = { horizontal: 'left' };
-        bondRow.getCell(2).border = {
-            top: { style: 'thin', color: { argb: 'FF000000' } },
-            left: { style: 'thin', color: { argb: 'FF000000' } },
-            bottom: { style: 'thin', color: { argb: 'FF000000' } },
-            right: { style: 'thin', color: { argb: 'FF000000' } }
-        };
-
-        bondRow.getCell(3).font = {
-            name: 'Cambria',
-            bold: true,
-            size: 16,
-            color: { argb: 'FF000000' }
-        };
-        bondRow.getCell(3).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFFFFFFF' }
-        };
-        bondRow.getCell(3).alignment = { horizontal: 'center' };
-        bondRow.getCell(3).numFmt = '$#,##0.00';
-        bondRow.getCell(3).border = {
-            top: { style: 'thin', color: { argb: 'FF000000' } },
-            left: { style: 'thin', color: { argb: 'FF000000' } },
-            bottom: { style: 'thin', color: { argb: 'FF000000' } },
-            right: { style: 'thin', color: { argb: 'FF000000' } }
-        };
-
-
-        // Add TOTAL ORDER row (B19:C19)
+        // Add TOTAL ORDER row - dynamically positioned
         const totalRow = worksheet.getRow(19);
         totalRow.getCell(2).value = 'TOTAL ORDER, USD';
-        totalRow.getCell(3).value = { formula: '=SUM(C14:C16)' };
+        // Build dynamic SUM formula based on which rows are present
+        let sumFormula = '=';
+        if (hasProvisionsData && hasBondData) {
+            sumFormula = '=SUM(C14:C16)'; // All three rows
+        } else if (hasProvisionsData && !hasBondData) {
+            sumFormula = '=SUM(C14:C15)'; // Only provisions and fresh provisions
+        } else if (!hasProvisionsData && hasBondData) {
+            sumFormula = '=C14'; // Only bond
+        } else {
+            sumFormula = '=0'; // No data
+        }
+        totalRow.getCell(3).value = { formula: sumFormula };
 
         // Style TOTAL ORDER row - no background, black text
         totalRow.getCell(2).font = {
@@ -906,6 +932,18 @@ export class PriceListComponent implements OnInit, OnDestroy {
     private isBondItem(item: ProcessedDataRow): boolean {
         // Data uploaded via "Bonded" dropzone should go in "BOND" Excel tab
         return item.category === 'Bonded';
+    }
+
+    private hasProvisionsData(): boolean {
+        // Check if there are any provisions items with valid prices and included
+        const validData = this.getValidPriceRecords();
+        return validData.some(item => this.isProvisionItem(item) && item.included);
+    }
+
+    private hasBondData(): boolean {
+        // Check if there are any bond items with valid prices and included
+        const validData = this.getValidPriceRecords();
+        return validData.some(item => this.isBondItem(item) && item.included);
     }
 
 }
