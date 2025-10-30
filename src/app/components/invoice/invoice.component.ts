@@ -730,33 +730,64 @@ export class InvoiceComponent implements OnInit {
             worksheet.properties.showGridLines = false;
             worksheet.views = [{ showGridLines: false }];
 
-            // Load and add images
+            // Top header rendering (image for HI Marine, custom header for EOS)
             try {
-                // Add top logo image
-                const topImageResponse = await fetch('assets/images/HIMarineTopImage.png');
-                const topImageBuffer = await topImageResponse.arrayBuffer();
-                const topImageId = workbook.addImage({
-                    buffer: topImageBuffer,
-                    extension: 'png',
-                });
-                worksheet.addImage(topImageId, {
-                    tl: { col: 1.5, row: 0.5 }, // Moved down slightly from the very top
-                    ext: { width: 300, height: 180 } // 150% of current size: 300x180 pixels
-                });
+                if (this.selectedBank === 'EOS') {
+                    // Left title: EOS SUPPLY LTD
+                    worksheet.mergeCells('A2:D2');
+                    const eosTitle = worksheet.getCell('A2');
+                    eosTitle.value = 'EOS SUPPLY LTD';
+                    eosTitle.font = { name: 'Arial', size: 18, bold: true, italic: true, color: { argb: 'FF0B2E66' } } as any;
+                    eosTitle.alignment = { horizontal: 'left', vertical: 'middle' } as any;
 
-                // Add bottom border image at the end (we'll set this position later after we know the final row)
+                    // Right contact details
+                    worksheet.mergeCells('E2:H2');
+                    const eosPhoneUk = worksheet.getCell('E2');
+                    eosPhoneUk.value = 'Phone: +44 730 7988228';
+                    eosPhoneUk.font = { name: 'Arial', size: 11, color: { argb: 'FF0B2E66' } } as any;
+                    eosPhoneUk.alignment = { horizontal: 'right', vertical: 'middle' } as any;
+
+                    worksheet.mergeCells('E3:H3');
+                    const eosPhoneUs = worksheet.getCell('E3');
+                    eosPhoneUs.value = 'Phone: +1 857 204-5786';
+                    eosPhoneUs.font = { name: 'Arial', size: 11, color: { argb: 'FF0B2E66' } } as any;
+                    eosPhoneUs.alignment = { horizontal: 'right', vertical: 'middle' } as any;
+
+                    worksheet.mergeCells('E4:H4');
+                    const eosEmail = worksheet.getCell('E4');
+                    eosEmail.value = 'office@eos-supply.co.uk';
+                    eosEmail.font = { name: 'Arial', size: 11, color: { argb: 'FF0B2E66' } } as any;
+                    eosEmail.alignment = { horizontal: 'right', vertical: 'middle' } as any;
+
+                    // Navy bar across the sheet
+                    worksheet.mergeCells('A6:H6');
+                    const eosBar = worksheet.getCell('A6');
+                    eosBar.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B2E66' } } as any;
+                    worksheet.getRow(6).height = 18;
+                } else {
+                    // Default: add HI Marine top logo image
+                    const topImageResponse = await fetch('assets/images/HIMarineTopImage.png');
+                    const topImageBuffer = await topImageResponse.arrayBuffer();
+                    const topImageId = workbook.addImage({
+                        buffer: topImageBuffer,
+                        extension: 'png',
+                    });
+                    worksheet.addImage(topImageId, {
+                        tl: { col: 1.5, row: 0.5 },
+                        ext: { width: 300, height: 180 }
+                    });
+                }
+
+                // Bottom border image (used for all variants)
                 const bottomImageResponse = await fetch('assets/images/HIMarineBottomBorder.png');
                 const bottomImageBuffer = await bottomImageResponse.arrayBuffer();
                 const bottomImageId = workbook.addImage({
                     buffer: bottomImageBuffer,
                     extension: 'png',
                 });
-
-                // We'll add the bottom image after calculating all content
-                // Store the ID for later use
                 (worksheet as any)._bottomImageId = bottomImageId;
             } catch (imageError) {
-                console.warn('Could not load images for Excel export:', imageError);
+                console.warn('Could not render header/footer for Excel export:', imageError);
             }
 
             // Set column widths
@@ -769,39 +800,34 @@ export class InvoiceComponent implements OnInit {
             worksheet.getColumn('G').width = 12;  // Price
             worksheet.getColumn('H').width = 12;  // Total
 
-            // Our Company Details (Top-Left) - label + value in one cell
-            worksheet.mergeCells('A9:D9');
+            // Our Company Details (Top-Left) - write concatenated text to column A only, no merges, no wrap
             const companyHeader = worksheet.getCell('A9');
             companyHeader.value = `Name: ${this.invoiceData.ourCompanyName || ''}`;
             companyHeader.font = { size: 11, name: 'Arial', bold: true };
-            companyHeader.alignment = { horizontal: 'left' };
+            companyHeader.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
-            worksheet.mergeCells('A10:D10');
             const address1 = worksheet.getCell('A10');
             address1.value = `Address: ${this.invoiceData.ourCompanyAddress || ''}`;
             address1.font = { size: 11, name: 'Arial', bold: true };
-            address1.alignment = { horizontal: 'left' };
+            address1.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
-            worksheet.mergeCells('A11:D11');
             const address2 = worksheet.getCell('A11');
             address2.value = `Address2: ${this.invoiceData.ourCompanyAddress2 || ''}`;
             address2.font = { size: 11, name: 'Arial', bold: true };
-            address2.alignment = { horizontal: 'left' };
+            address2.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
-            worksheet.mergeCells('A12:D12');
             const country = worksheet.getCell('A12');
             const leftCityLine = [this.invoiceData.ourCompanyCity, this.invoiceData.ourCompanyCountry]
                 .filter(Boolean)
                 .join(', ');
             country.value = `City: ${leftCityLine}`;
             country.font = { size: 11, name: 'Arial', bold: true };
-            country.alignment = { horizontal: 'left' };
+            country.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
-            worksheet.mergeCells('A13:D13');
             const email = worksheet.getCell('A13');
             email.value = `Email: ${this.invoiceData.ourCompanyEmail || ''}`;
             email.font = { size: 11, name: 'Arial', bold: true };
-            email.alignment = { horizontal: 'left' };
+            email.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
             // Vessel Details (Top-Right) under the logo - label + value in one cell
             const vesselLabelStyle = { font: { bold: true, size: 11, name: 'Arial' } };
@@ -905,7 +931,8 @@ export class InvoiceComponent implements OnInit {
                 const cell = worksheet.getCell(tableStartRow, index + 1);
                 cell.value = header;
                 cell.font = { bold: true, size: 11, name: 'Arial', color: { argb: 'FFFFFFFF' } };
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF808080' } } as any;
+                const headerFillColor = this.selectedBank === 'EOS' ? 'FF0B2E66' : 'FF808080';
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: headerFillColor } } as any;
                 cell.alignment = { horizontal: 'center', vertical: 'middle' };
                 cell.border = {
                     top: { style: 'thin', color: { argb: 'FF000000' } },
@@ -1058,9 +1085,9 @@ export class InvoiceComponent implements OnInit {
             totalsStartRow += feeLines.length;
 
             // TOTAL (formula: sum of H column item totals + all monetary fee cells)
-            worksheet.getCell(`F${totalsStartRow}`).value = 'TOTAL GBP';
-            worksheet.getCell(`F${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
-            worksheet.getCell(`F${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
+            worksheet.getCell(`G${totalsStartRow}`).value = 'TOTAL GBP';
+            worksheet.getCell(`G${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
+            worksheet.getCell(`G${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
 
             const firstDataRow = tableStartRow + 1;
             const lastDataRow = tableStartRow + this.invoiceData.items.length;
@@ -1068,10 +1095,22 @@ export class InvoiceComponent implements OnInit {
             const feeSumPart = feeAmountRowRefs.length ? `+${feeAmountRowRefs.join('+')}` : '';
             const discountFactor = this.invoiceData.discountPercent ? `(1-${this.invoiceData.discountPercent}/100)` : '1';
             const totalFormula = `(${itemsSumFormula}*${discountFactor})${feeSumPart}`;
-            worksheet.getCell(`G${totalsStartRow}`).value = { formula: totalFormula } as any;
-            worksheet.getCell(`G${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
-            worksheet.getCell(`G${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
-            worksheet.getCell(`G${totalsStartRow}`).numFmt = '£#,##0.00';
+            worksheet.getCell(`H${totalsStartRow}`).value = { formula: totalFormula } as any;
+            worksheet.getCell(`H${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
+            worksheet.getCell(`H${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
+            worksheet.getCell(`H${totalsStartRow}`).numFmt = '£#,##0.00';
+
+            // Draw a black horizontal separating line above "TOTAL GBP" across the sheet
+            for (let col = 5; col <= 8; col++) {
+                const cell = worksheet.getCell(totalsStartRow, col);
+                const existing = cell.border || {} as any;
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: existing.left,
+                    right: existing.right,
+                    bottom: existing.bottom
+                } as any;
+            }
 
             // Removed separate grand total line; the TOTAL GBP row represents the final amount
 
@@ -1095,8 +1134,46 @@ export class InvoiceComponent implements OnInit {
                 worksheet.getCell(`A${termsStartRow + 1 + index}`).font = { size: 10, name: 'Arial' };
             });
 
+            // If EOS category selected, print company and bank details at bottom (left and right blocks)
+            if (this.selectedBank === 'EOS') {
+                const eosFont = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF0B2E66' } } as any;
+                const bottomSectionStart = termsStartRow + terms.length + 4;
+
+                // Left block: Our Company Details in column A
+                const leftLines: string[] = [
+                    this.invoiceData.ourCompanyName || '',
+                    this.invoiceData.ourCompanyAddress || '',
+                    this.invoiceData.ourCompanyAddress2 || '',
+                    [this.invoiceData.ourCompanyCity, this.invoiceData.ourCompanyCountry].filter(Boolean).join(', ')
+                ].filter(Boolean);
+
+                leftLines.forEach((text, idx) => {
+                    const rowIndex = bottomSectionStart + idx;
+                    const cell = worksheet.getCell(`A${rowIndex}`);
+                    cell.value = text;
+                    cell.font = eosFont;
+                    cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
+                });
+
+                // Right block: Bank Details starting at column E; merge to allow long text on one line
+                const rightStartRow = bottomSectionStart;
+                const writeRight = (offset: number, text: string) => {
+                    const row = rightStartRow + offset;
+                    worksheet.mergeCells(`E${row}:H${row}`);
+                    const cell = worksheet.getCell(`E${row}`);
+                    cell.value = text;
+                    cell.font = eosFont;
+                    cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
+                };
+
+                writeRight(0, `Bank Name: ${this.invoiceData.bankName || ''}`);
+                writeRight(1, `Bank Address: ${this.invoiceData.bankAddress || ''}`);
+                writeRight(2, `IBAN: ${this.invoiceData.iban || ''}`);
+                writeRight(3, `SWIFTBIC: ${this.invoiceData.swiftCode || ''}`);
+            }
+
             // Add bottom image
-            const bottomImageRowPosition = termsStartRow + terms.length + 3; // Add some spacing
+            const bottomImageRowPosition = termsStartRow + terms.length + 8; // Leave extra spacing after shifting sections down
             if ((worksheet as any)._bottomImageId) {
                 worksheet.addImage((worksheet as any)._bottomImageId, {
                     tl: { col: 0, row: bottomImageRowPosition }, // Position at bottom
@@ -1111,7 +1188,8 @@ export class InvoiceComponent implements OnInit {
             });
 
             // Download file
-            const fileName = `HIMarine_Invoice_${this.invoiceData.invoiceNumber}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            const filePrefix = this.selectedBank === 'EOS' ? 'EOS_Invoice' : 'HIMarine_Invoice';
+            const fileName = `${filePrefix}_${this.invoiceData.invoiceNumber}_${new Date().toISOString().split('T')[0]}.xlsx`;
             saveAs(blob, fileName);
 
             this.loggingService.logExport('excel_invoice_exported', {

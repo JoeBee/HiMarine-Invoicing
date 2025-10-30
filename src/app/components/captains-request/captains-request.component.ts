@@ -244,6 +244,11 @@ export class CaptainsRequestComponent {
 
             // Check if row has enough columns (at least 7 for Total column)
             if (row && row.length >= 7) {
+                // Skip rows without a description (column B, index 1)
+                const descriptionCell = String(row[1] ?? '').trim();
+                if (!descriptionCell) {
+                    continue;
+                }
                 const totalValue = this.parseNumericValue(row[6]); // Total is column G (index 6)
 
                 if (totalValue > 0) {
@@ -316,6 +321,11 @@ export class CaptainsRequestComponent {
 
             // Check if row has enough columns (at least 7 for Total column)
             if (row && row.length >= 7) {
+                // Skip rows without a description (column B, index 1)
+                const descriptionCell = String(row[1] ?? '').trim();
+                if (!descriptionCell) {
+                    continue;
+                }
                 const totalValue = this.parseNumericValue(row[6]); // Total is column G (index 6)
 
                 if (totalValue > 0) {

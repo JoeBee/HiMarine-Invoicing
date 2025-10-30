@@ -3,7 +3,8 @@
         <!-- Top Logo Section with Export Buttons -->
         <div class="top-section">
             <div class="company-logo">
-                <img src="assets/images/HIMarineTopImage.png" alt="HI Marine Company" class="top-logo">
+                <img [src]="selectedBank === 'EOS' ? 'assets/images/EosSupplyLtd.png' : 'assets/images/HIMarineTopImage.png'"
+                    alt="Company Logo" class="top-logo">
             </div>
             <div class="export-buttons-section">
                 <button class="export-btn excel-btn" [disabled]="invoiceData.items.length === 0"
@@ -263,7 +264,7 @@
         </div>
 
         <!-- Items Table -->
-        <div class="items-section">
+        <div class="items-section" [ngClass]="{ 'eos-theme': selectedBank === 'EOS' }">
             <table class="items-table">
                 <thead>
                     <tr>
@@ -300,7 +301,8 @@
                     <span>£ {{ invoiceData.totalGBP | number:'1.2-2' }}</span>
                 </div>
                 <div class="total-line">
-                    <span *ngIf="(invoiceData.discountPercent || 0) > 0">Discount</span>
+                    <span *ngIf="(invoiceData.discountPercent || 0) > 0">Discount ({{ invoiceData.discountPercent || 0
+                        }} %)</span>
                     <span *ngIf="(invoiceData.discountPercent || 0) > 0">- £ {{ (invoiceData.totalGBP *
                         (invoiceData.discountPercent || 0) / 100) | number:'1.2-2' }}</span>
                 </div>
@@ -325,6 +327,7 @@
                     <span>£ {{ invoiceData.launchFee | number:'1.2-2' }}</span>
                 </div>
                 <div class="total-line grand-total">
+                    <span></span>
                     <span>£ {{ invoiceData.grandTotal | number:'1.2-2' }}</span>
                 </div>
             </div>
@@ -349,7 +352,8 @@
 
         <!-- Bottom Logo Section -->
         <div class="bottom-section">
-            <img src="assets/images/HIMarineBottomBorder.png" alt="HI Marine Company" class="bottom-logo-image">
+            <img [src]="selectedBank === 'EOS' ? 'assets/images/EosSupplyLtdBottomBorder.png' : 'assets/images/HIMarineBottomBorder.png'"
+                alt="Company Bottom Border" class="bottom-logo-image">
         </div>
     </div>
 </div>

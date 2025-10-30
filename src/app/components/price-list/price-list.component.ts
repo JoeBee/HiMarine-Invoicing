@@ -709,7 +709,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Add sum formula in column G - handle empty data case
         const totalValueCell = worksheet.getCell(`G${totalRowNumber}`);
         if (provisionsData.length > 0) {
-            totalValueCell.value = { formula: `=SUM(G3:G${lastDataRow})` };
+            totalValueCell.value = { formula: `=SUM(G2:G${lastDataRow})` };
         } else {
             totalValueCell.value = 0; // No data, so total is 0
         }
@@ -807,7 +807,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Add sum formula in column G - handle empty data case
         const totalValueCell = worksheet.getCell(`G${totalRowNumber}`);
         if (freshProvisionsData.length > 0) {
-            totalValueCell.value = { formula: `=SUM(G3:G${lastDataRow})` };
+            totalValueCell.value = { formula: `=SUM(G2:G${lastDataRow})` };
         } else {
             totalValueCell.value = 0; // No data, so total is 0
         }
@@ -905,7 +905,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Add sum formula in column G - handle empty data case
         const totalValueCell = worksheet.getCell(`G${totalRowNumber}`);
         if (bondData.length > 0) {
-            totalValueCell.value = { formula: `=SUM(G3:G${lastDataRow})` };
+            totalValueCell.value = { formula: `=SUM(G2:G${lastDataRow})` };
         } else {
             totalValueCell.value = 0; // No data, so total is 0
         }

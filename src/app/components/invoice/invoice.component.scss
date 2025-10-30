@@ -332,6 +332,15 @@
     .items-section {
         margin-bottom: 30px;
 
+        // EOS theme: parent class applied in template when EOS selected
+        &.eos-theme {
+            .items-table {
+                th {
+                    background-color: #0B2E66;
+                }
+            }
+        }
+
         .items-table {
             width: 100%;
             border-collapse: collapse;
@@ -351,6 +360,9 @@
                 font-weight: bold;
                 text-align: center;
             }
+
+            // EOS theme: match header background to EOS navy (#0B2E66)
+
 
             td {
                 background-color: white;
