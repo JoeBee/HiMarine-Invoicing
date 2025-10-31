@@ -78,6 +78,9 @@ export class InvoiceComponent implements OnInit {
     selectedBank: string = ''; // Default to blank
     primaryCurrency: string = '£'; // Default to GBP, will be updated from Excel file
 
+    // Toggle switch for Split File / One Invoice
+    splitFileMode: boolean = false; // false = "Split file" (default), true = "One invoice"
+
     // Country dropdown options
     countries = [
         'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Armenia', 'Australia',
@@ -258,6 +261,14 @@ export class InvoiceComponent implements OnInit {
                 // Keep fields blank
                 break;
         }
+    }
+
+    onToggleChange(): void {
+        // Handle toggle change logic here
+        // splitFileMode = false means "Split file" (default)
+        // splitFileMode = true means "One invoice"
+        console.log('Toggle changed:', this.splitFileMode ? 'One invoice' : 'Split file');
+        // Add any additional logic you need when the toggle changes
     }
 
     private clearBankDetails(): void {

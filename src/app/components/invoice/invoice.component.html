@@ -7,6 +7,17 @@
                     alt="Company Logo" class="top-logo">
             </div>
             <div class="export-buttons-section">
+                <!-- Toggle Switch for Split File / One Invoice -->
+                <div class="toggle-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" [(ngModel)]="splitFileMode" (change)="onToggleChange()"
+                            class="toggle-input">
+                        <span class="toggle-slider">
+                            <span class="toggle-label-left">Split file</span>
+                            <span class="toggle-label-right">One invoice</span>
+                        </span>
+                    </label>
+                </div>
                 <button class="export-btn excel-btn" [disabled]="invoiceData.items.length === 0"
                     (click)="exportInvoiceToExcel()">
                     <span class="btn-icon">📊</span>

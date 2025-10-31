@@ -135,6 +135,108 @@
             gap: 15px;
             align-items: center;
 
+            .toggle-group {
+                .toggle-switch {
+                    position: relative;
+                    display: inline-block;
+                    width: 160px;
+                    height: 38px;
+                    cursor: pointer;
+                    margin: 0;
+                }
+
+                .toggle-input {
+                    opacity: 0;
+                    width: 0;
+                    height: 0;
+                }
+
+                .toggle-slider {
+                    position: absolute;
+                    cursor: pointer;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: #e0e0e0;
+                    border: 2px solid #ccc;
+                    transition: .4s;
+                    border-radius: 38px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0 12px;
+
+                    &::before {
+                        position: absolute;
+                        content: "";
+                        height: 28px;
+                        width: 76px;
+                        left: 4px;
+                        bottom: 4px;
+                        background-color: #217346;
+                        transition: .4s;
+                        border-radius: 28px;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                    }
+                }
+
+                .toggle-label-left,
+                .toggle-label-right {
+                    z-index: 2;
+                    font-weight: 600;
+                    font-size: 14px;
+                    transition: color 0.3s, font-weight 0.3s;
+                    position: relative;
+                    width: 70px;
+                    text-align: center;
+                }
+
+                .toggle-label-left {
+                    color: #333;
+                }
+
+                .toggle-label-right {
+                    color: #666;
+                }
+
+                // When unchecked (Split file is selected)
+                .toggle-input:not(:checked) + .toggle-slider {
+                    .toggle-label-left {
+                        color: white;
+                        font-weight: 700;
+                    }
+
+                    .toggle-label-right {
+                        color: #999;
+                        font-weight: 500;
+                    }
+                }
+
+                // When checked (One invoice is selected)
+                .toggle-input:checked + .toggle-slider {
+                    background-color: #e0e0e0;
+
+                    &::before {
+                        transform: translateX(76px);
+                    }
+
+                    .toggle-label-left {
+                        color: #999;
+                        font-weight: 500;
+                    }
+
+                    .toggle-label-right {
+                        color: white;
+                        font-weight: 700;
+                    }
+                }
+
+                .toggle-input:focus + .toggle-slider {
+                    box-shadow: 0 0 0 3px rgba(33, 115, 70, 0.3);
+                }
+            }
+
             .export-btn {
                 display: flex;
                 align-items: center;
