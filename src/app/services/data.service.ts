@@ -154,8 +154,10 @@ export class DataService {
                                             descriptionHeader = headerText;
                                         }
 
-                                        if (headerValue.includes('price') || headerValue.includes('cost') ||
-                                            headerValue.includes('amount') || headerValue.includes('value')) {
+                                        if ((headerValue.includes('price') ||
+                                            headerValue.includes('cost') ||
+                                            headerValue.includes('amount') ||
+                                            headerValue.includes('value')) && headerValue.length < 25) {
                                             priceColumn = XLSX.utils.encode_col(searchCol);
                                             priceHeader = headerText;
                                         }
