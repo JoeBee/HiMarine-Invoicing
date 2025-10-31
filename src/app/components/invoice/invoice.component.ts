@@ -804,6 +804,48 @@ export class InvoiceComponent implements OnInit {
         }
 
         try {
+            // Check if split file mode is enabled
+            if (!this.splitFileMode) {
+                // Split file mode: Create separate files for Bonded and Provisions
+                await this.exportSplitFiles();
+            } else {
+                // One invoice mode: Create single file (existing behavior)
+                await this.exportSingleInvoiceFile(this.invoiceData.items, this.invoiceData.category);
+            }
+        } catch (error) {
+            this.loggingService.logError(error as Error, 'excel_export', 'InvoiceComponent');
+            alert('An error occurred while exporting to Excel. Please try again.');
+        }
+    }
+
+    private async exportSplitFiles(): Promise<void> {
+        // Group items by category
+        const bondedItems = this.invoiceData.items.filter(item => 
+            item.tabName === 'BOND'
+        );
+        const provisionsItems = this.invoiceData.items.filter(item => 
+            item.tabName === 'PROVISIONS' || item.tabName === 'FRESH PROVISIONS'
+        );
+
+        // Export each category if it has items
+        if (bondedItems.length > 0) {
+            await this.exportSingleInvoiceFile(bondedItems, 'Bonds');
+        }
+        if (provisionsItems.length > 0) {
+            await this.exportSingleInvoiceFile(provisionsItems, 'Provisions');
+        }
+
+        // Log export
+        const filesCreated = [bondedItems.length > 0, provisionsItems.length > 0].filter(Boolean).length;
+        this.loggingService.logExport('excel_invoice_exported_split', {
+            filesCreated,
+            bondedItems: bondedItems.length,
+            provisionsItems: provisionsItems.length
+        }, 'InvoiceComponent');
+    }
+
+    private async exportSingleInvoiceFile(items: InvoiceItem[], categoryOverride?: string): Promise<void> {
+        try {
             // Create workbook and worksheet using ExcelJS
             const workbook = new ExcelJS.Workbook();
             const worksheet = workbook.addWorksheet('Invoice');
@@ -823,26 +865,26 @@ export class InvoiceComponent implements OnInit {
                     eosTitle.alignment = { horizontal: 'left', vertical: 'middle' } as any;
 
                     // Right contact details
-                    worksheet.mergeCells('E2:H2');
+                    worksheet.mergeCells('E2:G2');
                     const eosPhoneUk = worksheet.getCell('E2');
                     eosPhoneUk.value = 'Phone: +44 730 7988228';
                     eosPhoneUk.font = { name: 'Arial', size: 11, color: { argb: 'FF0B2E66' } } as any;
                     eosPhoneUk.alignment = { horizontal: 'right', vertical: 'middle' } as any;
 
-                    worksheet.mergeCells('E3:H3');
+                    worksheet.mergeCells('E3:G3');
                     const eosPhoneUs = worksheet.getCell('E3');
                     eosPhoneUs.value = 'Phone: +1 857 204-5786';
                     eosPhoneUs.font = { name: 'Arial', size: 11, color: { argb: 'FF0B2E66' } } as any;
                     eosPhoneUs.alignment = { horizontal: 'right', vertical: 'middle' } as any;
 
-                    worksheet.mergeCells('E4:H4');
+                    worksheet.mergeCells('E4:G4');
                     const eosEmail = worksheet.getCell('E4');
                     eosEmail.value = 'office@eos-supply.co.uk';
                     eosEmail.font = { name: 'Arial', size: 11, color: { argb: 'FF0B2E66' } } as any;
                     eosEmail.alignment = { horizontal: 'right', vertical: 'middle' } as any;
 
                     // Navy bar across the sheet
-                    worksheet.mergeCells('A6:H6');
+                    worksheet.mergeCells('A6:G6');
                     const eosBar = worksheet.getCell('A6');
                     eosBar.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B2E66' } } as any;
                     worksheet.getRow(6).height = 18;
@@ -874,13 +916,12 @@ export class InvoiceComponent implements OnInit {
 
             // Set column widths
             worksheet.getColumn('A').width = 6;   // Pos
-            worksheet.getColumn('B').width = 15;  // Tab
-            worksheet.getColumn('C').width = 35;  // Description  
-            worksheet.getColumn('D').width = 15;  // Remark
-            worksheet.getColumn('E').width = 8;   // Unit
-            worksheet.getColumn('F').width = 6;   // Qty
-            worksheet.getColumn('G').width = 12;  // Price
-            worksheet.getColumn('H').width = 12;  // Total
+            worksheet.getColumn('B').width = 35;  // Description  
+            worksheet.getColumn('C').width = 15;  // Remark
+            worksheet.getColumn('D').width = 8;   // Unit
+            worksheet.getColumn('E').width = 6;   // Qty
+            worksheet.getColumn('F').width = 12;  // Price
+            worksheet.getColumn('G').width = 12;  // Total
 
             // Our Company Details (Top-Left) - write concatenated text to column A only, no merges, no wrap
             const companyHeader = worksheet.getCell('A9');
@@ -996,19 +1037,20 @@ export class InvoiceComponent implements OnInit {
                 worksheet.getCell(`G${row}`).value = null as any;
             };
 
+            const categoryToUse = categoryOverride || this.invoiceData.category;
             writeInvoiceDetail(0, 'No', this.invoiceData.invoiceNumber);
             writeInvoiceDetail(1, 'Invoice Date', this.invoiceData.invoiceDate);
             writeInvoiceDetail(2, 'Vessel', this.invoiceData.vessel);
             writeInvoiceDetail(3, 'Country', this.invoiceData.country);
             writeInvoiceDetail(4, 'Port', this.invoiceData.port);
-            writeInvoiceDetail(5, 'Category', this.invoiceData.category);
+            writeInvoiceDetail(5, 'Category', categoryToUse);
             writeInvoiceDetail(6, 'Invoice Due', this.invoiceData.invoiceDue);
 
             // Items Table (Starting from row 25)
             const tableStartRow = 25;
 
             // Table Headers
-            const headers = ['Pos', 'Tab', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
+            const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
             headers.forEach((header, index) => {
                 const cell = worksheet.getCell(tableStartRow, index + 1);
                 cell.value = header;
@@ -1018,48 +1060,52 @@ export class InvoiceComponent implements OnInit {
                 cell.alignment = { horizontal: 'center', vertical: 'middle' };
             });
 
+            // Calculate totals for these items
+            const itemsSubtotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
+            const discountAmount = itemsSubtotal * (this.invoiceData.discountPercent || 0) / 100;
+            const feesTotal = (this.invoiceData.deliveryFee || 0) + 
+                             (this.invoiceData.portFee || 0) + 
+                             (this.invoiceData.agencyFee || 0) + 
+                             (this.invoiceData.transportCustomsLaunchFees || 0) + 
+                             (this.invoiceData.launchFee || 0);
+            const categoryTotal = (itemsSubtotal - discountAmount) + feesTotal;
+
             // Table Data
-            this.invoiceData.items.forEach((item, index) => {
+            items.forEach((item, index) => {
                 const rowIndex = tableStartRow + 1 + index;
 
-                // Pos
+                // Pos (renumber from 1 for this file)
                 const posCell = worksheet.getCell(rowIndex, 1);
-                posCell.value = item.pos;
+                posCell.value = index + 1;
                 posCell.font = { size: 10, name: 'Arial' };
                 posCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
-                // Tab
-                const tabCell = worksheet.getCell(rowIndex, 2);
-                tabCell.value = item.tabName;
-                tabCell.font = { size: 10, name: 'Arial' };
-                tabCell.alignment = { horizontal: 'center', vertical: 'middle' };
-
                 // Description
-                const descCell = worksheet.getCell(rowIndex, 3);
+                const descCell = worksheet.getCell(rowIndex, 2);
                 descCell.value = item.description;
                 descCell.font = { size: 10, name: 'Arial' };
                 descCell.alignment = { horizontal: 'left', vertical: 'middle' };
 
                 // Remark
-                const remarkCell = worksheet.getCell(rowIndex, 4);
+                const remarkCell = worksheet.getCell(rowIndex, 3);
                 remarkCell.value = item.remark;
                 remarkCell.font = { size: 10, name: 'Arial' };
                 remarkCell.alignment = { horizontal: 'left', vertical: 'middle' };
 
                 // Unit
-                const unitCell = worksheet.getCell(rowIndex, 5);
+                const unitCell = worksheet.getCell(rowIndex, 4);
                 unitCell.value = item.unit;
                 unitCell.font = { size: 10, name: 'Arial' };
                 unitCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
                 // Qty (default to 0)
-                const qtyCell = worksheet.getCell(rowIndex, 6);
+                const qtyCell = worksheet.getCell(rowIndex, 5);
                 qtyCell.value = (item.qty ?? 0);
                 qtyCell.font = { size: 10, name: 'Arial' };
                 qtyCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
                 // Price (rounded to nearest penny)
-                const priceCell = worksheet.getCell(rowIndex, 7);
+                const priceCell = worksheet.getCell(rowIndex, 6);
                 priceCell.value = Math.round(item.price * 100) / 100;
                 priceCell.font = { size: 10, name: 'Arial' };
                 priceCell.alignment = { horizontal: 'right', vertical: 'middle' };
@@ -1067,20 +1113,19 @@ export class InvoiceComponent implements OnInit {
                 const currencyFormat = this.getCurrencyExcelFormat(item.currency);
                 priceCell.numFmt = currencyFormat;
 
-                // Total (formula = F * G)
-                const totalCell = worksheet.getCell(rowIndex, 8);
-                totalCell.value = { formula: `F${rowIndex}*G${rowIndex}` } as any;
+                // Total (formula = E * F)
+                const totalCell = worksheet.getCell(rowIndex, 7);
+                totalCell.value = { formula: `E${rowIndex}*F${rowIndex}` } as any;
                 totalCell.font = { size: 10, name: 'Arial' };
                 totalCell.alignment = { horizontal: 'right', vertical: 'middle' };
                 totalCell.numFmt = currencyFormat;
             });
 
             // Totals and Fees Section
-            let totalsStartRow = tableStartRow + this.invoiceData.items.length + 2; // slightly tighter spacing
+            let totalsStartRow = tableStartRow + items.length + 2; // slightly tighter spacing
 
             // List discount (amount) and non-zero fees just above the Total
             const feeLines: { label: string; value?: number; includeInSum?: boolean }[] = [];
-            const discountAmount = this.invoiceData.totalGBP * (this.invoiceData.discountPercent || 0) / 100;
             if (discountAmount > 0) feeLines.push({ label: 'Discount:', value: -discountAmount, includeInSum: false });
             if (this.invoiceData.deliveryFee) feeLines.push({ label: 'Delivery fee:', value: this.invoiceData.deliveryFee, includeInSum: true });
             if (this.invoiceData.portFee) feeLines.push({ label: 'Port fee:', value: this.invoiceData.portFee, includeInSum: true });
@@ -1096,15 +1141,15 @@ export class InvoiceComponent implements OnInit {
             const feeAmountRowRefs: string[] = [];
             feeLines.forEach((fee, idx) => {
                 const rowIndex = totalsStartRow + idx;
-                const labelCell = worksheet.getCell(`G${rowIndex}`);
+                const labelCell = worksheet.getCell(`F${rowIndex}`);
                 labelCell.value = fee.label;
                 labelCell.font = { bold: true, size: 11, name: 'Arial' };
                 labelCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
-                const valueCell = worksheet.getCell(`H${rowIndex}`);
+                const valueCell = worksheet.getCell(`G${rowIndex}`);
                 valueCell.value = fee.value as number;
                 valueCell.numFmt = primaryCurrencyFormat;
-                if (fee.includeInSum) feeAmountRowRefs.push(`H${rowIndex}`);
+                if (fee.includeInSum) feeAmountRowRefs.push(`G${rowIndex}`);
                 valueCell.font = { bold: true, size: 11, name: 'Arial' };
                 valueCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
@@ -1114,29 +1159,29 @@ export class InvoiceComponent implements OnInit {
 
             totalsStartRow += feeLines.length;
 
-            // Draw a line above the total row across columns F-H
-            for (let col = 6; col <= 8; col++) { // Column F=6, G=7, H=8
+            // Draw a line above the total row across columns E-G
+            for (let col = 5; col <= 7; col++) { // Column E=5, F=6, G=7
                 const cell = worksheet.getCell(totalsStartRow, col);
                 cell.border = {
                     top: { style: 'thin', color: { argb: 'FF000000' } }
                 } as any;
             }
 
-            // TOTAL (formula: sum of H column item totals + all monetary fee cells)
-            worksheet.getCell(`G${totalsStartRow}`).value = totalLabel;
-            worksheet.getCell(`G${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
-            worksheet.getCell(`G${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
+            // TOTAL (formula: sum of G column item totals + all monetary fee cells)
+            worksheet.getCell(`F${totalsStartRow}`).value = totalLabel;
+            worksheet.getCell(`F${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
+            worksheet.getCell(`F${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
 
             const firstDataRow = tableStartRow + 1;
-            const lastDataRow = tableStartRow + this.invoiceData.items.length;
-            const itemsSumFormula = `SUM(H${firstDataRow}:H${lastDataRow})`;
+            const lastDataRow = tableStartRow + items.length;
+            const itemsSumFormula = `SUM(G${firstDataRow}:G${lastDataRow})`;
             const feeSumPart = feeAmountRowRefs.length ? `+${feeAmountRowRefs.join('+')}` : '';
             const discountFactor = this.invoiceData.discountPercent ? `(1-${this.invoiceData.discountPercent}/100)` : '1';
             const totalFormula = `(${itemsSumFormula}*${discountFactor})${feeSumPart}`;
-            worksheet.getCell(`H${totalsStartRow}`).value = { formula: totalFormula } as any;
-            worksheet.getCell(`H${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
-            worksheet.getCell(`H${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
-            worksheet.getCell(`H${totalsStartRow}`).numFmt = primaryCurrencyFormat;
+            worksheet.getCell(`G${totalsStartRow}`).value = { formula: totalFormula } as any;
+            worksheet.getCell(`G${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
+            worksheet.getCell(`G${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
+            worksheet.getCell(`G${totalsStartRow}`).numFmt = primaryCurrencyFormat;
 
             // Removed separate grand total line; the total row represents the final amount
 
@@ -1185,7 +1230,7 @@ export class InvoiceComponent implements OnInit {
                 const rightStartRow = bottomSectionStart;
                 const writeRight = (offset: number, text: string) => {
                     const row = rightStartRow + offset;
-                    worksheet.mergeCells(`E${row}:H${row}`);
+                    worksheet.mergeCells(`E${row}:G${row}`);
                     const cell = worksheet.getCell(`E${row}`);
                     cell.value = text;
                     cell.font = eosFont;
@@ -1207,10 +1252,10 @@ export class InvoiceComponent implements OnInit {
                 });
             }
 
-            // Set print area: columns A-H starting from row 1, ending 3 rows below the bottom image
+            // Set print area: columns A-G starting from row 1, ending 3 rows below the bottom image
             // bottomImageRowPosition is 0-based, so add 1 to convert to 1-based, then add 3 more rows
             const printAreaEndRow = bottomImageRowPosition + 1 + 3;
-            worksheet.pageSetup.printArea = `A1:H${printAreaEndRow}`;
+            worksheet.pageSetup.printArea = `A1:G${printAreaEndRow}`;
 
             // Generate Excel file
             const buffer = await workbook.xlsx.writeBuffer();
@@ -1220,14 +1265,16 @@ export class InvoiceComponent implements OnInit {
 
             // Download file
             const filePrefix = this.selectedBank === 'EOS' ? 'EOS_Invoice' : 'HIMarine_Invoice';
-            const fileName = `${filePrefix}_${this.invoiceData.invoiceNumber}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            const categorySuffix = categoryOverride ? `_${categoryOverride}` : '';
+            const fileName = `${filePrefix}_${this.invoiceData.invoiceNumber}${categorySuffix}_${new Date().toISOString().split('T')[0]}.xlsx`;
             saveAs(blob, fileName);
 
             this.loggingService.logExport('excel_invoice_exported', {
                 fileName,
                 fileSize: blob.size,
-                itemsIncluded: this.invoiceData.items.length,
-                totalAmount: this.invoiceData.grandTotal
+                itemsIncluded: items.length,
+                totalAmount: categoryTotal,
+                category: categoryToUse
             }, 'InvoiceComponent');
 
         } catch (error) {
