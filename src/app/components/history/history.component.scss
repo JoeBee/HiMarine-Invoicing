@@ -145,6 +145,51 @@
                 color: #555;
                 border-bottom: 2px solid #dee2e6;
                 white-space: nowrap;
+
+                .ip-filter-header {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    align-items: center;
+
+                    .ip-filter-dropdown {
+                        width: 100%;
+                        padding: 6px 8px;
+                        border: 1px solid #ccc;
+                        border-radius: 4px;
+                        background-color: white;
+                        font-size: 0.85rem;
+                        font-family: monospace;
+                        cursor: pointer;
+                        min-width: 120px;
+
+                        &:focus {
+                            outline: none;
+                            border-color: #0066cc;
+                            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+                        }
+                    }
+
+                    .ip-header-label {
+                        font-size: 0.9rem;
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        color: #555;
+                        margin-top: 2px;
+                    }
+
+                    .sr-only {
+                        position: absolute;
+                        width: 1px;
+                        height: 1px;
+                        padding: 0;
+                        margin: -1px;
+                        overflow: hidden;
+                        clip: rect(0, 0, 0, 0);
+                        white-space: nowrap;
+                        border-width: 0;
+                    }
+                }
             }
         }
 
@@ -314,6 +359,39 @@
         .page-info {
             font-weight: 500;
             color: #666;
+        }
+
+        .page-jump {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            label {
+                font-size: 0.9rem;
+                color: #555;
+                font-weight: 500;
+            }
+
+            .page-jump-input {
+                width: 60px;
+                padding: 6px 8px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                font-size: 0.9rem;
+                text-align: center;
+                font-weight: 500;
+
+                &:focus {
+                    outline: none;
+                    border-color: #0066cc;
+                    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+                }
+            }
+
+            .page-jump-max {
+                font-size: 0.85rem;
+                color: #999;
+            }
         }
     }
 }

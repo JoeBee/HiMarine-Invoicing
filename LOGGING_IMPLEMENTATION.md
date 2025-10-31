@@ -1,6 +1,6 @@
-# Logging Implementation for HI Marine Invoicing
+# Logging Implementation for Hi Marine Invoicing
 
-This document describes the comprehensive logging system implemented in the HI Marine Invoicing application.
+This document describes the comprehensive logging system implemented in the Hi Marine Invoicing application.
 
 ## Overview
 

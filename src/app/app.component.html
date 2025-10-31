@@ -47,7 +47,7 @@
                         <li>File name (without extension)</li>
                         <li>Top left cell where the data table starts</li>
                         <li>Description column (searches for "description", "product", "item", "name")</li>
-                        <li>Price column (searches for "price", "cost", "amount", "value")</li>
+                        <li>Price column (searches for "price", "cost", "amount", "value" - headers must be less than 25 characters)</li>
                         <li>Unit column (searches for "unit", "units")</li>
                         <li>Remarks column (searches for "remark", "comment")</li>
                         <li>Number of data rows found</li>
@@ -69,7 +69,7 @@
                 <li><strong>Item Selection:</strong> Use checkboxes to include/exclude items from exports</li>
                 <li><strong>Bulk Selection:</strong> Use "Select All" checkbox for bulk operations on filtered results
                 </li>
-                <li><strong>Company Selection:</strong> Choose EOS or HI Marine company branding for exports</li>
+                <li><strong>Company Selection:</strong> Choose EOS or Hi Marine company branding for exports</li>
                 <li><strong>Advanced Filtering:</strong>
                     <ul>
                         <li>Filter by file name (dropdown with all uploaded files)</li>
@@ -123,6 +123,16 @@
                         <li><strong>PDF Format:</strong> Print-ready PDF invoice</li>
                     </ul>
                 </li>
+                <li><strong>Split Invoices Toggle:</strong> Toggle between "Split Invoices" (default) and "One Invoice"
+                    modes:
+                    <ul>
+                        <li><strong>Split Invoices:</strong> Creates separate Excel files for 'Bonded' and 'Provisions'
+                            categories. If a category has no items, that file is not created. When both categories exist,
+                            the 'Provisions' invoice number will have an "A" appended.</li>
+                        <li><strong>One Invoice:</strong> Creates a single Excel file containing all items regardless of
+                            category</li>
+                    </ul>
+                </li>
                 <li><strong>Company Selection:</strong> Choose between UK, US, EOS, or Blank company/bank details</li>
                 <li><strong>Dynamic Content:</strong> Company details, bank information, vessel details, and invoice
                     information all auto-populate based on selection</li>
@@ -141,6 +151,13 @@
                 <li><strong>Country & Port Selection:</strong> Choose from extensive lists with automatic port
                     suggestions</li>
                 <li><strong>Terms & Conditions:</strong> Professional terms automatically included in invoice</li>
+                <li><strong>Excel Export Features:</strong>
+                    <ul>
+                        <li>Vessel details exported as values only (no labels)</li>
+                        <li>Tab column excluded from export for cleaner format</li>
+                        <li>Items automatically renumbered starting from 1 in each exported file</li>
+                    </ul>
+                </li>
                 <li><strong>File Naming:</strong> Invoices automatically named with company prefix, invoice number, and
                     date</li>
                 <li><strong>Professional Formatting:</strong> Company headers, bank details, and branding included in
@@ -153,10 +170,18 @@
                     events</li>
                 <li><strong>Log Categories:</strong> File uploads, button clicks, form submissions, data processing,
                     exports, errors</li>
-                <li><strong>Advanced Filtering:</strong> Filter by category, level, component, date range, and search
+                <li><strong>Advanced Filtering:</strong> Filter by category, level, component, IP address, date range, and search
                     text</li>
+                <li><strong>IP Address Filter:</strong> Dropdown filter in the IP Address column header shows all unique IP
+                    addresses ordered by most recent activity first</li>
                 <li><strong>CSV Export:</strong> Download logs for external analysis</li>
-                <li><strong>Pagination:</strong> Navigate through large log datasets efficiently</li>
+                <li><strong>Pagination:</strong> Navigate through large log datasets efficiently with:
+                    <ul>
+                        <li>Previous/Next buttons</li>
+                        <li>Direct page jump input - enter a page number to jump directly to that page</li>
+                        <li>Page information display showing current page and total pages</li>
+                    </ul>
+                </li>
                 <li><strong>IP Address Tracking:</strong> Monitor user locations and sessions</li>
                 <li><strong>Visual Elements:</strong> Historical imagery related to marine invoicing</li>
             </ul>
@@ -197,8 +222,12 @@
                 <li><strong>Captain's Request:</strong> Upload processed price lists in Captain's Request tab</li>
                 <li><strong>Configure Invoice:</strong> Select company, fill in vessel details, add fees, and review
                     items</li>
-                <li><strong>Generate Invoice:</strong> Export professional invoices in Excel or PDF format</li>
-                <li><strong>Monitor Activity:</strong> Review logs in History tab for audit and troubleshooting</li>
+                <li><strong>Choose Export Mode:</strong> Use the Split Invoices toggle to choose between creating separate
+                    files for each category (default) or a single combined invoice file</li>
+                <li><strong>Generate Invoice:</strong> Export professional invoices in Excel or PDF format with
+                    automatic formatting and calculations</li>
+                <li><strong>Monitor Activity:</strong> Review logs in History tab with advanced filtering and pagination
+                    for audit and troubleshooting</li>
             </ol>
 
             <button class="primary close-button" (click)="closeInfoModal()">Close</button>

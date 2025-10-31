@@ -375,8 +375,8 @@ export class PriceListComponent implements OnInit, OnDestroy {
             const dateString = `${year}${month}${day}`;
 
             // Determine filename based on selected company
-            const fileName = this.selectedCompany === 'HI Marine'
-                ? `HI Marine_Price List_${dateString}.xlsx`
+            const fileName = this.selectedCompany === 'Hi Marine'
+                ? `Hi Marine_Price List_${dateString}.xlsx`
                 : `EOS Supply LTD_Price List_${dateString}.xlsx`;
 
             saveAs(data, fileName);
@@ -418,7 +418,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         };
 
         // Add email (moved to B9 to match image) - based on selected company
-        const email = this.selectedCompany === 'HI Marine'
+        const email = this.selectedCompany === 'Hi Marine'
             ? 'office@himarinecompany.com'
             : 'office@eos-supply.co.uk';
         worksheet.getCell('B9').value = email;

@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo   HI Marine Invoicing - Deploy to Firebase
+echo   Hi Marine Invoicing - Deploy to Firebase
 echo ========================================
 echo.
 echo Building production version...

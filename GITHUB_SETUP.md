@@ -5,7 +5,7 @@
 1. Go to https://github.com/new
 2. Fill in the following:
    - **Repository name:** HiMarine-Invoicing
-   - **Description:** HI Marine Invoicing - Angular application for processing supplier XLSX files and generating invoices
+   - **Description:** Hi Marine Invoicing - Angular application for processing supplier XLSX files and generating invoices
    - **Visibility:** Choose Public or Private
    - **DO NOT** check "Initialize this repository with a README"
    - **DO NOT** add .gitignore or license (we already have these)

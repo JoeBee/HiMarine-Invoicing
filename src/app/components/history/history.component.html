@@ -93,7 +93,16 @@
                             <th>Category</th>
                             <th>Component</th>
                             <th>Action</th>
-                            <th>IP Address</th>
+                            <th>
+                                <div class="ip-filter-header">
+                                    <label for="ipAddressFilter" class="sr-only">Filter by IP Address</label>
+                                    <select id="ipAddressFilter" [(ngModel)]="selectedIpAddress" (change)="onFilterChange()" class="ip-filter-dropdown">
+                                        <option value="">All IPs</option>
+                                        <option *ngFor="let ip of ipAddresses" [value]="ip">{{ ip }}</option>
+                                    </select>
+                                    <div class="ip-header-label">IP Address</div>
+                                </div>
+                            </th>
                             <th>Details</th>
                         </tr>
                     </thead>
@@ -133,6 +142,18 @@
                 <span class="page-info">
                     Page {{ currentPage }} of {{ totalPages }}
                 </span>
+
+                <div class="page-jump">
+                    <label for="pageJumpInput">Go to:</label>
+                    <input type="number" id="pageJumpInput" 
+                        [value]="currentPage" 
+                        min="1" 
+                        [max]="totalPages"
+                        (keyup.enter)="onPageJump($any($event.target).value)"
+                        (blur)="onPageJump($any($event.target).value)"
+                        class="page-jump-input">
+                    <span class="page-jump-max">/ {{ totalPages }}</span>
+                </div>
 
                 <button class="btn btn-secondary" (click)="onPageChange(currentPage + 1)"
                     [disabled]="currentPage === totalPages">

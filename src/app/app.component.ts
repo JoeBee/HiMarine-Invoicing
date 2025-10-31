@@ -12,7 +12,7 @@ import { LoggingService } from './services/logging.service';
     styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-    title = 'HI Marine Invoicing';
+    title = 'Hi Marine Invoicing';
     showInfoModal = false;
     activeMainTab = '';
 

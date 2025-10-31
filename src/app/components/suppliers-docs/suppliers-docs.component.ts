@@ -63,11 +63,6 @@ export class SuppliersDocsComponent implements OnInit {
         event.stopPropagation();
         this.isDragging = true;
         this.hoveredDropzone = category || null;
-
-        this.loggingService.logUserAction('drag_over', {
-            category: category || 'unknown',
-            filesCount: event.dataTransfer?.files.length || 0
-        }, 'SuppliersDocsComponent');
     }
 
     onDragLeave(event: DragEvent): void {

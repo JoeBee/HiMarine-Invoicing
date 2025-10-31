@@ -820,10 +820,10 @@ export class InvoiceComponent implements OnInit {
 
     private async exportSplitFiles(): Promise<void> {
         // Group items by category
-        const bondedItems = this.invoiceData.items.filter(item => 
+        const bondedItems = this.invoiceData.items.filter(item =>
             item.tabName === 'BOND'
         );
-        const provisionsItems = this.invoiceData.items.filter(item => 
+        const provisionsItems = this.invoiceData.items.filter(item =>
             item.tabName === 'PROVISIONS' || item.tabName === 'FRESH PROVISIONS'
         );
 
@@ -858,7 +858,7 @@ export class InvoiceComponent implements OnInit {
             worksheet.properties.showGridLines = false;
             worksheet.views = [{ showGridLines: false }];
 
-            // Top header rendering (image for HI Marine, custom header for EOS)
+            // Top header rendering (image for Hi Marine, custom header for EOS)
             try {
                 if (this.selectedBank === 'EOS') {
                     // Left title: EOS SUPPLY LTD
@@ -893,7 +893,7 @@ export class InvoiceComponent implements OnInit {
                     eosBar.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B2E66' } } as any;
                     worksheet.getRow(6).height = 18;
                 } else {
-                    // Default: add HI Marine top logo image
+                    // Default: add Hi Marine top logo image
                     const topImageResponse = await fetch('assets/images/HIMarineTopImage.png');
                     const topImageBuffer = await topImageResponse.arrayBuffer();
                     const topImageId = workbook.addImage({
@@ -1068,11 +1068,11 @@ export class InvoiceComponent implements OnInit {
             // Calculate totals for these items
             const itemsSubtotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
             const discountAmount = itemsSubtotal * (this.invoiceData.discountPercent || 0) / 100;
-            const feesTotal = (this.invoiceData.deliveryFee || 0) + 
-                             (this.invoiceData.portFee || 0) + 
-                             (this.invoiceData.agencyFee || 0) + 
-                             (this.invoiceData.transportCustomsLaunchFees || 0) + 
-                             (this.invoiceData.launchFee || 0);
+            const feesTotal = (this.invoiceData.deliveryFee || 0) +
+                (this.invoiceData.portFee || 0) +
+                (this.invoiceData.agencyFee || 0) +
+                (this.invoiceData.transportCustomsLaunchFees || 0) +
+                (this.invoiceData.launchFee || 0);
             const categoryTotal = (itemsSubtotal - discountAmount) + feesTotal;
 
             // Table Data

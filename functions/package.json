@@ -1,6 +1,6 @@
 {
     "name": "himarine-invoicing-functions",
-    "description": "Cloud Functions for HI Marine Invoicing Application",
+    "description": "Cloud Functions for Hi Marine Invoicing Application",
     "scripts": {
         "serve": "firebase emulators:start --only functions",
         "shell": "firebase functions:shell",

@@ -1,4 +1,4 @@
-# HI Marine Invoicing - Project Summary
+# Hi Marine Invoicing - Project Summary
 
 ## Overview
 A modern, single-page Angular web application for processing supplier XLSX files and generating invoices.

@@ -1,4 +1,4 @@
-# HI Marine Invoicing
+# Hi Marine Invoicing
 
 A modern Angular web application for processing supplier XLSX files and generating invoices.
 

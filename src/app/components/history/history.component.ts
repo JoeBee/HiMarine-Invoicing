@@ -20,6 +20,7 @@ export class HistoryComponent implements OnInit {
     selectedCategory = '';
     selectedLevel = '';
     selectedComponent = '';
+    selectedIpAddress = '';
     searchText = '';
     dateRange = {
         start: '',
@@ -30,6 +31,7 @@ export class HistoryComponent implements OnInit {
     categories: string[] = [];
     levels: string[] = ['info', 'warn', 'error', 'debug'];
     components: string[] = [];
+    ipAddresses: string[] = [];
 
     // Pagination
     currentPage = 1;
@@ -80,6 +82,29 @@ export class HistoryComponent implements OnInit {
 
         // Extract unique components
         this.components = [...new Set(this.logs.map(log => log.component))].sort();
+
+        // Extract unique IP addresses, ordered by most recent first
+        const ipMap = new Map<string, Date>();
+        this.logs.forEach(log => {
+            if (log.ipAddress && log.ipAddress !== 'Unknown') {
+                const existingDate = ipMap.get(log.ipAddress);
+                if (!existingDate || log.timestamp > existingDate) {
+                    ipMap.set(log.ipAddress, log.timestamp);
+                }
+            }
+        });
+        
+        // Sort by most recent timestamp first, then by IP address
+        this.ipAddresses = Array.from(ipMap.entries())
+            .sort((a, b) => {
+                // First sort by timestamp (most recent first)
+                if (b[1].getTime() !== a[1].getTime()) {
+                    return b[1].getTime() - a[1].getTime();
+                }
+                // Then by IP address if timestamps are equal
+                return a[0].localeCompare(b[0]);
+            })
+            .map(entry => entry[0]);
     }
 
     onFilterChange(): void {
@@ -103,6 +128,11 @@ export class HistoryComponent implements OnInit {
         // Filter by component
         if (this.selectedComponent) {
             filtered = filtered.filter(log => log.component === this.selectedComponent);
+        }
+
+        // Filter by IP address
+        if (this.selectedIpAddress) {
+            filtered = filtered.filter(log => log.ipAddress === this.selectedIpAddress);
         }
 
         // Filter by search text
@@ -135,6 +165,7 @@ export class HistoryComponent implements OnInit {
         this.selectedCategory = '';
         this.selectedLevel = '';
         this.selectedComponent = '';
+        this.selectedIpAddress = '';
         this.searchText = '';
         this.dateRange = { start: '', end: '' };
         this.applyFilters();
@@ -155,6 +186,13 @@ export class HistoryComponent implements OnInit {
 
     onPageChange(page: number): void {
         this.currentPage = page;
+    }
+
+    onPageJump(inputPage: string): void {
+        const pageNumber = parseInt(inputPage, 10);
+        if (!isNaN(pageNumber) && pageNumber >= 1 && pageNumber <= this.totalPages) {
+            this.currentPage = pageNumber;
+        }
     }
 
     getLevelClass(level: string): string {
