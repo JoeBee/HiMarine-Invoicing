@@ -78,8 +78,8 @@ export class InvoiceComponent implements OnInit {
     selectedBank: string = ''; // Default to blank
     primaryCurrency: string = '£'; // Default to GBP, will be updated from Excel file
 
-    // Toggle switch for Split File / One Invoice
-    splitFileMode: boolean = false; // false = "Split file" (default), true = "One invoice"
+    // Toggle switch for Split Invoices / One Invoice
+    splitFileMode: boolean = false; // false = "Split invoices" (default), true = "One invoice"
 
     // Country dropdown options
     countries = [
@@ -265,9 +265,9 @@ export class InvoiceComponent implements OnInit {
 
     onToggleChange(): void {
         // Handle toggle change logic here
-        // splitFileMode = false means "Split file" (default)
+        // splitFileMode = false means "Split invoices" (default)
         // splitFileMode = true means "One invoice"
-        console.log('Toggle changed:', this.splitFileMode ? 'One invoice' : 'Split file');
+        console.log('Toggle changed:', this.splitFileMode ? 'One invoice' : 'Split invoices');
         // Add any additional logic you need when the toggle changes
     }
 
@@ -810,7 +810,7 @@ export class InvoiceComponent implements OnInit {
                 await this.exportSplitFiles();
             } else {
                 // One invoice mode: Create single file (existing behavior)
-                await this.exportSingleInvoiceFile(this.invoiceData.items, this.invoiceData.category);
+                await this.exportSingleInvoiceFile(this.invoiceData.items, this.invoiceData.category, false);
             }
         } catch (error) {
             this.loggingService.logError(error as Error, 'excel_export', 'InvoiceComponent');
@@ -827,12 +827,16 @@ export class InvoiceComponent implements OnInit {
             item.tabName === 'PROVISIONS' || item.tabName === 'FRESH PROVISIONS'
         );
 
+        // Check if both categories exist
+        const hasBothCategories = bondedItems.length > 0 && provisionsItems.length > 0;
+
         // Export each category if it has items
         if (bondedItems.length > 0) {
-            await this.exportSingleInvoiceFile(bondedItems, 'Bonds');
+            await this.exportSingleInvoiceFile(bondedItems, 'Bonds', false);
         }
         if (provisionsItems.length > 0) {
-            await this.exportSingleInvoiceFile(provisionsItems, 'Provisions');
+            // Append "A" to invoice number for provisions if both categories exist
+            await this.exportSingleInvoiceFile(provisionsItems, 'Provisions', hasBothCategories);
         }
 
         // Log export
@@ -844,7 +848,7 @@ export class InvoiceComponent implements OnInit {
         }, 'InvoiceComponent');
     }
 
-    private async exportSingleInvoiceFile(items: InvoiceItem[], categoryOverride?: string): Promise<void> {
+    private async exportSingleInvoiceFile(items: InvoiceItem[], categoryOverride?: string, appendAtoInvoiceNumber?: boolean): Promise<void> {
         try {
             // Create workbook and worksheet using ExcelJS
             const workbook = new ExcelJS.Workbook();
@@ -952,30 +956,29 @@ export class InvoiceComponent implements OnInit {
             email.font = { size: 11, name: 'Arial', bold: true };
             email.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
-            // Vessel Details (Top-Right) under the logo - label + value in one cell
-            const vesselLabelStyle = { font: { bold: true, size: 11, name: 'Arial' } };
+            // Vessel Details (Top-Right) under the logo - values only, no labels
             const vesselValueStyle = { font: { size: 11, name: 'Arial', bold: true } };
-            worksheet.getCell('E9').value = `Name: ${this.invoiceData.vesselName || ''}`;
+            worksheet.getCell('E9').value = this.invoiceData.vesselName || '';
             worksheet.getCell('E9').font = vesselValueStyle.font;
             worksheet.getCell('F9').value = null as any;
             worksheet.getCell('G9').value = null as any;
 
-            worksheet.getCell('E10').value = `Name2: ${this.invoiceData.vesselName2 || ''}`;
+            worksheet.getCell('E10').value = this.invoiceData.vesselName2 || '';
             worksheet.getCell('E10').font = vesselValueStyle.font;
             worksheet.getCell('F10').value = null as any;
             worksheet.getCell('G10').value = null as any;
 
-            worksheet.getCell('E11').value = `Address: ${this.invoiceData.vesselAddress || ''}`;
+            worksheet.getCell('E11').value = this.invoiceData.vesselAddress || '';
             worksheet.getCell('E11').font = vesselValueStyle.font;
             worksheet.getCell('F11').value = null as any;
             worksheet.getCell('G11').value = null as any;
 
-            worksheet.getCell('E12').value = `Address2: ${this.invoiceData.vesselAddress2 || ''}`;
+            worksheet.getCell('E12').value = this.invoiceData.vesselAddress2 || '';
             worksheet.getCell('E12').font = vesselValueStyle.font;
             worksheet.getCell('F12').value = null as any;
             worksheet.getCell('G12').value = null as any;
 
-            worksheet.getCell('E13').value = `City/Country: ${[this.invoiceData.vesselCity, this.invoiceData.vesselCountry].filter(Boolean).join(', ')}`;
+            worksheet.getCell('E13').value = [this.invoiceData.vesselCity, this.invoiceData.vesselCountry].filter(Boolean).join(', ');
             worksheet.getCell('E13').font = vesselValueStyle.font;
             worksheet.getCell('F13').value = null as any;
             worksheet.getCell('G13').value = null as any;
@@ -1038,7 +1041,9 @@ export class InvoiceComponent implements OnInit {
             };
 
             const categoryToUse = categoryOverride || this.invoiceData.category;
-            writeInvoiceDetail(0, 'No', this.invoiceData.invoiceNumber);
+            // Append "A" to invoice number if requested (for provisions when both categories exist)
+            const invoiceNumberToUse = appendAtoInvoiceNumber ? `${this.invoiceData.invoiceNumber}A` : this.invoiceData.invoiceNumber;
+            writeInvoiceDetail(0, 'No', invoiceNumberToUse);
             writeInvoiceDetail(1, 'Invoice Date', this.invoiceData.invoiceDate);
             writeInvoiceDetail(2, 'Vessel', this.invoiceData.vessel);
             writeInvoiceDetail(3, 'Country', this.invoiceData.country);
