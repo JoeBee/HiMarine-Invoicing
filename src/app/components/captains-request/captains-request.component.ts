@@ -7,6 +7,7 @@ import * as XLSX from 'xlsx';
 interface TabData {
     recordsWithTotal: number;
     sumOfTotals: number;
+    currency: string;
 }
 
 interface ExcelData {
@@ -232,11 +233,65 @@ export class CaptainsRequestComponent {
         });
     }
 
+    private detectCurrency(value: string): string | null {
+        if (!value || typeof value !== 'string') return null;
+        const str = value.trim();
+        const strUpper = str.toUpperCase();
+        
+        // Check for specific currency prefixes first (most specific to least specific)
+        // Check both original case and uppercase to catch NZ$, nz$, NZ$ etc.
+        if (strUpper.includes('NZ$') || strUpper.includes('NZD')) return 'NZ$';
+        if (strUpper.includes('A$') || strUpper.includes('AUD')) return 'A$';
+        if (strUpper.includes('C$') || strUpper.includes('CAD')) return 'C$';
+        if (str.includes('€') || strUpper.includes('EUR')) return '€';
+        if (str.includes('£') || strUpper.includes('GBP')) return '£';
+        // Check for generic $ last (only if not already matched by NZ$, A$, C$)
+        // We need to check that $ is not part of NZ$, A$, or C$
+        if (str.includes('$')) {
+            // Make sure it's not NZ$, A$, or C$
+            if (!strUpper.includes('NZ$') && !strUpper.includes('A$') && !strUpper.includes('C$')) {
+                return '$';
+            }
+        }
+        if (strUpper.includes('USD')) return '$';
+        
+        return null;
+    }
+
     private processTabData(worksheet: XLSX.WorkSheet): TabData {
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
         let recordsWithTotal = 0;
         let sumOfTotals = 0;
+
+        // Detect currency from the first price or total value found
+        let detectedCurrency = '£'; // Default to GBP
+        for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i] as any[];
+            if (row && row.length >= 7) {
+                // Check price column (index 5)
+                const priceValue = row[5];
+                if (priceValue) {
+                    const currency = this.detectCurrency(String(priceValue));
+                    if (currency) {
+                        detectedCurrency = currency;
+                        break;
+                    }
+                }
+
+                // Also check total column (index 6) if price didn't have currency
+                if (detectedCurrency === '£') {
+                    const totalValue = row[6];
+                    if (totalValue) {
+                        const currency = this.detectCurrency(String(totalValue));
+                        if (currency) {
+                            detectedCurrency = currency;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
         // Skip header row (index 0)
         for (let i = 1; i < jsonData.length; i++) {
@@ -260,7 +315,8 @@ export class CaptainsRequestComponent {
 
         return {
             recordsWithTotal,
-            sumOfTotals
+            sumOfTotals,
+            currency: detectedCurrency
         };
     }
 
@@ -278,17 +334,11 @@ export class CaptainsRequestComponent {
             if (row && row.length >= 7) {
                 // Check price column (index 5)
                 const priceValue = row[5];
-                if (priceValue && typeof priceValue === 'string') {
-                    const priceStr = String(priceValue).trim();
-                    console.log(`Price value: "${priceStr}"`);
-                    if (priceStr.includes('$')) {
-                        detectedCurrency = '$';
-                        break;
-                    } else if (priceStr.includes('€')) {
-                        detectedCurrency = '€';
-                        break;
-                    } else if (priceStr.includes('£')) {
-                        detectedCurrency = '£';
+                if (priceValue) {
+                    const currency = this.detectCurrency(String(priceValue));
+                    if (currency) {
+                        detectedCurrency = currency;
+                        console.log(`Detected currency for tab ${tabName} from price: ${currency}`);
                         break;
                     }
                 }
@@ -296,16 +346,11 @@ export class CaptainsRequestComponent {
                 // Also check total column (index 6) if price didn't have currency
                 if (detectedCurrency === '£') {
                     const totalValue = row[6];
-                    if (totalValue && typeof totalValue === 'string') {
-                        const totalStr = String(totalValue).trim();
-                        if (totalStr.includes('$')) {
-                            detectedCurrency = '$';
-                            break;
-                        } else if (totalStr.includes('€')) {
-                            detectedCurrency = '€';
-                            break;
-                        } else if (totalStr.includes('£')) {
-                            detectedCurrency = '£';
+                    if (totalValue) {
+                        const currency = this.detectCurrency(String(totalValue));
+                        if (currency) {
+                            detectedCurrency = currency;
+                            console.log(`Detected currency for tab ${tabName} from total: ${currency}`);
                             break;
                         }
                     }
@@ -363,8 +408,12 @@ export class CaptainsRequestComponent {
         }
 
         if (typeof value === 'string') {
-            // Remove currency symbols and parse
-            const cleaned = value.replace(/[$,]/g, '').trim();
+            // Remove currency prefixes first (most specific to least specific), then other symbols
+            let cleaned = value.trim();
+            cleaned = cleaned.replace(/NZ\$/gi, '');
+            cleaned = cleaned.replace(/A\$/gi, '');
+            cleaned = cleaned.replace(/C\$/gi, '');
+            cleaned = cleaned.replace(/[€£$,]/g, '');
             const parsed = parseFloat(cleaned);
             return isNaN(parsed) ? 0 : parsed;
         }
@@ -388,5 +437,41 @@ export class CaptainsRequestComponent {
         return tabs.reduce((total, tab) => {
             return total + (this.excelData![tab]?.sumOfTotals || 0);
         }, 0);
+    }
+
+    getPrimaryCurrency(): string {
+        if (!this.excelData) return '£';
+
+        const tabs = ['PROVISIONS', 'FRESH PROVISIONS', 'BOND'];
+        const currencyCount: { [key: string]: number } = {};
+        
+        tabs.forEach(tab => {
+            // Only count currency from tabs that exist and have currency defined
+            if (this.excelData![tab] && this.excelData![tab].currency) {
+                const currency = this.excelData![tab].currency;
+                currencyCount[currency] = (currencyCount[currency] || 0) + 1;
+            }
+        });
+
+        // If no currencies found, default to £
+        const currencies = Object.keys(currencyCount);
+        if (currencies.length === 0) return '£';
+
+        // Find the most common currency
+        let maxCount = 0;
+        let mostCommonCurrency = currencies[0]; // Start with first found currency instead of £
+        for (const [currency, count] of Object.entries(currencyCount)) {
+            if (count > maxCount) {
+                maxCount = count;
+                mostCommonCurrency = currency;
+            }
+        }
+
+        return mostCommonCurrency;
+    }
+
+    getTabCurrency(tab: string): string {
+        if (!this.excelData || !this.excelData[tab]) return '£';
+        return this.excelData[tab].currency || '£';
     }
 }

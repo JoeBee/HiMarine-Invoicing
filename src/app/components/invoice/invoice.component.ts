@@ -76,6 +76,7 @@ export class InvoiceComponent implements OnInit {
     processedData: ProcessedDataRow[] = [];
     hasDataToInvoice = false;
     selectedBank: string = ''; // Default to blank
+    primaryCurrency: string = '£'; // Default to GBP, will be updated from Excel file
 
     // Country dropdown options
     countries = [
@@ -422,7 +423,74 @@ export class InvoiceComponent implements OnInit {
             currency: item.currency
         }));
 
+        // Detect primary currency from the items (most common currency)
+        this.detectPrimaryCurrency();
+
         this.calculateTotals();
+    }
+
+    private detectPrimaryCurrency(): void {
+        if (this.invoiceData.items.length === 0) {
+            this.primaryCurrency = '£';
+            return;
+        }
+
+        // Count occurrences of each currency
+        const currencyCount: { [key: string]: number } = {};
+        this.invoiceData.items.forEach(item => {
+            const currency = item.currency || '£';
+            currencyCount[currency] = (currencyCount[currency] || 0) + 1;
+        });
+
+        // Find the most common currency
+        let maxCount = 0;
+        let mostCommonCurrency = '£';
+        for (const [currency, count] of Object.entries(currencyCount)) {
+            if (count > maxCount) {
+                maxCount = count;
+                mostCommonCurrency = currency;
+            }
+        }
+
+        this.primaryCurrency = mostCommonCurrency;
+    }
+
+    getCurrencyLabel(currency: string): string {
+        switch (currency) {
+            case 'NZ$':
+                return 'NZD';
+            case 'A$':
+                return 'AUD';
+            case 'C$':
+                return 'CAD';
+            case '€':
+                return 'EUR';
+            case '$':
+                return 'USD';
+            case '£':
+                return 'GBP';
+            default:
+                return 'GBP';
+        }
+    }
+
+    getCurrencyExcelFormat(currency: string): string {
+        switch (currency) {
+            case 'NZ$':
+                return '"NZ$"#,##0.00';
+            case 'A$':
+                return '"A$"#,##0.00';
+            case 'C$':
+                return '"C$"#,##0.00';
+            case '€':
+                return '€#,##0.00';
+            case '$':
+                return '$#,##0.00';
+            case '£':
+                return '£#,##0.00';
+            default:
+                return '£#,##0.00';
+        }
     }
 
     private convertToInvoiceItems(data: ProcessedDataRow[]): void {
@@ -438,6 +506,9 @@ export class InvoiceComponent implements OnInit {
             tabName: 'LEGACY', // Default value for legacy data
             currency: '£' // Default to GBP for legacy data
         }));
+
+        // For legacy data, use GBP as primary currency
+        this.primaryCurrency = '£';
 
         this.calculateTotals();
     }
@@ -982,9 +1053,7 @@ export class InvoiceComponent implements OnInit {
                 priceCell.font = { size: 10, name: 'Arial' };
                 priceCell.alignment = { horizontal: 'right', vertical: 'middle' };
                 // Use dynamic currency formatting based on item currency
-                const currencyFormat = item.currency === '$' ? '$#,##0.00' :
-                    item.currency === '€' ? '€#,##0.00' :
-                        '£#,##0.00';
+                const currencyFormat = this.getCurrencyExcelFormat(item.currency);
                 priceCell.numFmt = currencyFormat;
 
                 // Total (formula = F * G)
@@ -1008,6 +1077,10 @@ export class InvoiceComponent implements OnInit {
             if (this.invoiceData.transportCustomsLaunchFees) feeLines.push({ label: 'Transport, Customs, Launch fees:', value: this.invoiceData.transportCustomsLaunchFees, includeInSum: true });
             if (this.invoiceData.launchFee) feeLines.push({ label: 'Launch:', value: this.invoiceData.launchFee, includeInSum: true });
 
+            // Get currency format for totals
+            const primaryCurrencyFormat = this.getCurrencyExcelFormat(this.primaryCurrency);
+            const totalLabel = `TOTAL ${this.getCurrencyLabel(this.primaryCurrency)}`;
+
             // Track fee rows that contain numeric amounts for later SUM
             const feeAmountRowRefs: string[] = [];
             feeLines.forEach((fee, idx) => {
@@ -1019,7 +1092,7 @@ export class InvoiceComponent implements OnInit {
 
                 const valueCell = worksheet.getCell(`H${rowIndex}`);
                 valueCell.value = fee.value as number;
-                valueCell.numFmt = '£#,##0.00';
+                valueCell.numFmt = primaryCurrencyFormat;
                 if (fee.includeInSum) feeAmountRowRefs.push(`H${rowIndex}`);
                 valueCell.font = { bold: true, size: 11, name: 'Arial' };
                 valueCell.alignment = { horizontal: 'right', vertical: 'middle' };
@@ -1030,7 +1103,7 @@ export class InvoiceComponent implements OnInit {
 
             totalsStartRow += feeLines.length;
 
-            // Draw a line above "TOTAL GBP" across columns F-H
+            // Draw a line above the total row across columns F-H
             for (let col = 6; col <= 8; col++) { // Column F=6, G=7, H=8
                 const cell = worksheet.getCell(totalsStartRow, col);
                 cell.border = {
@@ -1039,7 +1112,7 @@ export class InvoiceComponent implements OnInit {
             }
 
             // TOTAL (formula: sum of H column item totals + all monetary fee cells)
-            worksheet.getCell(`G${totalsStartRow}`).value = 'TOTAL GBP';
+            worksheet.getCell(`G${totalsStartRow}`).value = totalLabel;
             worksheet.getCell(`G${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
             worksheet.getCell(`G${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
 
@@ -1052,9 +1125,9 @@ export class InvoiceComponent implements OnInit {
             worksheet.getCell(`H${totalsStartRow}`).value = { formula: totalFormula } as any;
             worksheet.getCell(`H${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
             worksheet.getCell(`H${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
-            worksheet.getCell(`H${totalsStartRow}`).numFmt = '£#,##0.00';
+            worksheet.getCell(`H${totalsStartRow}`).numFmt = primaryCurrencyFormat;
 
-            // Removed separate grand total line; the TOTAL GBP row represents the final amount
+            // Removed separate grand total line; the total row represents the final amount
 
             // Terms and Conditions
             const termsStartRow = totalsStartRow + 4;
@@ -1276,30 +1349,31 @@ export class InvoiceComponent implements OnInit {
         });
 
         // Totals and Fees
+        const totalCurrencyLabel = this.getCurrencyLabel(this.primaryCurrency);
         yPos += 10;
         doc.line(margin, yPos, pageWidth - margin, yPos);
         yPos += 10;
 
         doc.setFont('helvetica', 'bold');
-        doc.text(`TOTAL GBP: £${this.invoiceData.totalGBP.toFixed(2)}`, pageWidth - 100, yPos);
+        doc.text(`TOTAL ${totalCurrencyLabel}: ${this.primaryCurrency}${this.invoiceData.totalGBP.toFixed(2)}`, pageWidth - 100, yPos);
         yPos += 8;
         doc.setFont('helvetica', 'normal');
         const discountAmountForPdf = this.invoiceData.totalGBP * (this.invoiceData.discountPercent || 0) / 100;
         if (discountAmountForPdf > 0) {
-            doc.text(`Discount: -£${discountAmountForPdf.toFixed(2)}`, pageWidth - 100, yPos);
+            doc.text(`Discount: -${this.primaryCurrency}${discountAmountForPdf.toFixed(2)}`, pageWidth - 100, yPos);
             yPos += 8;
         }
-        if ((this.invoiceData.deliveryFee || 0) > 0) { doc.text(`Delivery fee: £${(this.invoiceData.deliveryFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
-        if ((this.invoiceData.portFee || 0) > 0) { doc.text(`Port fee: £${(this.invoiceData.portFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
-        if ((this.invoiceData.agencyFee || 0) > 0) { doc.text(`Agency fee: £${(this.invoiceData.agencyFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
-        if ((this.invoiceData.transportCustomsLaunchFees || 0) > 0) { doc.text(`Transport/Customs/Launch: £${(this.invoiceData.transportCustomsLaunchFees || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
-        if ((this.invoiceData.launchFee || 0) > 0) { doc.text(`Launch: £${(this.invoiceData.launchFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
+        if ((this.invoiceData.deliveryFee || 0) > 0) { doc.text(`Delivery fee: ${this.primaryCurrency}${(this.invoiceData.deliveryFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
+        if ((this.invoiceData.portFee || 0) > 0) { doc.text(`Port fee: ${this.primaryCurrency}${(this.invoiceData.portFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
+        if ((this.invoiceData.agencyFee || 0) > 0) { doc.text(`Agency fee: ${this.primaryCurrency}${(this.invoiceData.agencyFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
+        if ((this.invoiceData.transportCustomsLaunchFees || 0) > 0) { doc.text(`Transport/Customs/Launch: ${this.primaryCurrency}${(this.invoiceData.transportCustomsLaunchFees || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
+        if ((this.invoiceData.launchFee || 0) > 0) { doc.text(`Launch: ${this.primaryCurrency}${(this.invoiceData.launchFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
         yPos += 10;
         doc.line(margin, yPos, pageWidth - margin, yPos);
         yPos += 10;
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
-        doc.text(`GRAND TOTAL: £${this.invoiceData.grandTotal.toFixed(2)}`, pageWidth - 110, yPos);
+        doc.text(`GRAND TOTAL: ${this.primaryCurrency}${this.invoiceData.grandTotal.toFixed(2)}`, pageWidth - 110, yPos);
 
         // Save the PDF
         const fileName = `HIMarine_Invoice_${this.invoiceData.invoiceNumber}_${new Date().toISOString().split('T')[0]}.pdf`;

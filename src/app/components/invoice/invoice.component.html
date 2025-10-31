@@ -301,38 +301,39 @@
         <div class="totals-section">
             <div class="totals-right">
                 <div class="total-line">
-                    <span>TOTAL GBP</span>
-                    <span>£ {{ invoiceData.totalGBP | number:'1.2-2' }}</span>
+                    <span>TOTAL {{ getCurrencyLabel(primaryCurrency) }}</span>
+                    <span>{{ primaryCurrency }} {{ invoiceData.totalGBP | number:'1.2-2' }}</span>
                 </div>
                 <div class="total-line">
                     <span *ngIf="(invoiceData.discountPercent || 0) > 0">Discount ({{ invoiceData.discountPercent || 0
                         }} %)</span>
-                    <span *ngIf="(invoiceData.discountPercent || 0) > 0">- £ {{ (invoiceData.totalGBP *
+                    <span *ngIf="(invoiceData.discountPercent || 0) > 0">- {{ primaryCurrency }} {{
+                        (invoiceData.totalGBP *
                         (invoiceData.discountPercent || 0) / 100) | number:'1.2-2' }}</span>
                 </div>
                 <div class="total-line" *ngIf="(invoiceData.deliveryFee || 0) > 0">
                     <span>Delivery fee</span>
-                    <span>£ {{ invoiceData.deliveryFee | number:'1.2-2' }}</span>
+                    <span>{{ primaryCurrency }} {{ invoiceData.deliveryFee | number:'1.2-2' }}</span>
                 </div>
                 <div class="total-line" *ngIf="(invoiceData.portFee || 0) > 0">
                     <span>Port fee</span>
-                    <span>£ {{ invoiceData.portFee | number:'1.2-2' }}</span>
+                    <span>{{ primaryCurrency }} {{ invoiceData.portFee | number:'1.2-2' }}</span>
                 </div>
                 <div class="total-line" *ngIf="(invoiceData.agencyFee || 0) > 0">
                     <span>Agency fee</span>
-                    <span>£ {{ invoiceData.agencyFee | number:'1.2-2' }}</span>
+                    <span>{{ primaryCurrency }} {{ invoiceData.agencyFee | number:'1.2-2' }}</span>
                 </div>
                 <div class="total-line" *ngIf="(invoiceData.transportCustomsLaunchFees || 0) > 0">
                     <span>Transport, Customs, Launch fees</span>
-                    <span>£ {{ invoiceData.transportCustomsLaunchFees | number:'1.2-2' }}</span>
+                    <span>{{ primaryCurrency }} {{ invoiceData.transportCustomsLaunchFees | number:'1.2-2' }}</span>
                 </div>
                 <div class="total-line" *ngIf="(invoiceData.launchFee || 0) > 0">
                     <span>Launch</span>
-                    <span>£ {{ invoiceData.launchFee | number:'1.2-2' }}</span>
+                    <span>{{ primaryCurrency }} {{ invoiceData.launchFee | number:'1.2-2' }}</span>
                 </div>
                 <div class="total-line grand-total">
                     <span></span>
-                    <span>£ {{ invoiceData.grandTotal | number:'1.2-2' }}</span>
+                    <span>{{ primaryCurrency }} {{ invoiceData.grandTotal | number:'1.2-2' }}</span>
                 </div>
             </div>
         </div>
