@@ -810,7 +810,7 @@ export class InvoiceComponent implements OnInit {
                 await this.exportSplitFiles();
             } else {
                 // One invoice mode: Create single file (existing behavior)
-                await this.exportSingleInvoiceFile(this.invoiceData.items, this.invoiceData.category, false);
+                await this.exportSingleInvoiceFile(this.invoiceData.items, this.invoiceData.category, false, true);
             }
         } catch (error) {
             this.loggingService.logError(error as Error, 'excel_export', 'InvoiceComponent');
@@ -830,13 +830,20 @@ export class InvoiceComponent implements OnInit {
         // Check if both categories exist
         const hasBothCategories = bondedItems.length > 0 && provisionsItems.length > 0;
 
+        // Determine which category should receive fees:
+        // - If both exist: fees go to Provisions only
+        // - If only Provisions: fees go to Provisions
+        // - If only Bonds: fees go to Bonds
+        const provisionsShouldGetFees = provisionsItems.length > 0;
+        const bondsShouldGetFees = bondedItems.length > 0 && provisionsItems.length === 0;
+
         // Export each category if it has items
         if (bondedItems.length > 0) {
-            await this.exportSingleInvoiceFile(bondedItems, 'Bonds', false);
+            await this.exportSingleInvoiceFile(bondedItems, 'Bonds', false, bondsShouldGetFees);
         }
         if (provisionsItems.length > 0) {
             // Append "A" to invoice number for provisions if both categories exist
-            await this.exportSingleInvoiceFile(provisionsItems, 'Provisions', hasBothCategories);
+            await this.exportSingleInvoiceFile(provisionsItems, 'Provisions', hasBothCategories, provisionsShouldGetFees);
         }
 
         // Log export
@@ -848,7 +855,7 @@ export class InvoiceComponent implements OnInit {
         }, 'InvoiceComponent');
     }
 
-    private async exportSingleInvoiceFile(items: InvoiceItem[], categoryOverride?: string, appendAtoInvoiceNumber?: boolean): Promise<void> {
+    private async exportSingleInvoiceFile(items: InvoiceItem[], categoryOverride?: string, appendAtoInvoiceNumber?: boolean, includeFees: boolean = true): Promise<void> {
         try {
             // Create workbook and worksheet using ExcelJS
             const workbook = new ExcelJS.Workbook();
@@ -1025,19 +1032,23 @@ export class InvoiceComponent implements OnInit {
             const invoiceDetailsStart = 15;
             const invoiceLabelStyle = { font: { bold: true, size: 11, name: 'Arial' } };
             const invoiceValueStyle = { font: { size: 11, name: 'Arial' } };
-            // Helper to write invoice detail in merged E:G cell with bold label
+            // Helper to write invoice detail with label and value in separate cells
             const writeInvoiceDetail = (offset: number, label: string, value: string) => {
                 const row = invoiceDetailsStart + offset;
-                const cell = worksheet.getCell(`E${row}`);
-                cell.value = {
-                    richText: [
-                        { text: `${label}: `, font: { size: 11, name: 'Arial', bold: false } },
-                        { text: `${value || ''}`, font: { size: 11, name: 'Arial', bold: false } }
-                    ]
-                } as any;
-                cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
+                // Write label in column E with colon
+                const labelCell = worksheet.getCell(`E${row}`);
+                labelCell.value = `${label}:`;
+                labelCell.font = { size: 11, name: 'Arial', bold: true };
+                labelCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
+
+                // Leave column F empty
                 worksheet.getCell(`F${row}`).value = null as any;
-                worksheet.getCell(`G${row}`).value = null as any;
+
+                // Write value in column G
+                const valueCell = worksheet.getCell(`G${row}`);
+                valueCell.value = value || '';
+                valueCell.font = { size: 11, name: 'Arial', bold: false };
+                valueCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
             };
 
             const categoryToUse = categoryOverride || this.invoiceData.category;
@@ -1068,11 +1079,12 @@ export class InvoiceComponent implements OnInit {
             // Calculate totals for these items
             const itemsSubtotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
             const discountAmount = itemsSubtotal * (this.invoiceData.discountPercent || 0) / 100;
-            const feesTotal = (this.invoiceData.deliveryFee || 0) +
-                (this.invoiceData.portFee || 0) +
-                (this.invoiceData.agencyFee || 0) +
-                (this.invoiceData.transportCustomsLaunchFees || 0) +
-                (this.invoiceData.launchFee || 0);
+            const feesTotal = includeFees ?
+                ((this.invoiceData.deliveryFee || 0) +
+                    (this.invoiceData.portFee || 0) +
+                    (this.invoiceData.agencyFee || 0) +
+                    (this.invoiceData.transportCustomsLaunchFees || 0) +
+                    (this.invoiceData.launchFee || 0)) : 0;
             const categoryTotal = (itemsSubtotal - discountAmount) + feesTotal;
 
             // Table Data
@@ -1130,13 +1142,18 @@ export class InvoiceComponent implements OnInit {
             let totalsStartRow = tableStartRow + items.length + 2; // slightly tighter spacing
 
             // List discount (amount) and non-zero fees just above the Total
+            // Discount is always included (applied to items), fees are conditional
             const feeLines: { label: string; value?: number; includeInSum?: boolean }[] = [];
             if (discountAmount > 0) feeLines.push({ label: 'Discount:', value: -discountAmount, includeInSum: false });
-            if (this.invoiceData.deliveryFee) feeLines.push({ label: 'Delivery fee:', value: this.invoiceData.deliveryFee, includeInSum: true });
-            if (this.invoiceData.portFee) feeLines.push({ label: 'Port fee:', value: this.invoiceData.portFee, includeInSum: true });
-            if (this.invoiceData.agencyFee) feeLines.push({ label: 'Agency fee:', value: this.invoiceData.agencyFee, includeInSum: true });
-            if (this.invoiceData.transportCustomsLaunchFees) feeLines.push({ label: 'Transport, Customs, Launch fees:', value: this.invoiceData.transportCustomsLaunchFees, includeInSum: true });
-            if (this.invoiceData.launchFee) feeLines.push({ label: 'Launch:', value: this.invoiceData.launchFee, includeInSum: true });
+
+            // Only include fees if includeFees is true
+            if (includeFees) {
+                if (this.invoiceData.deliveryFee) feeLines.push({ label: 'Delivery fee:', value: this.invoiceData.deliveryFee, includeInSum: true });
+                if (this.invoiceData.portFee) feeLines.push({ label: 'Port fee:', value: this.invoiceData.portFee, includeInSum: true });
+                if (this.invoiceData.agencyFee) feeLines.push({ label: 'Agency fee:', value: this.invoiceData.agencyFee, includeInSum: true });
+                if (this.invoiceData.transportCustomsLaunchFees) feeLines.push({ label: 'Transport, Customs, Launch fees:', value: this.invoiceData.transportCustomsLaunchFees, includeInSum: true });
+                if (this.invoiceData.launchFee) feeLines.push({ label: 'Launch:', value: this.invoiceData.launchFee, includeInSum: true });
+            }
 
             // Get currency format for totals
             const primaryCurrencyFormat = this.getCurrencyExcelFormat(this.primaryCurrency);
