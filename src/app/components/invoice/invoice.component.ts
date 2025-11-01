@@ -99,9 +99,6 @@ export class InvoiceComponent implements OnInit {
         'United States', 'Uruguay', 'Vietnam'
     ];
 
-    // Category dropdown options
-    categories = ['Provisions', 'Bond'];
-
     // Available ports for selected country
     availablePorts: string[] = [];
 
@@ -434,10 +431,38 @@ export class InvoiceComponent implements OnInit {
             currency: item.currency
         }));
 
+        // Auto-determine category based on tabName values
+        this.determineCategoryFromItems();
+
         // Detect primary currency from the items (most common currency)
         this.detectPrimaryCurrency();
 
         this.calculateTotals();
+    }
+
+    private determineCategoryFromItems(): void {
+        if (this.invoiceData.items.length === 0) {
+            this.invoiceData.category = '';
+            return;
+        }
+
+        // Collect unique tabName values
+        const uniqueTabs = new Set(this.invoiceData.items.map(item => item.tabName));
+        
+        // Determine category based on tabName values
+        if (uniqueTabs.has('BOND') && !uniqueTabs.has('PROVISIONS') && !uniqueTabs.has('FRESH PROVISIONS')) {
+            // Only BOND
+            this.invoiceData.category = 'Bond';
+        } else if ((uniqueTabs.has('PROVISIONS') || uniqueTabs.has('FRESH PROVISIONS')) && !uniqueTabs.has('BOND')) {
+            // Only PROVISIONS or FRESH PROVISIONS
+            this.invoiceData.category = 'Provisions';
+        } else if (uniqueTabs.has('BOND') && (uniqueTabs.has('PROVISIONS') || uniqueTabs.has('FRESH PROVISIONS'))) {
+            // Both BOND and PROVISIONS/FRESH PROVISIONS
+            this.invoiceData.category = 'Bonds and Provisions';
+        } else {
+            // Fallback for any other cases
+            this.invoiceData.category = '';
+        }
     }
 
     private detectPrimaryCurrency(): void {
@@ -517,6 +542,9 @@ export class InvoiceComponent implements OnInit {
             tabName: 'LEGACY', // Default value for legacy data
             currency: '£' // Default to GBP for legacy data
         }));
+
+        // Auto-determine category based on tabName values
+        this.determineCategoryFromItems();
 
         // For legacy data, use GBP as primary currency
         this.primaryCurrency = '£';
@@ -833,13 +861,13 @@ export class InvoiceComponent implements OnInit {
         // Determine which category should receive fees:
         // - If both exist: fees go to Provisions only
         // - If only Provisions: fees go to Provisions
-        // - If only Bonds: fees go to Bonds
+        // - If only Bond: fees go to Bond
         const provisionsShouldGetFees = provisionsItems.length > 0;
-        const bondsShouldGetFees = bondedItems.length > 0 && provisionsItems.length === 0;
+        const bondShouldGetFees = bondedItems.length > 0 && provisionsItems.length === 0;
 
         // Export each category if it has items
         if (bondedItems.length > 0) {
-            await this.exportSingleInvoiceFile(bondedItems, 'Bonds', false, bondsShouldGetFees);
+            await this.exportSingleInvoiceFile(bondedItems, 'Bond', false, bondShouldGetFees);
         }
         if (provisionsItems.length > 0) {
             // Append "A" to invoice number for provisions if both categories exist

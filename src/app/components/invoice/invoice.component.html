@@ -93,10 +93,10 @@
                         <input type="number" step="0.1" [(ngModel)]="invoiceData.launchFee"
                             (ngModelChange)="calculateTotals()" class="editable-field">
                     </div>
-                    <div class="fee-field">
+                    <div class="fee-field discount-field">
                         <label>Discount (%):</label>
                         <input type="number" step="0.1" [(ngModel)]="invoiceData.discountPercent"
-                            (ngModelChange)="calculateTotals()" class="editable-field">
+                            (ngModelChange)="calculateTotals()" class="editable-field discount-input">
                     </div>
                 </div>
             </div>
@@ -259,10 +259,7 @@
                         </div>
                         <div class="invoice-field">
                             <label>Category</label>
-                            <select [(ngModel)]="invoiceData.category" class="editable-field">
-                                <option value="">Select Category</option>
-                                <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
-                            </select>
+                            <input type="text" [(ngModel)]="invoiceData.category" class="editable-field" readonly style="background-color: #f0f0f0; cursor: not-allowed;">
                         </div>
                         <div class="invoice-field">
                             <label>Invoice Due</label>

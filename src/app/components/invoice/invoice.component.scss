@@ -110,6 +110,29 @@
                         width: 80px;
                         flex-shrink: 0;
                     }
+
+                    // Right column fields - move left and align
+                    &:nth-child(2n) {
+                        margin-left: -15px; // Move right column fields left
+                        
+                        .editable-field {
+                            width: 80px; // Ensure consistent width for alignment
+                        }
+                    }
+
+                    // Discount field styling - rectangle border and slight background shading
+                    &.discount-field {
+                        padding: 4px;
+                        border: 1px solid #d0d0d0;
+                        border-radius: 4px;
+                        background-color: #f5f5f5;
+                        margin-left: -15px; // Align with other right column fields
+
+                        .discount-input {
+                            background-color: #fafafa;
+                            border: 1px solid #ccc;
+                        }
+                    }
                 }
             }
         }

@@ -163,7 +163,9 @@ export class DataService {
                                         }
 
                                         if (headerValue === 'unit' ||
-                                            headerValue === 'units') {
+                                            headerValue === 'units' ||
+                                            headerValue === 'uom' ||
+                                            headerValue === 'uoms') {
                                             unitColumn = XLSX.utils.encode_col(searchCol);
                                             unitHeader = headerText;
                                         }
