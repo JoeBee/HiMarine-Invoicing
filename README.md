@@ -5,7 +5,7 @@ A modern Angular web application for processing supplier XLSX files and generati
 ## Features
 
 - **Suppliers Tab**: Upload multiple XLSX files via drag-and-drop or file browser
-- **Captain's Request Tab**: Upload and process Excel files for captain requests
+- **Captain's Order Tab**: Upload and process Excel files for captain requests
 - **Invoice Tab**: Generate Excel invoices from selected items
 - **History Tab**: Placeholder for future functionality
 

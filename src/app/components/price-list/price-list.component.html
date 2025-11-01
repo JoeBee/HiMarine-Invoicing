@@ -22,19 +22,30 @@
                 <input type="radio" id="radioCAD" name="currency" value="CAD" [(ngModel)]="selectedCurrency">
                 <label for="radioCAD">CAD (C$)</label>
             </div>
-            <button class="secondary" [disabled]="processedData.length === 0" (click)="showInvalidPricesDialog()">
-                Show Invalid
-            </button>
         </div>
         <div class="export-filename-control" *ngIf="hasProcessedFiles">
-            <label for="exportFileName">Export File Name:</label>
-            <input type="text" id="exportFileName" 
-                [ngModel]="exportFileName || getDefaultFileName()"
-                (ngModelChange)="exportFileName = $event"
-                class="export-filename-input">
-            <button class="primary" [disabled]="processedData.length === 0 || !selectedCurrency"
-                (click)="exportToExcel()">
-                Export Price List </button>
+            <div class="country-section">
+                <div class="dropdown-container">
+                    <label for="countrySelection">Country:</label>
+                    <select id="countrySelection" [(ngModel)]="selectedCountry" (change)="onCountryChange()"
+                        class="filter-dropdown">
+                        <option value="">Select Country</option>
+                        <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filename-section">
+                <label for="exportFileName">Export File Name:</label>
+                <input type="text" id="exportFileName" 
+                    [ngModel]="exportFileName || getDefaultFileName()"
+                    (ngModelChange)="exportFileName = $event"
+                    class="export-filename-input">
+            </div>
+            <div class="button-section">
+                <button class="primary" [disabled]="processedData.length === 0 || !selectedCurrency"
+                    (click)="exportToExcel()">
+                    Export Price List </button>
+            </div>
         </div>
     </div>
 
@@ -82,6 +93,9 @@
 
         <div class="results-info" *ngIf="filteredData.length > 0">
             <p>Selected {{ getSelectedCount() }} of {{ filteredData.length }} results</p>
+            <button class="secondary" [disabled]="processedData.length === 0" (click)="showInvalidPricesDialog()">
+                Show Invalid
+            </button>
         </div>
 
         <table>

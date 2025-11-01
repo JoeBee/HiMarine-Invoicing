@@ -15,7 +15,7 @@
 
         <!-- Sub Navigation Row - Invoicing -->
         <nav class="nav-tabs sub-nav" *ngIf="activeMainTab === 'invoicing'">
-            <a routerLink="/invoicing/captains-request" routerLinkActive="active">Captain's Request</a>
+            <a routerLink="/invoicing/captains-request" routerLinkActive="active">Captain's Order</a>
             <a routerLink="/invoicing/invoice" routerLinkActive="active">Invoice</a>
         </nav>
     </header>
@@ -47,7 +47,8 @@
                         <li>File name (without extension)</li>
                         <li>Top left cell where the data table starts</li>
                         <li>Description column (searches for "description", "product", "item", "name")</li>
-                        <li>Price column (searches for "price", "cost", "amount", "value" - headers must be less than 25 characters)</li>
+                        <li>Price column (searches for "price", "cost", "amount", "value" - headers must be less than 25
+                            characters)</li>
                         <li>Unit column (searches for "unit", "units")</li>
                         <li>Remarks column (searches for "remark", "comment")</li>
                         <li>Number of data rows found</li>
@@ -94,7 +95,7 @@
             </ul>
 
             <h3>📄 Invoicing Tab</h3>
-            <h4>Captain's Request</h4>
+            <h4>Captain's Order</h4>
             <ul>
                 <li><strong>Excel File Upload:</strong> Drag and drop or click to browse for Excel files (.xlsx/.xls)
                 </li>
@@ -127,7 +128,8 @@
                     modes:
                     <ul>
                         <li><strong>Split Invoices:</strong> Creates separate Excel files for 'Bonded' and 'Provisions'
-                            categories. If a category has no items, that file is not created. When both categories exist,
+                            categories. If a category has no items, that file is not created. When both categories
+                            exist,
                             the 'Provisions' invoice number will have an "A" appended.</li>
                         <li><strong>One Invoice:</strong> Creates a single Excel file containing all items regardless of
                             category</li>
@@ -136,7 +138,7 @@
                 <li><strong>Company Selection:</strong> Choose between UK, US, EOS, or Blank company/bank details</li>
                 <li><strong>Dynamic Content:</strong> Company details, bank information, vessel details, and invoice
                     information all auto-populate based on selection</li>
-                <li><strong>Invoice Items:</strong> Items populated from Captain's Request with currency support (USD,
+                <li><strong>Invoice Items:</strong> Items populated from Captain's Order with currency support (USD,
                     EUR, GBP)</li>
                 <li><strong>Fees & Discounts:</strong> Configure:
                     <ul>
@@ -170,9 +172,11 @@
                     events</li>
                 <li><strong>Log Categories:</strong> File uploads, button clicks, form submissions, data processing,
                     exports, errors</li>
-                <li><strong>Advanced Filtering:</strong> Filter by category, level, component, IP address, date range, and search
+                <li><strong>Advanced Filtering:</strong> Filter by category, level, component, IP address, date range,
+                    and search
                     text</li>
-                <li><strong>IP Address Filter:</strong> Dropdown filter in the IP Address column header shows all unique IP
+                <li><strong>IP Address Filter:</strong> Dropdown filter in the IP Address column header shows all unique
+                    IP
                     addresses ordered by most recent activity first</li>
                 <li><strong>CSV Export:</strong> Download logs for external analysis</li>
                 <li><strong>Pagination:</strong> Navigate through large log datasets efficiently with:
@@ -219,10 +223,11 @@
                 <li><strong>Review Analysis:</strong> Check file analysis results and pricing in Supplier Docs tab</li>
                 <li><strong>Select Items:</strong> Use Price List tab to select items for inclusion and export price
                     lists</li>
-                <li><strong>Captain's Request:</strong> Upload processed price lists in Captain's Request tab</li>
+                <li><strong>Captain's Order:</strong> Upload processed price lists in Captain's Order tab</li>
                 <li><strong>Configure Invoice:</strong> Select company, fill in vessel details, add fees, and review
                     items</li>
-                <li><strong>Choose Export Mode:</strong> Use the Split Invoices toggle to choose between creating separate
+                <li><strong>Choose Export Mode:</strong> Use the Split Invoices toggle to choose between creating
+                    separate
                     files for each category (default) or a single combined invoice file</li>
                 <li><strong>Generate Invoice:</strong> Export professional invoices in Excel or PDF format with
                     automatic formatting and calculations</li>

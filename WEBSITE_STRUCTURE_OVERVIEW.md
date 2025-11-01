@@ -39,7 +39,7 @@ Located in `app.component.html`:
 2. **Invoicing Tab** (`/invoicing/*`)
 
             - Sub-tabs:
-                    - Captain's Request (`/invoicing/captains-request`)
+                    - Captain's Order (`/invoicing/captains-request`)
                     - Invoice (`/invoicing/invoice`)
 
 3. **History Tab** (`/history`)
@@ -518,7 +518,7 @@ All state is managed through RxJS Observables in services:
 
 ### Captain Request Workflow
 
-1. Navigate to Invoicing → Captain's Request
+1. Navigate to Invoicing → Captain's Order
 2. Upload captain request Excel file
 3. Process similar to supplier files
 4. Generate invoice from captain request data

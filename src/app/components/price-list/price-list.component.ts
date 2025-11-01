@@ -52,6 +52,27 @@ export class PriceListComponent implements OnInit, OnDestroy {
     // Export filename
     exportFileName: string = '';
 
+    // Country selection
+    selectedCountry: string = '';
+
+    // Country names
+    countries = [
+        'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Armenia', 'Australia',
+        'Austria', 'Azerbaijan', 'Bahrain', 'Bangladesh', 'Belarus', 'Belgium',
+        'Bolivia', 'Brazil', 'Bulgaria', 'Cambodia', 'Canada', 'Chile', 'China',
+        'Colombia', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Ecuador',
+        'Egypt', 'Estonia', 'Finland', 'France', 'Georgia', 'Germany', 'Ghana',
+        'Greece', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq',
+        'Ireland', 'Israel', 'Italy', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya',
+        'Kuwait', 'Latvia', 'Lebanon', 'Lithuania', 'Luxembourg', 'Malaysia',
+        'Malta', 'Mexico', 'Morocco', 'Netherlands', 'New Zealand', 'Nigeria',
+        'Norway', 'Oman', 'Pakistan', 'Peru', 'Philippines', 'Poland', 'Portugal',
+        'Qatar', 'Romania', 'Russia', 'Saudi Arabia', 'Singapore', 'Slovakia',
+        'Slovenia', 'South Africa', 'South Korea', 'Spain', 'Sri Lanka', 'Sweden',
+        'Switzerland', 'Thailand', 'Turkey', 'UAE', 'Ukraine', 'United Kingdom',
+        'United States', 'Uruguay', 'Vietnam'
+    ];
+
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
     ngOnInit(): void {
@@ -990,10 +1011,14 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
     private generateDefaultFileName(): string {
         // Start with company prefix
-        const companyPrefix = this.selectedCompany === 'Hi Marine' ? 'HiMarine_' : 'EOS_';
-
-        // Add Country_ literal text
-        let fileName = companyPrefix + 'Country_';
+        let companyPrefix = '';
+        if (this.selectedCompany === 'Hi Marine') {
+            companyPrefix = 'Hi Marine Company Price List ';
+        } else {
+            companyPrefix = 'EOS Supply Price List ';
+        }
+        
+        let fileName = companyPrefix;
 
         // Determine category part based on data
         const hasProvisions = this.processedData.some(item =>
@@ -1003,15 +1028,24 @@ export class PriceListComponent implements OnInit, OnDestroy {
             item.category === 'Bonded' && item.included && this.isPriceValid(item.price)
         );
 
+        // Build category suffix
+        let categorySuffix = '';
         if (hasProvisions && hasBonded) {
-            fileName += 'BondProvisions';
+            categorySuffix = 'Provisions&Bond';
         } else if (hasBonded) {
-            fileName += 'Bond';
+            categorySuffix = 'Bond';
         } else if (hasProvisions) {
-            fileName += 'Provisions';
+            categorySuffix = 'Provisions';
         } else {
             // Default if no data
-            fileName += 'Provisions';
+            categorySuffix = 'Provisions';
+        }
+
+        fileName += categorySuffix;
+
+        // Add country at the end if selected
+        if (this.selectedCountry && this.selectedCountry.trim() !== '') {
+            fileName += ' ' + this.selectedCountry;
         }
 
         // Add file extension
@@ -1022,6 +1056,11 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
     onCompanyChange(): void {
         // Update filename when company selection changes
+        this.updateExportFileName();
+    }
+
+    onCountryChange(): void {
+        // Update filename when country selection changes
         this.updateExportFileName();
     }
 

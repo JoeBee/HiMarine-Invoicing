@@ -1,6 +1,6 @@
 <div class="captains-request-container">
     <div class="content-wrapper">
-        <h1>Captain's Request</h1>
+        <h1>Captain's Order</h1>
 
         <!-- Dropzone for Excel file upload -->
         <div class="dropzone-container">
@@ -41,7 +41,8 @@
                         <tr *ngFor="let tab of ['PROVISIONS', 'FRESH PROVISIONS', 'BOND']">
                             <td *ngIf="excelData[tab]" class="tab-name">{{ tab }}</td>
                             <td *ngIf="excelData[tab]" class="records-count">{{ excelData[tab].recordsWithTotal }}</td>
-                            <td *ngIf="excelData[tab]" class="total-amount">{{ getTabCurrency(tab) }}{{ excelData[tab].sumOfTotals |
+                            <td *ngIf="excelData[tab]" class="total-amount">{{ getTabCurrency(tab) }}{{
+                                excelData[tab].sumOfTotals |
                                 number:'1.2-2'
                                 }}</td>
                         </tr>
