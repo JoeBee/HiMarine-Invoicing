@@ -100,7 +100,7 @@ export class InvoiceComponent implements OnInit {
     ];
 
     // Category dropdown options
-    categories = ['Provisions', 'Bonds'];
+    categories = ['Provisions', 'Bond'];
 
     // Available ports for selected country
     availablePorts: string[] = [];

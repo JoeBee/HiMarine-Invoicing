@@ -49,9 +49,15 @@ export class PriceListComponent implements OnInit, OnDestroy {
     // Currency selection
     selectedCurrency: string = '';
 
+    // Export filename
+    exportFileName: string = '';
+
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
     ngOnInit(): void {
+        // Initialize export filename
+        this.updateExportFileName();
+
         this.dataService.processedData$.subscribe(data => {
             this.processedData = data;
             this.filteredData = [...data]; // Initialize filtered data
@@ -59,6 +65,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
             this.updateCommonDescriptions();
             this.applyFilters();
             this.updateSelectAllState();
+            this.updateExportFileName(); // Update filename when data changes
 
             // Update hasProcessedFiles based on data availability
             this.hasProcessedFiles = data.length > 0;
@@ -374,10 +381,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
             const day = String(today.getDate()).padStart(2, '0');
             const dateString = `${year}${month}${day}`;
 
-            // Determine filename based on selected company
-            const fileName = this.selectedCompany === 'Hi Marine'
-                ? `Hi Marine_Price List_${dateString}.xlsx`
-                : `EOS Supply LTD_Price List_${dateString}.xlsx`;
+            // Use the export filename from input, or fallback to default if empty
+            // If exportFileName is empty, use the computed default (what's shown in the input)
+            const fileName = this.exportFileName.trim() || this.generateDefaultFileName();
 
             saveAs(data, fileName);
 
@@ -975,6 +981,53 @@ export class PriceListComponent implements OnInit, OnDestroy {
     private roundToTwoDecimals(value: number): number {
         // Round number to 2 decimal places
         return Math.round(value * 100) / 100;
+    }
+
+    updateExportFileName(): void {
+        // Update filename when company or data changes
+        this.exportFileName = this.generateDefaultFileName();
+    }
+
+    private generateDefaultFileName(): string {
+        // Start with company prefix
+        const companyPrefix = this.selectedCompany === 'Hi Marine' ? 'HiMarine_' : 'EOS_';
+
+        // Add Country_ literal text
+        let fileName = companyPrefix + 'Country_';
+
+        // Determine category part based on data
+        const hasProvisions = this.processedData.some(item =>
+            item.category === 'Provisions' && item.included && this.isPriceValid(item.price)
+        );
+        const hasBonded = this.processedData.some(item =>
+            item.category === 'Bonded' && item.included && this.isPriceValid(item.price)
+        );
+
+        if (hasProvisions && hasBonded) {
+            fileName += 'BondProvisions';
+        } else if (hasBonded) {
+            fileName += 'Bond';
+        } else if (hasProvisions) {
+            fileName += 'Provisions';
+        } else {
+            // Default if no data
+            fileName += 'Provisions';
+        }
+
+        // Add file extension
+        fileName += '.xlsx';
+
+        return fileName;
+    }
+
+    onCompanyChange(): void {
+        // Update filename when company selection changes
+        this.updateExportFileName();
+    }
+
+    getDefaultFileName(): string {
+        // Public method to access default filename in template
+        return this.generateDefaultFileName();
     }
 
 }

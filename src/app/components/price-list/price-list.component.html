@@ -5,9 +5,9 @@
     <div class="action-section" *ngIf="hasProcessedFiles">
         <div class="export-controls">
             <div class="radio-group">
-                <input type="radio" id="radioEOS" name="company" value="EOS" [(ngModel)]="selectedCompany">
+                <input type="radio" id="radioEOS" name="company" value="EOS" [(ngModel)]="selectedCompany" (change)="onCompanyChange()">
                 <label for="radioEOS">EOS</label>
-                <input type="radio" id="radioHIMarine" name="company" value="Hi Marine" [(ngModel)]="selectedCompany">
+                <input type="radio" id="radioHIMarine" name="company" value="Hi Marine" [(ngModel)]="selectedCompany" (change)="onCompanyChange()">
                 <label for="radioHIMarine">Hi Marine</label>
             </div>
             <div class="radio-group currency-group">
@@ -22,13 +22,20 @@
                 <input type="radio" id="radioCAD" name="currency" value="CAD" [(ngModel)]="selectedCurrency">
                 <label for="radioCAD">CAD (C$)</label>
             </div>
+            <button class="secondary" [disabled]="processedData.length === 0" (click)="showInvalidPricesDialog()">
+                Show Invalid
+            </button>
+        </div>
+        <div class="export-filename-control" *ngIf="hasProcessedFiles">
+            <label for="exportFileName">Export File Name:</label>
+            <input type="text" id="exportFileName" 
+                [ngModel]="exportFileName || getDefaultFileName()"
+                (ngModelChange)="exportFileName = $event"
+                class="export-filename-input">
             <button class="primary" [disabled]="processedData.length === 0 || !selectedCurrency"
                 (click)="exportToExcel()">
                 Export Price List </button>
         </div>
-        <button class="secondary" [disabled]="processedData.length === 0" (click)="showInvalidPricesDialog()">
-            Show Invalid Price Records
-        </button>
     </div>
 
 
