@@ -963,63 +963,49 @@ export class InvoiceComponent implements OnInit {
             worksheet.getColumn('G').width = 12;  // Total
 
             // Our Company Details (Top-Left) - write concatenated text to column A only, no merges, no wrap
-            const companyHeader = worksheet.getCell('A9');
-            companyHeader.value = `Name: ${this.invoiceData.ourCompanyName || ''}`;
-            companyHeader.font = { size: 11, name: 'Arial', bold: true };
-            companyHeader.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
-
-            const address1 = worksheet.getCell('A10');
-            address1.value = `Address: ${this.invoiceData.ourCompanyAddress || ''}`;
-            address1.font = { size: 11, name: 'Arial', bold: true };
-            address1.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
-
-            const address2 = worksheet.getCell('A11');
-            address2.value = `Address2: ${this.invoiceData.ourCompanyAddress2 || ''}`;
-            address2.font = { size: 11, name: 'Arial', bold: true };
-            address2.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
-
-            const country = worksheet.getCell('A12');
-            const leftCityLine = [this.invoiceData.ourCompanyCity, this.invoiceData.ourCompanyCountry]
-                .filter(Boolean)
-                .join(', ');
-            country.value = `City: ${leftCityLine}`;
-            country.font = { size: 11, name: 'Arial', bold: true };
-            country.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
-
-            const email = worksheet.getCell('A13');
-            email.value = `Email: ${this.invoiceData.ourCompanyEmail || ''}`;
-            email.font = { size: 11, name: 'Arial', bold: true };
-            email.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
+            // Only write rows that have data to avoid blank lines
+            let companyRow = 9;
+            const companyDetails = [
+                { label: 'Name', value: this.invoiceData.ourCompanyName },
+                { label: 'Address', value: this.invoiceData.ourCompanyAddress },
+                { label: 'Address2', value: this.invoiceData.ourCompanyAddress2 },
+                { label: 'City', value: [this.invoiceData.ourCompanyCity, this.invoiceData.ourCompanyCountry].filter(Boolean).join(', ') },
+                { label: 'Phone', value: this.invoiceData.ourCompanyPhone },
+                { label: 'Email', value: this.invoiceData.ourCompanyEmail }
+            ];
+            companyDetails.forEach(detail => {
+                if (detail.value && detail.value.trim()) {
+                    const cell = worksheet.getCell(`A${companyRow}`);
+                    cell.value = `${detail.label}: ${detail.value}`;
+                    cell.font = { size: 11, name: 'Arial', bold: true };
+                    cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
+                    companyRow++;
+                }
+            });
 
             // Vessel Details (Top-Right) under the logo - values only, no labels
+            // Only write rows that have data to avoid blank lines
+            let vesselRow = 9;
+            const vesselDetails = [
+                this.invoiceData.vesselName,
+                this.invoiceData.vesselName2,
+                this.invoiceData.vesselAddress,
+                this.invoiceData.vesselAddress2,
+                [this.invoiceData.vesselCity, this.invoiceData.vesselCountry].filter(Boolean).join(', ')
+            ];
             const vesselValueStyle = { font: { size: 11, name: 'Arial', bold: true } };
-            worksheet.getCell('E9').value = this.invoiceData.vesselName || '';
-            worksheet.getCell('E9').font = vesselValueStyle.font;
-            worksheet.getCell('F9').value = null as any;
-            worksheet.getCell('G9').value = null as any;
-
-            worksheet.getCell('E10').value = this.invoiceData.vesselName2 || '';
-            worksheet.getCell('E10').font = vesselValueStyle.font;
-            worksheet.getCell('F10').value = null as any;
-            worksheet.getCell('G10').value = null as any;
-
-            worksheet.getCell('E11').value = this.invoiceData.vesselAddress || '';
-            worksheet.getCell('E11').font = vesselValueStyle.font;
-            worksheet.getCell('F11').value = null as any;
-            worksheet.getCell('G11').value = null as any;
-
-            worksheet.getCell('E12').value = this.invoiceData.vesselAddress2 || '';
-            worksheet.getCell('E12').font = vesselValueStyle.font;
-            worksheet.getCell('F12').value = null as any;
-            worksheet.getCell('G12').value = null as any;
-
-            worksheet.getCell('E13').value = [this.invoiceData.vesselCity, this.invoiceData.vesselCountry].filter(Boolean).join(', ');
-            worksheet.getCell('E13').font = vesselValueStyle.font;
-            worksheet.getCell('F13').value = null as any;
-            worksheet.getCell('G13').value = null as any;
+            vesselDetails.forEach(value => {
+                if (value && value.trim()) {
+                    worksheet.getCell(`E${vesselRow}`).value = value;
+                    worksheet.getCell(`E${vesselRow}`).font = vesselValueStyle.font;
+                    worksheet.getCell(`F${vesselRow}`).value = null as any;
+                    worksheet.getCell(`G${vesselRow}`).value = null as any;
+                    vesselRow++;
+                }
+            });
 
             // Bank Details Section (Left side - Row 15-23)
-            const bankDetailsStart = 15;
+            // Only write rows that have data to avoid blank lines
             const bankLabelStyle = { font: { bold: true, size: 11, name: 'Arial' } };
             const bankValueStyle = { font: { size: 11, name: 'Arial' } };
             // Merge A:D and write rich text "Label: value" (label bold)
@@ -1034,35 +1020,60 @@ export class InvoiceComponent implements OnInit {
                 } as any;
             };
 
-            writeBankLine(bankDetailsStart, 'Bank Name', this.invoiceData.bankName);
-            writeBankLine(bankDetailsStart + 1, 'Bank Address', this.invoiceData.bankAddress);
-            writeBankLine(bankDetailsStart + 2, 'IBAN', this.invoiceData.iban);
-            writeBankLine(bankDetailsStart + 3, 'Swift Code', this.invoiceData.swiftCode);
-            writeBankLine(bankDetailsStart + 4, 'Title on Account', this.invoiceData.accountTitle);
+            let bankRow = 15;
+            const standardBankDetails = [
+                { label: 'Bank Name', value: this.invoiceData.bankName },
+                { label: 'Bank Address', value: this.invoiceData.bankAddress },
+                { label: 'IBAN', value: this.invoiceData.iban },
+                { label: 'Swift Code', value: this.invoiceData.swiftCode },
+                { label: 'Title on Account', value: this.invoiceData.accountTitle }
+            ];
+            standardBankDetails.forEach(detail => {
+                if (detail.value && detail.value.trim()) {
+                    writeBankLine(bankRow, detail.label, detail.value);
+                    bankRow++;
+                }
+            });
 
             // Conditional bank extras
             if (this.selectedBank === 'UK') {
-                worksheet.mergeCells(`A${bankDetailsStart + 6}:D${bankDetailsStart + 6}`);
-                worksheet.getCell(`A${bankDetailsStart + 6}`).value = 'UK DOMESTIC WIRES:';
-                worksheet.getCell(`A${bankDetailsStart + 6}`).font = { bold: true, size: 11, name: 'Arial' };
+                const hasUkData = (this.invoiceData.accountNumber && this.invoiceData.accountNumber.trim()) || 
+                                  (this.invoiceData.sortCode && this.invoiceData.sortCode.trim());
+                if (hasUkData) {
+                    worksheet.mergeCells(`A${bankRow}:D${bankRow}`);
+                    worksheet.getCell(`A${bankRow}`).value = 'UK DOMESTIC WIRES:';
+                    worksheet.getCell(`A${bankRow}`).font = { bold: true, size: 11, name: 'Arial' };
+                    bankRow++;
 
-                writeBankLine(bankDetailsStart + 7, 'Account number', this.invoiceData.accountNumber);
-                writeBankLine(bankDetailsStart + 8, 'Sort code', this.invoiceData.sortCode);
+                    if (this.invoiceData.accountNumber && this.invoiceData.accountNumber.trim()) {
+                        writeBankLine(bankRow, 'Account number', this.invoiceData.accountNumber);
+                        bankRow++;
+                    }
+                    if (this.invoiceData.sortCode && this.invoiceData.sortCode.trim()) {
+                        writeBankLine(bankRow, 'Sort code', this.invoiceData.sortCode);
+                        bankRow++;
+                    }
+                }
             }
             if (this.selectedBank === 'US') {
-                writeBankLine(bankDetailsStart + 6, 'ACH Routing', this.invoiceData.achRouting || '');
+                if (this.invoiceData.achRouting && this.invoiceData.achRouting.trim()) {
+                    writeBankLine(bankRow, 'ACH Routing', this.invoiceData.achRouting);
+                    bankRow++;
+                }
             }
             if (this.selectedBank === 'EOS') {
-                writeBankLine(bankDetailsStart + 6, 'Intermediary BIC', this.invoiceData.intermediaryBic || '');
+                if (this.invoiceData.intermediaryBic && this.invoiceData.intermediaryBic.trim()) {
+                    writeBankLine(bankRow, 'Intermediary BIC', this.invoiceData.intermediaryBic);
+                    bankRow++;
+                }
             }
 
             // Invoice Details Section (Right side - Row 15-21)
-            const invoiceDetailsStart = 15;
+            // Only write rows that have data to avoid blank lines
             const invoiceLabelStyle = { font: { bold: true, size: 11, name: 'Arial' } };
             const invoiceValueStyle = { font: { size: 11, name: 'Arial' } };
             // Helper to write invoice detail with label and value in separate cells
-            const writeInvoiceDetail = (offset: number, label: string, value: string) => {
-                const row = invoiceDetailsStart + offset;
+            const writeInvoiceDetail = (row: number, label: string, value: string) => {
                 // Write label in column E with colon
                 const labelCell = worksheet.getCell(`E${row}`);
                 labelCell.value = `${label}:`;
@@ -1082,13 +1093,22 @@ export class InvoiceComponent implements OnInit {
             const categoryToUse = categoryOverride || this.invoiceData.category;
             // Append "A" to invoice number if requested (for provisions when both categories exist)
             const invoiceNumberToUse = appendAtoInvoiceNumber ? `${this.invoiceData.invoiceNumber}A` : this.invoiceData.invoiceNumber;
-            writeInvoiceDetail(0, 'No', invoiceNumberToUse);
-            writeInvoiceDetail(1, 'Invoice Date', this.invoiceData.invoiceDate);
-            writeInvoiceDetail(2, 'Vessel', this.invoiceData.vessel);
-            writeInvoiceDetail(3, 'Country', this.invoiceData.country);
-            writeInvoiceDetail(4, 'Port', this.invoiceData.port);
-            writeInvoiceDetail(5, 'Category', categoryToUse);
-            writeInvoiceDetail(6, 'Invoice Due', this.invoiceData.invoiceDue);
+            let invoiceRow = 15;
+            const invoiceDetails = [
+                { label: 'No', value: invoiceNumberToUse },
+                { label: 'Invoice Date', value: this.invoiceData.invoiceDate },
+                { label: 'Vessel', value: this.invoiceData.vessel },
+                { label: 'Country', value: this.invoiceData.country },
+                { label: 'Port', value: this.invoiceData.port },
+                { label: 'Category', value: categoryToUse },
+                { label: 'Invoice Due', value: this.invoiceData.invoiceDue }
+            ];
+            invoiceDetails.forEach(detail => {
+                if (detail.value && detail.value.trim()) {
+                    writeInvoiceDetail(invoiceRow, detail.label, detail.value);
+                    invoiceRow++;
+                }
+            });
 
             // Items Table (Starting from row 25)
             const tableStartRow = 25;
