@@ -1187,6 +1187,9 @@ export class InvoiceComponent implements OnInit {
                 totalCell.numFmt = currencyFormat;
             });
 
+            // Get currency format for totals
+            const primaryCurrencyFormat = this.getCurrencyExcelFormat(this.primaryCurrency);
+
             // Add subtotal row for Total column at the bottom of datatable
             const subtotalRow = tableStartRow + items.length + 1;
             const firstDataRow = tableStartRow + 1;
@@ -1221,8 +1224,7 @@ export class InvoiceComponent implements OnInit {
                 if (this.invoiceData.launchFee) feeLines.push({ label: 'Launch:', value: this.invoiceData.launchFee, includeInSum: true });
             }
 
-            // Get currency format for totals
-            const primaryCurrencyFormat = this.getCurrencyExcelFormat(this.primaryCurrency);
+            // Get currency format for totals (already defined above)
             const totalLabel = `TOTAL ${this.getCurrencyLabel(this.primaryCurrency)}`;
 
             // Track fee rows that contain numeric amounts for later SUM
@@ -1260,8 +1262,7 @@ export class InvoiceComponent implements OnInit {
             worksheet.getCell(`F${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
             worksheet.getCell(`F${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
 
-            const firstDataRow = tableStartRow + 1;
-            const lastDataRow = tableStartRow + items.length;
+            // firstDataRow and lastDataRow already defined above
             const itemsSumFormula = `SUM(G${firstDataRow}:G${lastDataRow})`;
             const feeSumPart = feeAmountRowRefs.length ? `+${feeAmountRowRefs.join('+')}` : '';
             const discountFactor = this.invoiceData.discountPercent ? `(1-${this.invoiceData.discountPercent}/100)` : '1';
