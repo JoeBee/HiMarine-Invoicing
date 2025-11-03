@@ -139,12 +139,16 @@
     }
 
     .top-section {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
         margin-bottom: 30px;
         border-bottom: 2px solid #000;
         padding-bottom: 20px;
+
+        .top-section-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
 
         .company-logo {
             .top-logo {
@@ -297,31 +301,43 @@
 
                 &.pdf-btn {
                     background-color: #d32f2f;
-                    color: white;
+                }
+            }
+        }
 
-                    &:hover {
-                        background-color: #b71c1c;
-                    }
+        .export-filename-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: flex-end;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #fafafa;
+
+            label {
+                font-size: 14px;
+                font-weight: 500;
+                color: #333;
+                white-space: nowrap;
+            }
+
+            .filename-input {
+                width: 525px;
+                padding: 8px 12px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                font-size: 14px;
+                transition: border-color 0.3s ease;
+
+                &:focus {
+                    outline: none;
+                    border-color: #217346;
+                    box-shadow: 0 0 0 2px rgba(33, 115, 70, 0.1);
                 }
 
-                // Disabled state styling
-                &:disabled {
-                    background-color: #cccccc !important;
-                    color: #666666 !important;
-                    cursor: not-allowed !important;
-                    opacity: 0.6;
-                    transform: none !important;
-                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-
-                    &:hover {
-                        background-color: #cccccc !important;
-                        transform: none !important;
-                        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-                    }
-
-                    .btn-icon {
-                        opacity: 0.5;
-                    }
+                &:hover {
+                    border-color: #999;
                 }
             }
         }

@@ -63,6 +63,8 @@ interface InvoiceData {
     transportCustomsLaunchFees: number;
     launchFee: number;
     discountPercent: number;
+    // Export
+    exportFileName?: string;
 }
 
 @Component({
@@ -216,7 +218,9 @@ export class InvoiceComponent implements OnInit {
         agencyFee: 0,
         transportCustomsLaunchFees: 0,
         launchFee: 0,
-        discountPercent: 0
+        discountPercent: 0,
+        // Export
+        exportFileName: ''
     };
 
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
@@ -224,6 +228,60 @@ export class InvoiceComponent implements OnInit {
     private getTodayDate(): string {
         const today = new Date();
         return today.toISOString().split('T')[0]; // Returns YYYY-MM-DD format
+    }
+
+    private generateAutoFileName(): void {
+        const parts: string[] = [];
+
+        // Invoice prefix
+        parts.push('Invoice');
+
+        // Invoice Number
+        if (this.invoiceData.invoiceNumber) {
+            parts.push(this.invoiceData.invoiceNumber);
+        }
+
+        // Today's Date
+        if (this.invoiceData.invoiceDate) {
+            const date = new Date(this.invoiceData.invoiceDate);
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const month = months[date.getMonth()];
+            const day = date.getDate();
+            const year = date.getFullYear();
+            parts.push(`${month} ${day} ${year}`);
+        }
+
+        // Vessel Name
+        if (this.invoiceData.vesselName) {
+            parts.push(this.invoiceData.vesselName);
+        }
+
+        // Country
+        if (this.invoiceData.country) {
+            parts.push(this.invoiceData.country);
+        }
+
+        // Port
+        if (this.invoiceData.port) {
+            parts.push(this.invoiceData.port);
+        }
+
+        // Category
+        if (this.invoiceData.category) {
+            // If category is 'Bonds and Provisions', use placeholder
+            if (this.invoiceData.category === 'Bonds and Provisions') {
+                parts.push('<Category>');
+            } else {
+                parts.push(this.invoiceData.category);
+            }
+        }
+
+        // Invoice Due
+        if (this.invoiceData.invoiceDue) {
+            parts.push(this.invoiceData.invoiceDue);
+        }
+
+        this.invoiceData.exportFileName = parts.join(' ');
     }
 
     onCountryChange(): void {
@@ -236,6 +294,14 @@ export class InvoiceComponent implements OnInit {
         } else {
             this.availablePorts = [];
         }
+
+        // Update filename
+        this.generateAutoFileName();
+    }
+
+    onInvoiceDetailChange(): void {
+        // Update filename when invoice details change
+        this.generateAutoFileName();
     }
 
     onBankSelectionChange(): void {
@@ -443,6 +509,7 @@ export class InvoiceComponent implements OnInit {
     private determineCategoryFromItems(): void {
         if (this.invoiceData.items.length === 0) {
             this.invoiceData.category = '';
+            this.generateAutoFileName();
             return;
         }
 
@@ -463,6 +530,8 @@ export class InvoiceComponent implements OnInit {
             // Fallback for any other cases
             this.invoiceData.category = '';
         }
+
+        this.generateAutoFileName();
     }
 
     private detectPrimaryCurrency(): void {
@@ -1198,6 +1267,15 @@ export class InvoiceComponent implements OnInit {
                 totalCell.font = { size: 10, name: 'Arial' };
                 totalCell.alignment = { horizontal: 'right', vertical: 'middle' };
                 totalCell.numFmt = currencyFormat;
+
+                // Add grid lines to data cells
+                posCell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } } as any;
+                descCell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } } as any;
+                remarkCell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } } as any;
+                unitCell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } } as any;
+                qtyCell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } } as any;
+                priceCell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } } as any;
+                totalCell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } } as any;
             });
 
             // Get currency format for totals
@@ -1363,9 +1441,21 @@ export class InvoiceComponent implements OnInit {
             });
 
             // Download file
-            const filePrefix = this.selectedBank === 'EOS' ? 'EOS_Invoice' : 'HIMarine_Invoice';
-            const categorySuffix = categoryOverride ? `_${categoryOverride}` : '';
-            const fileName = `${filePrefix}_${this.invoiceData.invoiceNumber}${categorySuffix}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            let fileName: string;
+            if (this.invoiceData.exportFileName && this.invoiceData.exportFileName.trim()) {
+                fileName = this.invoiceData.exportFileName.trim();
+                // Replace <Category> placeholder with actual category if categoryOverride is provided
+                if (categoryOverride && fileName.includes('<Category>')) {
+                    fileName = fileName.replace('<Category>', categoryOverride);
+                }
+                if (!fileName.endsWith('.xlsx')) {
+                    fileName = `${fileName}.xlsx`;
+                }
+            } else {
+                const filePrefix = this.selectedBank === 'EOS' ? 'EOS_Invoice' : 'HIMarine_Invoice';
+                const categorySuffix = categoryOverride ? `_${categoryOverride}` : '';
+                fileName = `${filePrefix}_${this.invoiceData.invoiceNumber}${categorySuffix}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            }
             saveAs(blob, fileName);
 
             this.loggingService.logExport('excel_invoice_exported', {

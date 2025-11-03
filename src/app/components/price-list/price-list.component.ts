@@ -957,9 +957,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
         const desc = item.description.toUpperCase();
         const hasFreshProvisionKeyword = FRESH_PROVISIONS_LIST
-            .some(keyword => desc.includes(keyword));
+            .some((keyword: string) => desc.includes(keyword));
         const hasNotFreshKeyword = NOT_FRESH
-            .some(keyword => desc.includes(keyword));
+            .some((keyword: string) => desc.includes(keyword));
 
         return hasFreshProvisionKeyword && !hasNotFreshKeyword;
     }

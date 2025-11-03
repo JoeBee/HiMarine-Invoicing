@@ -2,32 +2,39 @@
     <div class="content-wrapper">
         <!-- Top Logo Section with Export Buttons -->
         <div class="top-section">
-            <div class="company-logo">
-                <img [src]="selectedBank === 'EOS' ? 'assets/images/EosSupplyLtd.png' : 'assets/images/HIMarineTopImage.png'"
-                    alt="Company Logo" class="top-logo">
-            </div>
-            <div class="export-buttons-section">
-                <!-- Toggle Switch for Split Invoices / One Invoice -->
-                <div class="toggle-group">
-                    <label class="toggle-switch">
-                        <input type="checkbox" [(ngModel)]="splitFileMode" (change)="onToggleChange()"
-                            class="toggle-input">
-                        <span class="toggle-slider">
-                            <span class="toggle-label-left">Split Invoices</span>
-                            <span class="toggle-label-right">One Invoice</span>
-                        </span>
-                    </label>
+            <div class="top-section-content">
+                <div class="company-logo">
+                    <img [src]="selectedBank === 'EOS' ? 'assets/images/EosSupplyLtd.png' : 'assets/images/HIMarineTopImage.png'"
+                        alt="Company Logo" class="top-logo">
                 </div>
-                <button class="export-btn excel-btn" [disabled]="invoiceData.items.length === 0"
-                    (click)="exportInvoiceToExcel()">
-                    <span class="btn-icon">📊</span>
-                    Export Invoice
-                </button>
-                <button class="export-btn pdf-btn" *ngIf="false" [disabled]="invoiceData.items.length === 0"
-                    (click)="exportInvoiceToPDF()">
-                    <span class="btn-icon">📄</span>
-                    Export to PDF
-                </button>
+                <div class="export-buttons-section">
+                    <!-- Toggle Switch for Split Invoices / One Invoice -->
+                    <div class="toggle-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" [(ngModel)]="splitFileMode" (change)="onToggleChange()"
+                                class="toggle-input">
+                            <span class="toggle-slider">
+                                <span class="toggle-label-left">Split Invoices</span>
+                                <span class="toggle-label-right">One Invoice</span>
+                            </span>
+                        </label>
+                    </div>
+                    <button class="export-btn excel-btn" [disabled]="invoiceData.items.length === 0"
+                        (click)="exportInvoiceToExcel()">
+                        <span class="btn-icon">📊</span>
+                        Export Invoice
+                    </button>
+                    <button class="export-btn pdf-btn" *ngIf="false" [disabled]="invoiceData.items.length === 0"
+                        (click)="exportInvoiceToPDF()">
+                        <span class="btn-icon">📄</span>
+                        Export to PDF
+                    </button>
+                </div>
+            </div>
+            <!-- Export File Name Input -->
+            <div class="export-filename-group">
+                <label>Export File Name:</label>
+                <input type="text" [(ngModel)]="invoiceData.exportFileName" class="filename-input">
             </div>
         </div>
 
@@ -197,7 +204,7 @@
                     <div class="vessel-details">
                         <div class="detail-field">
                             <label>Name:</label>
-                            <input type="text" [(ngModel)]="invoiceData.vesselName" class="editable-field">
+                            <input type="text" [(ngModel)]="invoiceData.vesselName" (ngModelChange)="onInvoiceDetailChange()" class="editable-field">
                         </div>
                         <div class="detail-field">
                             <label>Name 2:</label>
@@ -228,15 +235,15 @@
                     <div class="invoice-details">
                         <div class="invoice-field">
                             <label>No</label>
-                            <input type="text" [(ngModel)]="invoiceData.invoiceNumber" class="editable-field">
+                            <input type="text" [(ngModel)]="invoiceData.invoiceNumber" (ngModelChange)="onInvoiceDetailChange()" class="editable-field">
                         </div>
                         <div class="invoice-field">
                             <label>Invoice Date</label>
-                            <input type="date" [(ngModel)]="invoiceData.invoiceDate" class="editable-field">
+                            <input type="date" [(ngModel)]="invoiceData.invoiceDate" (ngModelChange)="onInvoiceDetailChange()" class="editable-field">
                         </div>
                         <div class="invoice-field">
                             <label>Vessel</label>
-                            <input type="text" [(ngModel)]="invoiceData.vessel" class="editable-field">
+                            <input type="text" [(ngModel)]="invoiceData.vessel" (ngModelChange)="onInvoiceDetailChange()" class="editable-field">
                         </div>
                         <div class="invoice-field">
                             <label>Country</label>
@@ -249,7 +256,7 @@
                         <div class="invoice-field">
                             <label>Port</label>
                             <!-- Text input with datalist for suggestions -->
-                            <input type="text" [(ngModel)]="invoiceData.port" class="editable-field"
+                            <input type="text" [(ngModel)]="invoiceData.port" (ngModelChange)="onInvoiceDetailChange()" class="editable-field"
                                 placeholder="Enter or select port name"
                                 [attr.list]="availablePorts.length > 0 ? 'port-suggestions' : null">
                             <!-- Datalist for port suggestions when country is selected -->
@@ -263,7 +270,7 @@
                         </div>
                         <div class="invoice-field">
                             <label>Invoice Due</label>
-                            <select [(ngModel)]="invoiceData.invoiceDue" class="editable-field">
+                            <select [(ngModel)]="invoiceData.invoiceDue" (ngModelChange)="onInvoiceDetailChange()" class="editable-field">
                                 <option value=""></option>
                                 <option value="CASH">CASH</option>
                                 <option value="CREDIT">CREDIT</option>
