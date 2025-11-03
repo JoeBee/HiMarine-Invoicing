@@ -1281,26 +1281,26 @@ export class InvoiceComponent implements OnInit {
             // Get currency format for totals
             const primaryCurrencyFormat = this.getCurrencyExcelFormat(this.primaryCurrency);
 
-            // Add subtotal row for Total column at the bottom of datatable
-            const subtotalRow = tableStartRow + items.length + 1;
+            // Add subtotal row for Total column at the bottom of datatable - moved down 1 row
+            const subtotalRow = tableStartRow + items.length + 2;
             const firstDataRow = tableStartRow + 1;
             const lastDataRow = tableStartRow + items.length;
+
+            // Add label in column F
+            const subtotalLabelCell = worksheet.getCell(`F${subtotalRow}`);
+            subtotalLabelCell.value = `TOTAL ${this.getCurrencyLabel(this.primaryCurrency)}`;
+            subtotalLabelCell.font = { size: 11, name: 'Arial', bold: true };
+            subtotalLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+
+            // Add formula in column G (no border, no shading)
             const subtotalCell = worksheet.getCell(`G${subtotalRow}`);
             subtotalCell.value = { formula: `SUM(G${firstDataRow}:G${lastDataRow})` } as any;
-            subtotalCell.font = { size: 10, name: 'Arial' };
+            subtotalCell.font = { size: 11, name: 'Arial', bold: true };
             subtotalCell.alignment = { horizontal: 'right', vertical: 'middle' };
             subtotalCell.numFmt = primaryCurrencyFormat;
-            // Add light gray border and background around the cell
-            subtotalCell.border = {
-                top: { style: 'thin', color: { argb: 'FFD3D3D3' } },
-                bottom: { style: 'thin', color: { argb: 'FFD3D3D3' } },
-                left: { style: 'thin', color: { argb: 'FFD3D3D3' } },
-                right: { style: 'thin', color: { argb: 'FFD3D3D3' } }
-            } as any;
-            subtotalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } } as any;
 
             // Totals and Fees Section
-            let totalsStartRow = tableStartRow + items.length + 3; // moved down by 1 row
+            let totalsStartRow = tableStartRow + items.length + 4; // moved down by 2 rows now
 
             // List discount (amount) and non-zero fees just above the Total
             // Discount is always included (applied to items), fees are conditional
@@ -1325,14 +1325,14 @@ export class InvoiceComponent implements OnInit {
                 const rowIndex = totalsStartRow + idx;
                 const labelCell = worksheet.getCell(`F${rowIndex}`);
                 labelCell.value = fee.label;
-                labelCell.font = { bold: false, size: 11, name: 'Arial' };
+                labelCell.font = { bold: true, size: 11, name: 'Arial' };
                 labelCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
                 const valueCell = worksheet.getCell(`G${rowIndex}`);
                 valueCell.value = fee.value as number;
                 valueCell.numFmt = primaryCurrencyFormat;
                 if (fee.includeInSum) feeAmountRowRefs.push(`G${rowIndex}`);
-                valueCell.font = { bold: false, size: 11, name: 'Arial' };
+                valueCell.font = { bold: true, size: 11, name: 'Arial' };
                 valueCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
                 // Use standard line height like the rest of the page
@@ -1341,9 +1341,8 @@ export class InvoiceComponent implements OnInit {
 
             totalsStartRow += feeLines.length;
 
-            // TOTAL (formula: sum of G column item totals + all monetary fee cells)
-            worksheet.getCell(`F${totalsStartRow}`).value = totalLabel;
-            worksheet.getCell(`F${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
+            // Final TOTAL (formula: sum of G column item totals + all monetary fee cells) - no label
+            worksheet.getCell(`F${totalsStartRow}`).value = '';
             worksheet.getCell(`F${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
 
             // firstDataRow and lastDataRow already defined above
