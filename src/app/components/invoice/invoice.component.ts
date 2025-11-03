@@ -1073,8 +1073,18 @@ export class InvoiceComponent implements OnInit {
             // Only write rows that have data to avoid blank lines
             const invoiceLabelStyle = { font: { bold: true, size: 11, name: 'Arial' } };
             const invoiceValueStyle = { font: { size: 11, name: 'Arial' } };
+            // Helper to format date as "November 03, 2025"
+            const formatDateAsText = (dateString: string): string => {
+                const date = new Date(dateString);
+                const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                const month = months[date.getMonth()];
+                const day = date.getDate().toString().padStart(2, '0');
+                const year = date.getFullYear();
+                return `${month} ${day}, ${year}`;
+            };
+
             // Helper to write invoice detail with label and value in separate cells
-            const writeInvoiceDetail = (row: number, label: string, value: string) => {
+            const writeInvoiceDetail = (row: number, label: string, value: string, isDate: boolean = false) => {
                 // Write label in column E with colon
                 const labelCell = worksheet.getCell(`E${row}`);
                 labelCell.value = `${label}:`;
@@ -1086,7 +1096,12 @@ export class InvoiceComponent implements OnInit {
 
                 // Write value in column G
                 const valueCell = worksheet.getCell(`G${row}`);
-                valueCell.value = value || '';
+                // Format date as text if needed
+                if (isDate && value) {
+                    valueCell.value = formatDateAsText(value);
+                } else {
+                    valueCell.value = value || '';
+                }
                 valueCell.font = { size: 11, name: 'Arial', bold: false };
                 valueCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
             };
@@ -1096,17 +1111,17 @@ export class InvoiceComponent implements OnInit {
             const invoiceNumberToUse = appendAtoInvoiceNumber ? `${this.invoiceData.invoiceNumber}A` : this.invoiceData.invoiceNumber;
             let invoiceRow = 15;
             const invoiceDetails = [
-                { label: 'No', value: invoiceNumberToUse },
-                { label: 'Invoice Date', value: this.invoiceData.invoiceDate },
-                { label: 'Vessel', value: this.invoiceData.vessel },
-                { label: 'Country', value: this.invoiceData.country },
-                { label: 'Port', value: this.invoiceData.port },
-                { label: 'Category', value: categoryToUse },
-                { label: 'Invoice Due', value: this.invoiceData.invoiceDue }
+                { label: 'No', value: invoiceNumberToUse, isDate: false },
+                { label: 'Invoice Date', value: this.invoiceData.invoiceDate, isDate: true },
+                { label: 'Vessel', value: this.invoiceData.vessel, isDate: false },
+                { label: 'Country', value: this.invoiceData.country, isDate: false },
+                { label: 'Port', value: this.invoiceData.port, isDate: false },
+                { label: 'Category', value: categoryToUse, isDate: false },
+                { label: 'Invoice Due', value: this.invoiceData.invoiceDue, isDate: false }
             ];
             invoiceDetails.forEach(detail => {
                 if (detail.value && detail.value.trim()) {
-                    writeInvoiceDetail(invoiceRow, detail.label, detail.value);
+                    writeInvoiceDetail(invoiceRow, detail.label, detail.value, detail.isDate);
                     invoiceRow++;
                 }
             });
@@ -1199,13 +1214,14 @@ export class InvoiceComponent implements OnInit {
             subtotalCell.font = { size: 10, name: 'Arial' };
             subtotalCell.alignment = { horizontal: 'right', vertical: 'middle' };
             subtotalCell.numFmt = primaryCurrencyFormat;
-            // Add light gray border around the cell
+            // Add light gray border and background around the cell
             subtotalCell.border = {
                 top: { style: 'thin', color: { argb: 'FFD3D3D3' } },
                 bottom: { style: 'thin', color: { argb: 'FFD3D3D3' } },
                 left: { style: 'thin', color: { argb: 'FFD3D3D3' } },
                 right: { style: 'thin', color: { argb: 'FFD3D3D3' } }
             } as any;
+            subtotalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8E8E8' } } as any;
 
             // Totals and Fees Section
             let totalsStartRow = tableStartRow + items.length + 3; // moved down by 1 row
@@ -1319,12 +1335,12 @@ export class InvoiceComponent implements OnInit {
                     cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
                 });
 
-                // Right block: Bank Details starting at column E; merge to allow long text on one line
+                // Right block: Bank Details starting at column D; merge to allow long text on one line
                 const rightStartRow = bottomSectionStart;
                 const writeRight = (offset: number, text: string) => {
                     const row = rightStartRow + offset;
-                    worksheet.mergeCells(`E${row}:G${row}`);
-                    const cell = worksheet.getCell(`E${row}`);
+                    worksheet.mergeCells(`D${row}:G${row}`);
+                    const cell = worksheet.getCell(`D${row}`);
                     cell.value = text;
                     cell.font = eosFont;
                     cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
