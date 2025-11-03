@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, ProcessedDataRow } from '../../services/data.service';
 import { LoggingService } from '../../services/logging.service';
-import { FRESH_PROVISIONS_LIST } from '../../constants/fresh-provisions.constants';
+import { FRESH_PROVISIONS_LIST, NOT_FRESH } from '../../constants/fresh-provisions.constants';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
@@ -950,13 +950,18 @@ export class PriceListComponent implements OnInit, OnDestroy {
     }
 
     private isFreshProvisionItem(item: ProcessedDataRow): boolean {
-        // Data uploaded via "Provisions" dropzone AND has "Description" containing a word from freshProvisionsList should go in "FRESH PROVISIONS" Excel tab
+        // Data uploaded via "Provisions" dropzone AND has "Description" containing a word from FRESH_PROVISIONS_LIST but NOT from NOT_FRESH should go in "FRESH PROVISIONS" Excel tab
         if (item.category !== 'Provisions') {
             return false;
         }
 
         const desc = item.description.toUpperCase();
-        return FRESH_PROVISIONS_LIST.some(keyword => desc.includes(keyword));
+        const hasFreshProvisionKeyword = FRESH_PROVISIONS_LIST
+            .some(keyword => desc.includes(keyword));
+        const hasNotFreshKeyword = NOT_FRESH
+            .some(keyword => desc.includes(keyword));
+
+        return hasFreshProvisionKeyword && !hasNotFreshKeyword;
     }
 
     private isBondItem(item: ProcessedDataRow): boolean {
@@ -1017,7 +1022,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         } else {
             companyPrefix = 'EOS Supply Price List ';
         }
-        
+
         let fileName = companyPrefix;
 
         // Determine category part based on data

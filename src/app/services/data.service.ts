@@ -156,6 +156,7 @@ export class DataService {
 
                                         if ((headerValue.includes('price') ||
                                             headerValue.includes('cost') ||
+                                            headerValue.includes('unit aud') ||
                                             headerValue.includes('amount') ||
                                             headerValue.includes('value')) && headerValue.length < 25) {
                                             priceColumn = XLSX.utils.encode_col(searchCol);

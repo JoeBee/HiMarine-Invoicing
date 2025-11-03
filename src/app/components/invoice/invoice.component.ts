@@ -356,12 +356,12 @@ export class InvoiceComponent implements OnInit {
     private populateEOSBankDetails(): void {
         // Our Company Details
         this.invoiceData.ourCompanyName = 'EOS SUPPLY LTD';
-        this.invoiceData.ourCompanyAddress = 'Wearfield, Enterprise Park East';
-        this.invoiceData.ourCompanyAddress2 = 'Sunderland, Tyne and Wear, SR5 2TA';
-        this.invoiceData.ourCompanyCity = '';
+        this.invoiceData.ourCompanyAddress = '85 Great Portland Street, First Floor';
+        this.invoiceData.ourCompanyAddress2 = '';
+        this.invoiceData.ourCompanyCity = 'London, England, W1W 7LT';
         this.invoiceData.ourCompanyCountry = 'United Kingdom';
         this.invoiceData.ourCompanyPhone = '';
-        this.invoiceData.ourCompanyEmail = 'office@eos-supply.co.uk';
+        this.invoiceData.ourCompanyEmail = '';
 
         // Vessel Details (do not auto-populate; keep blank by default)
         this.invoiceData.vesselName = '';
@@ -373,7 +373,7 @@ export class InvoiceComponent implements OnInit {
 
         // Bank Details
         this.invoiceData.bankName = 'Revolut Ltd';
-        this.invoiceData.bankAddress = '7 Westferry Circus, Canary Wharf, London, England, E14 4HD';
+        this.invoiceData.bankAddress = '7 Westferry Circus, London, England, E14 4HD';
         this.invoiceData.iban = 'GB64REVO00996912321885';
         this.invoiceData.swiftCode = 'REVOGB21XXX';
         this.invoiceData.intermediaryBic = 'CHASGB2L';
@@ -448,7 +448,7 @@ export class InvoiceComponent implements OnInit {
 
         // Collect unique tabName values
         const uniqueTabs = new Set(this.invoiceData.items.map(item => item.tabName));
-        
+
         // Determine category based on tabName values
         if (uniqueTabs.has('BOND') && !uniqueTabs.has('PROVISIONS') && !uniqueTabs.has('FRESH PROVISIONS')) {
             // Only BOND
@@ -976,7 +976,7 @@ export class InvoiceComponent implements OnInit {
             companyDetails.forEach(detail => {
                 if (detail.value && detail.value.trim()) {
                     const cell = worksheet.getCell(`A${companyRow}`);
-                    cell.value = `${detail.label}: ${detail.value}`;
+                    cell.value = detail.value;
                     cell.font = { size: 11, name: 'Arial', bold: true };
                     cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
                     companyRow++;
@@ -1018,6 +1018,7 @@ export class InvoiceComponent implements OnInit {
                         { text: `${value || ''}`, font: { size: 11, name: 'Arial', bold: true } }
                     ]
                 } as any;
+                cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true } as any;
             };
 
             let bankRow = 15;
@@ -1037,8 +1038,8 @@ export class InvoiceComponent implements OnInit {
 
             // Conditional bank extras
             if (this.selectedBank === 'UK') {
-                const hasUkData = (this.invoiceData.accountNumber && this.invoiceData.accountNumber.trim()) || 
-                                  (this.invoiceData.sortCode && this.invoiceData.sortCode.trim());
+                const hasUkData = (this.invoiceData.accountNumber && this.invoiceData.accountNumber.trim()) ||
+                    (this.invoiceData.sortCode && this.invoiceData.sortCode.trim());
                 if (hasUkData) {
                     worksheet.mergeCells(`A${bankRow}:D${bankRow}`);
                     worksheet.getCell(`A${bankRow}`).value = 'UK DOMESTIC WIRES:';
@@ -1186,8 +1187,25 @@ export class InvoiceComponent implements OnInit {
                 totalCell.numFmt = currencyFormat;
             });
 
+            // Add subtotal row for Total column at the bottom of datatable
+            const subtotalRow = tableStartRow + items.length + 1;
+            const firstDataRow = tableStartRow + 1;
+            const lastDataRow = tableStartRow + items.length;
+            const subtotalCell = worksheet.getCell(`G${subtotalRow}`);
+            subtotalCell.value = { formula: `SUM(G${firstDataRow}:G${lastDataRow})` } as any;
+            subtotalCell.font = { size: 10, name: 'Arial' };
+            subtotalCell.alignment = { horizontal: 'right', vertical: 'middle' };
+            subtotalCell.numFmt = primaryCurrencyFormat;
+            // Add light gray border around the cell
+            subtotalCell.border = {
+                top: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+                bottom: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+                left: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+                right: { style: 'thin', color: { argb: 'FFD3D3D3' } }
+            } as any;
+
             // Totals and Fees Section
-            let totalsStartRow = tableStartRow + items.length + 2; // slightly tighter spacing
+            let totalsStartRow = tableStartRow + items.length + 3; // moved down by 1 row
 
             // List discount (amount) and non-zero fees just above the Total
             // Discount is always included (applied to items), fees are conditional
@@ -1258,8 +1276,10 @@ export class InvoiceComponent implements OnInit {
             // Terms and Conditions
             const termsStartRow = totalsStartRow + 4;
             worksheet.mergeCells(`A${termsStartRow}:G${termsStartRow}`);
-            worksheet.getCell(`A${termsStartRow}`).value = 'By placing the order according to the above quotation you are accepting the following terms:';
-            worksheet.getCell(`A${termsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
+            const termsHeader = worksheet.getCell(`A${termsStartRow}`);
+            termsHeader.value = 'By placing the order according to the above quotation you are accepting the following terms:';
+            termsHeader.font = { bold: true, size: 11, name: 'Arial' };
+            termsHeader.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
             const terms = [
                 'I.    Credit days: 30 calendar days.',
@@ -1271,8 +1291,10 @@ export class InvoiceComponent implements OnInit {
 
             terms.forEach((term, index) => {
                 worksheet.mergeCells(`A${termsStartRow + 1 + index}:G${termsStartRow + 1 + index}`);
-                worksheet.getCell(`A${termsStartRow + 1 + index}`).value = term;
-                worksheet.getCell(`A${termsStartRow + 1 + index}`).font = { size: 10, name: 'Arial' };
+                const cell = worksheet.getCell(`A${termsStartRow + 1 + index}`);
+                cell.value = term;
+                cell.font = { size: 10, name: 'Arial' };
+                cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
             });
 
             // If EOS category selected, print company and bank details at bottom (left and right blocks)
