@@ -1120,10 +1120,8 @@ export class InvoiceComponent implements OnInit {
                 { label: 'Invoice Due', value: this.invoiceData.invoiceDue, isDate: false }
             ];
             invoiceDetails.forEach(detail => {
-                if (detail.value && detail.value.trim()) {
-                    writeInvoiceDetail(invoiceRow, detail.label, detail.value, detail.isDate);
-                    invoiceRow++;
-                }
+                writeInvoiceDetail(invoiceRow, detail.label, detail.value || '', detail.isDate);
+                invoiceRow++;
             });
 
             // Items Table (Starting from row 25)
@@ -1221,7 +1219,7 @@ export class InvoiceComponent implements OnInit {
                 left: { style: 'thin', color: { argb: 'FFD3D3D3' } },
                 right: { style: 'thin', color: { argb: 'FFD3D3D3' } }
             } as any;
-            subtotalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8E8E8' } } as any;
+            subtotalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } } as any;
 
             // Totals and Fees Section
             let totalsStartRow = tableStartRow + items.length + 3; // moved down by 1 row
@@ -1249,14 +1247,14 @@ export class InvoiceComponent implements OnInit {
                 const rowIndex = totalsStartRow + idx;
                 const labelCell = worksheet.getCell(`F${rowIndex}`);
                 labelCell.value = fee.label;
-                labelCell.font = { bold: true, size: 11, name: 'Arial' };
+                labelCell.font = { bold: false, size: 11, name: 'Arial' };
                 labelCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
                 const valueCell = worksheet.getCell(`G${rowIndex}`);
                 valueCell.value = fee.value as number;
                 valueCell.numFmt = primaryCurrencyFormat;
                 if (fee.includeInSum) feeAmountRowRefs.push(`G${rowIndex}`);
-                valueCell.font = { bold: true, size: 11, name: 'Arial' };
+                valueCell.font = { bold: false, size: 11, name: 'Arial' };
                 valueCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
                 // Use standard line height like the rest of the page
@@ -1264,14 +1262,6 @@ export class InvoiceComponent implements OnInit {
             });
 
             totalsStartRow += feeLines.length;
-
-            // Draw a line above the total row across columns E-G
-            for (let col = 5; col <= 7; col++) { // Column E=5, F=6, G=7
-                const cell = worksheet.getCell(totalsStartRow, col);
-                cell.border = {
-                    top: { style: 'thin', color: { argb: 'FF000000' } }
-                } as any;
-            }
 
             // TOTAL (formula: sum of G column item totals + all monetary fee cells)
             worksheet.getCell(`F${totalsStartRow}`).value = totalLabel;
