@@ -251,9 +251,9 @@ export class InvoiceComponent implements OnInit {
             parts.push(`${month} ${day} ${year}`);
         }
 
-        // Vessel Name
-        if (this.invoiceData.vesselName) {
-            parts.push(this.invoiceData.vesselName);
+        // Vessel (from Invoice Details)
+        if (this.invoiceData.vessel) {
+            parts.push(this.invoiceData.vessel);
         }
 
         // Country
@@ -1022,14 +1022,14 @@ export class InvoiceComponent implements OnInit {
                 console.warn('Could not render header/footer for Excel export:', imageError);
             }
 
-            // Set column widths
-            worksheet.getColumn('A').width = 6;   // Pos
-            worksheet.getColumn('B').width = 35;  // Description  
-            worksheet.getColumn('C').width = 15;  // Remark
-            worksheet.getColumn('D').width = 8;   // Unit
-            worksheet.getColumn('E').width = 6;   // Qty
-            worksheet.getColumn('F').width = 12;  // Price
-            worksheet.getColumn('G').width = 12;  // Total
+            // Set column widths (converted from pixels to Excel character units: ~7 pixels per unit)
+            worksheet.getColumn('A').width = 42 / 7;   // Pos: 42 pixels = 6 character units
+            worksheet.getColumn('B').width = 300 / 7;  // Description: 300 pixels = ~43 character units
+            worksheet.getColumn('C').width = 200 / 7;  // Remark: 200 pixels = ~29 character units
+            worksheet.getColumn('D').width = 100 / 7;  // Unit: 100 pixels = ~14 character units
+            worksheet.getColumn('E').width = 50 / 7;   // Qty: 50 pixels = ~7 character units (default, not specified)
+            worksheet.getColumn('F').width = 100 / 7;  // Price: 100 pixels = ~14 character units
+            worksheet.getColumn('G').width = 110 / 7;  // Total: 110 pixels = ~16 character units
 
             // Our Company Details (Top-Left) - write concatenated text to column A only, no merges, no wrap
             // Only write rows that have data to avoid blank lines
@@ -1413,10 +1413,19 @@ export class InvoiceComponent implements OnInit {
                     cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
                 };
 
-                writeRight(0, `Bank Name: ${this.invoiceData.bankName || ''}`);
-                writeRight(1, `Bank Address: ${this.invoiceData.bankAddress || ''}`);
-                writeRight(2, `IBAN: ${this.invoiceData.iban || ''}`);
-                writeRight(3, `SWIFTBIC: ${this.invoiceData.swiftCode || ''}`);
+                // Add "Bank Details" header (underlined)
+                const headerRow = rightStartRow;
+                worksheet.mergeCells(`D${headerRow}:G${headerRow}`);
+                const headerCell = worksheet.getCell(`D${headerRow}`);
+                headerCell.value = 'Bank Details';
+                headerCell.font = { ...eosFont, underline: true } as any;
+                headerCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
+
+                // Bank details moved down one row (offsets 1-4 instead of 0-3), with prefixes removed for Bank Name and Bank Address
+                writeRight(1, this.invoiceData.bankName || '');
+                writeRight(2, this.invoiceData.bankAddress || '');
+                writeRight(3, `IBAN: ${this.invoiceData.iban || ''}`);
+                writeRight(4, `SWIFTBIC: ${this.invoiceData.swiftCode || ''}`);
             }
 
             // Add bottom image
