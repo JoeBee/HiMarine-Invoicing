@@ -7,6 +7,7 @@ import * as XLSX from 'xlsx';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
+import JSZip from 'jszip';
 
 interface InvoiceItem {
     pos: number;
@@ -973,18 +974,6 @@ export class InvoiceComponent implements OnInit {
             worksheet.properties.showGridLines = false;
             worksheet.views = [{ showGridLines: false }];
 
-            // Set workbook to open in Page Layout view
-            workbook.views = [{
-                activeTab: 0,
-                x: 0,
-                y: 0,
-                width: 10000,
-                height: 10000,
-                firstSheet: 0,
-                visibility: 'visible',
-                state: 'pageLayout'
-            }] as any;
-
             // Top header rendering (image for Hi Marine, custom header for EOS)
             try {
                 if (this.selectedBank === 'EOS') {
@@ -992,26 +981,26 @@ export class InvoiceComponent implements OnInit {
                     worksheet.mergeCells('A2:D2');
                     const eosTitle = worksheet.getCell('A2');
                     eosTitle.value = 'EOS SUPPLY LTD';
-                    eosTitle.font = { name: 'Calibri', size: 18, bold: true, italic: true, color: { argb: 'FF0B2E66' } } as any;
+                    eosTitle.font = { name: 'Calibri', size: 16, bold: true, italic: true, color: { argb: 'FF0B2E66' } } as any;
                     eosTitle.alignment = { horizontal: 'left', vertical: 'middle' } as any;
 
                     // Right contact details
                     worksheet.mergeCells('E2:G2');
                     const eosPhoneUk = worksheet.getCell('E2');
                     eosPhoneUk.value = 'Phone: +44 730 7988228';
-                    eosPhoneUk.font = { name: 'Calibri', size: 11, color: { argb: 'FF0B2E66' } } as any;
+                    eosPhoneUk.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF0B2E66' } } as any;
                     eosPhoneUk.alignment = { horizontal: 'right', vertical: 'middle' } as any;
 
                     worksheet.mergeCells('E3:G3');
                     const eosPhoneUs = worksheet.getCell('E3');
                     eosPhoneUs.value = 'Phone: +1 857 204-5786';
-                    eosPhoneUs.font = { name: 'Calibri', size: 11, color: { argb: 'FF0B2E66' } } as any;
+                    eosPhoneUs.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF0B2E66' } } as any;
                     eosPhoneUs.alignment = { horizontal: 'right', vertical: 'middle' } as any;
 
                     worksheet.mergeCells('E4:G4');
                     const eosEmail = worksheet.getCell('E4');
                     eosEmail.value = 'office@eos-supply.co.uk';
-                    eosEmail.font = { name: 'Calibri', size: 11, color: { argb: 'FF0B2E66' } } as any;
+                    eosEmail.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF0B2E66' } } as any;
                     eosEmail.alignment = { horizontal: 'right', vertical: 'middle' } as any;
 
                     // Navy bar across the sheet
@@ -1128,8 +1117,8 @@ export class InvoiceComponent implements OnInit {
 
             // Vessel Details (Top-Right) under the logo - values only, no labels
             // Only write rows that have data to avoid blank lines
-            // Vessel Details starts in row 6
-            let vesselRow = 6;
+            // Vessel Details starts in row 6 for US/UK, row 8 for EOS
+            let vesselRow = this.selectedBank === 'EOS' ? 8 : 6;
             const vesselDetails = [
                 this.invoiceData.vesselName,
                 this.invoiceData.vesselName2,
@@ -1517,18 +1506,10 @@ export class InvoiceComponent implements OnInit {
                     cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
                 };
 
-                // Add "Bank Details" header (underlined)
-                const headerRow = rightStartRow;
-                worksheet.mergeCells(`D${headerRow}:G${headerRow}`);
-                const headerCell = worksheet.getCell(`D${headerRow}`);
-                headerCell.value = 'Bank Details';
-                headerCell.font = { ...bottomFont, underline: true } as any;
-                headerCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
-
-                // Bank details - standard fields
-                let currentOffset = 1;
-                writeRight(currentOffset++, this.invoiceData.bankName || '');
-                writeRight(currentOffset++, this.invoiceData.bankAddress || '');
+                // Bank details - standard fields (no header, with labels)
+                let currentOffset = 0;
+                writeRight(currentOffset++, `Bank Name: ${this.invoiceData.bankName || ''}`);
+                writeRight(currentOffset++, `Bank Address: ${this.invoiceData.bankAddress || ''}`);
 
                 // EOS bank details
                 writeRight(currentOffset++, `IBAN: ${this.invoiceData.iban || ''}`);
@@ -1567,8 +1548,106 @@ export class InvoiceComponent implements OnInit {
             worksheet.pageSetup.fitToWidth = 1;
             // Don't set fitToHeight to allow multiple pages for height
 
+            // Set page orientation to Portrait
+            worksheet.pageSetup.orientation = 'portrait';
+
+            // Set paper size to A4
+            worksheet.pageSetup.paperSize = 9; // 9 = A4 in ExcelJS
+
+            // Set margins (in inches, converted from the values shown in screenshot)
+            worksheet.pageSetup.margins = {
+                top: 0.590,
+                bottom: 0.590,
+                left: 0.393,
+                right: 0.393,
+                header: 0.314,
+                footer: 0.314
+            };
+
+            // Center horizontally, not vertically
+            worksheet.pageSetup.horizontalCentered = true;
+            worksheet.pageSetup.verticalCentered = false;
+
             // Generate Excel file
-            const buffer = await workbook.xlsx.writeBuffer();
+            let buffer = await workbook.xlsx.writeBuffer();
+
+            // Use JSZip to modify the Excel XML to set Page Break Preview view
+            try {
+                const zip = await JSZip.loadAsync(buffer);
+
+                // Find the worksheet XML file (usually xl/worksheets/sheet1.xml)
+                const worksheetFiles = Object.keys(zip.files).filter(name =>
+                    name.startsWith('xl/worksheets/sheet') && name.endsWith('.xml')
+                );
+
+                if (worksheetFiles.length > 0) {
+                    // Process the first worksheet (main invoice sheet)
+                    const worksheetXml = await zip.file(worksheetFiles[0])?.async('string');
+                    if (worksheetXml) {
+                        // Parse and modify the XML to set pageBreakPreview view
+                        let modifiedXml = worksheetXml;
+
+                        // Check if sheetViews element exists
+                        if (modifiedXml.includes('<sheetViews>')) {
+                            // Replace or modify sheetView element to set view="pageBreakPreview"
+                            // Handle both self-closing and opening tags
+                            modifiedXml = modifiedXml.replace(
+                                /<sheetView([^>]*?)(\s*\/?>)/g,
+                                (match, attrs, closing) => {
+                                    // Remove existing view attribute if present
+                                    let cleanAttrs = attrs.replace(/\s*view="[^"]*"/g, '');
+                                    // Ensure we have proper spacing
+                                    if (cleanAttrs && !cleanAttrs.endsWith(' ')) {
+                                        cleanAttrs += ' ';
+                                    }
+                                    // Add view="pageBreakPreview" attribute
+                                    return `<sheetView${cleanAttrs}view="pageBreakPreview"${closing}`;
+                                }
+                            );
+
+                            // If no sheetView found with the view attribute, add it
+                            if (!modifiedXml.includes('view="pageBreakPreview"')) {
+                                // Try to add view attribute to existing sheetView
+                                modifiedXml = modifiedXml.replace(
+                                    /<sheetViews>(\s*)<sheetView([^>]*?)(\s*\/?>)/g,
+                                    (match, spacing, attrs, closing) => {
+                                        let cleanAttrs = attrs.replace(/\s*view="[^"]*"/g, '');
+                                        if (cleanAttrs && !cleanAttrs.endsWith(' ')) {
+                                            cleanAttrs += ' ';
+                                        }
+                                        return `<sheetViews>${spacing}<sheetView${cleanAttrs}view="pageBreakPreview"${closing}`;
+                                    }
+                                );
+
+                                // If still no view attribute, add a new sheetView
+                                if (!modifiedXml.includes('view="pageBreakPreview"')) {
+                                    modifiedXml = modifiedXml.replace(
+                                        '<sheetViews>',
+                                        '<sheetViews><sheetView view="pageBreakPreview"/>'
+                                    );
+                                }
+                            }
+                        } else {
+                            // Add sheetViews section if it doesn't exist
+                            // Insert after the opening worksheet tag
+                            modifiedXml = modifiedXml.replace(
+                                /(<worksheet[^>]*>)/,
+                                '$1<sheetViews><sheetView view="pageBreakPreview"/></sheetViews>'
+                            );
+                        }
+
+                        // Update the file in the zip
+                        zip.file(worksheetFiles[0], modifiedXml);
+                    }
+                }
+
+                // Generate new buffer with modified XML
+                buffer = await zip.generateAsync({ type: 'arraybuffer' });
+            } catch (zipError) {
+                console.warn('Could not modify Excel file for Page Break Preview view:', zipError);
+                // Continue with original buffer if modification fails
+            }
+
             const blob = new Blob([buffer], {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             });

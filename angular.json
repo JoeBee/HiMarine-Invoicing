@@ -47,7 +47,8 @@
                             "canvg",
                             "rgbcolor",
                             "raf",
-                            "core-js"
+                            "core-js",
+                            "jszip"
                         ]
                     },
                     "configurations": {
