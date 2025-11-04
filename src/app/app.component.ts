@@ -47,7 +47,7 @@ export class AppComponent {
         if (tab === 'suppliers') {
             this.router.navigate(['/suppliers/supplier-docs']);
         } else if (tab === 'invoicing') {
-            this.router.navigate(['/invoicing/captains-request']);
+            this.router.navigate(['/invoicing/captains-order']);
         } else if (tab === 'history') {
             this.router.navigate(['/history']);
         }

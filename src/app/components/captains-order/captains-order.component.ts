@@ -15,13 +15,13 @@ interface ExcelData {
 }
 
 @Component({
-    selector: 'app-captains-request',
+    selector: 'app-captains-order',
     standalone: true,
     imports: [CommonModule],
-    templateUrl: './captains-request.component.html',
-    styleUrls: ['./captains-request.component.scss']
+    templateUrl: './captains-order.component.html',
+    styleUrls: ['./captains-order.component.scss']
 })
-export class CaptainsRequestComponent {
+export class CaptainsOrderComponent {
     isDragOver = false;
     uploadedFile: File | null = null;
     isProcessing = false;
@@ -63,7 +63,7 @@ export class CaptainsRequestComponent {
 
     private handleFile(file: File): void {
         // Log file upload attempt
-        this.loggingService.logFileUpload(file.name, file.size, file.type, 'captains_request', 'CaptainsRequestComponent');
+        this.loggingService.logFileUpload(file.name, file.size, file.type, 'captains_order', 'CaptainsOrderComponent');
 
         // Validate file type
         const validTypes = [
@@ -76,7 +76,7 @@ export class CaptainsRequestComponent {
             this.loggingService.logError(
                 `Invalid file type: ${file.type}`,
                 'file_validation',
-                'CaptainsRequestComponent',
+                'CaptainsOrderComponent',
                 {
                     fileName: file.name,
                     fileSize: file.size,
@@ -108,7 +108,7 @@ export class CaptainsRequestComponent {
             this.loggingService.logError(
                 error as Error,
                 'excel_file_processing',
-                'CaptainsRequestComponent',
+                'CaptainsOrderComponent',
                 {
                     fileName: file.name,
                     fileSize: file.size,
@@ -147,7 +147,7 @@ export class CaptainsRequestComponent {
                     this.loggingService.logError(
                         error as Error,
                         'excel_file_reading',
-                        'CaptainsRequestComponent',
+                        'CaptainsOrderComponent',
                         {
                             fileName: file.name,
                             processingStep: 'read_excel_file',
@@ -163,7 +163,7 @@ export class CaptainsRequestComponent {
                 this.loggingService.logError(
                     error,
                     'file_reader_error',
-                    'CaptainsRequestComponent',
+                    'CaptainsOrderComponent',
                     {
                         fileName: file.name,
                         fileSize: file.size,
@@ -202,7 +202,7 @@ export class CaptainsRequestComponent {
                     this.loggingService.logError(
                         error as Error,
                         'excel_file_reading_with_items',
-                        'CaptainsRequestComponent',
+                        'CaptainsOrderComponent',
                         {
                             fileName: file.name,
                             processingStep: 'read_excel_file_with_items',
@@ -218,7 +218,7 @@ export class CaptainsRequestComponent {
                 this.loggingService.logError(
                     error,
                     'file_reader_error_with_items',
-                    'CaptainsRequestComponent',
+                    'CaptainsOrderComponent',
                     {
                         fileName: file.name,
                         fileSize: file.size,
@@ -475,3 +475,4 @@ export class CaptainsRequestComponent {
         return this.excelData[tab].currency || '£';
     }
 }
+

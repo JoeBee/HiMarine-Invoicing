@@ -449,7 +449,7 @@ export class InvoiceComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        // Subscribe to Excel data from captains-request component
+        // Subscribe to Excel data from captains-order component
         this.dataService.excelData$.subscribe(data => {
             if (data) {
                 this.convertExcelDataToInvoiceItems(data);

@@ -39,7 +39,7 @@ Located in `app.component.html`:
 2. **Invoicing Tab** (`/invoicing/*`)
 
             - Sub-tabs:
-                    - Captain's Order (`/invoicing/captains-request`)
+                    - Captain's Order (`/invoicing/captains-order`)
                     - Invoice (`/invoicing/invoice`)
 
 3. **History Tab** (`/history`)
@@ -122,18 +122,18 @@ Routes use lazy loading with `loadComponent()` for optimal performance:
 - Updates item selection state
 - Exports to `DataService.excelData$`
 
-#### 3. CaptainsRequestComponent
+#### 3. CaptainsOrderComponent
 
-**Location:** `src/app/components/captains-request/`
+**Location:** `src/app/components/captains-order/`
 
-**Route:** `/invoicing/captains-request`
+**Route:** `/invoicing/captains-order`
 
-**Purpose:** Upload and process captain request Excel files
+**Purpose:** Upload and process captain order Excel files
 
 **Key Features:**
 - Excel file upload interface
 - Similar processing workflow to supplier files
-- Specialized for captain requests
+- Specialized for captain orders
 
 #### 4. InvoiceComponent
 
@@ -397,7 +397,7 @@ HiMarine-Invoicing/
 │   │   │   │   ├── price-list.component.ts
 │   │   │   │   ├── price-list.component.html
 │   │   │   │   └── price-list.component.scss
-│   │   │   ├── captains-request/        # Captain request processing
+│   │   │   ├── captains-order/         # Captain order processing
 │   │   │   ├── invoice/                 # Invoice generation
 │   │   │   ├── history/                 # Log viewing
 │   │   │   ├── invoicing/               # Alternative invoicing (legacy)
@@ -516,12 +516,12 @@ All state is managed through RxJS Observables in services:
             - Click "Export Invoice" (Excel) or "Generate PDF"
             - Download file(s)
 
-### Captain Request Workflow
+### Captain Order Workflow
 
 1. Navigate to Invoicing → Captain's Order
-2. Upload captain request Excel file
+2. Upload captain order Excel file
 3. Process similar to supplier files
-4. Generate invoice from captain request data
+4. Generate invoice from captain order data
 
 ### Log Review Workflow
 

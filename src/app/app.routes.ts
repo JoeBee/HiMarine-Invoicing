@@ -35,8 +35,8 @@ export const routes: Routes = [
         loadComponent: () => import('./components/price-list/price-list.component').then(m => m.PriceListComponent)
     },
     {
-        path: 'invoicing/captains-request',
-        loadComponent: () => import('./components/captains-request/captains-request.component').then(m => m.CaptainsRequestComponent)
+        path: 'invoicing/captains-order',
+        loadComponent: () => import('./components/captains-order/captains-order.component').then(m => m.CaptainsOrderComponent)
     },
     {
         path: 'invoicing/invoice',

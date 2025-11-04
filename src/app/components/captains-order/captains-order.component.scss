@@ -1,4 +1,4 @@
-.captains-request-container {
+.captains-order-container {
     background-color: #f0f7ff;
     /* Very light blue background - lighter than #e3f2fd */
     min-height: calc(100vh - 120px);
@@ -249,7 +249,7 @@
 
 // Responsive design
 @media (max-width: 768px) {
-    .captains-request-container {
+    .captains-order-container {
         padding: 10px;
     }
 
@@ -276,3 +276,4 @@
         }
     }
 }
+
