@@ -973,6 +973,18 @@ export class InvoiceComponent implements OnInit {
             worksheet.properties.showGridLines = false;
             worksheet.views = [{ showGridLines: false }];
 
+            // Set workbook to open in Page Layout view
+            workbook.views = [{
+                activeTab: 0,
+                x: 0,
+                y: 0,
+                width: 10000,
+                height: 10000,
+                firstSheet: 0,
+                visibility: 'visible',
+                state: 'pageLayout'
+            }] as any;
+
             // Top header rendering (image for Hi Marine, custom header for EOS)
             try {
                 if (this.selectedBank === 'EOS') {
@@ -1088,24 +1100,20 @@ export class InvoiceComponent implements OnInit {
             worksheet.getColumn('F').width = 131 / 7;  // Price: 131 pixels
             worksheet.getColumn('G').width = 120 / 7;  // Total: 120 pixels
 
-            // Our Company Details (Top-Left) - write concatenated text to column A only, no merges, no wrap
-            // Only write rows that have data to avoid blank lines
-            // Skip Email field when 'US' or 'UK' is selected
+            // Our Company Details (Top-Left) - write each field on its own line, one textbox item per line
             // For EOS, start at row 8 instead of 9 to remove the empty row 7
             let companyRow = this.selectedBank === 'EOS' ? 8 : 9;
             const companyDetails = [
-                { label: 'Name', value: this.invoiceData.ourCompanyName },
-                { label: 'Address', value: this.invoiceData.ourCompanyAddress },
-                { label: 'Address2', value: this.invoiceData.ourCompanyAddress2 },
-                { label: 'City', value: [this.invoiceData.ourCompanyCity, this.invoiceData.ourCompanyCountry].filter(Boolean).join(', ') },
-                { label: 'Phone', value: this.invoiceData.ourCompanyPhone },
-                { label: 'Email', value: this.invoiceData.ourCompanyEmail, skipForUSUK: true }
+                { value: this.invoiceData.ourCompanyName },
+                { value: this.invoiceData.ourCompanyAddress },
+                { value: this.invoiceData.ourCompanyAddress2 },
+                { value: this.invoiceData.ourCompanyCity },
+                { value: this.invoiceData.ourCompanyCountry },
+                { value: this.invoiceData.ourCompanyPhone },
+                { value: this.invoiceData.ourCompanyEmail }
             ];
             companyDetails.forEach(detail => {
-                // Skip Email field when 'US' or 'UK' is selected
-                if (detail.skipForUSUK && (this.selectedBank === 'US' || this.selectedBank === 'UK')) {
-                    return;
-                }
+                // Output each field on its own line (only if it has a value)
                 if (detail.value && detail.value.trim()) {
                     const cell = worksheet.getCell(`A${companyRow}`);
                     cell.value = detail.value;
@@ -1115,10 +1123,13 @@ export class InvoiceComponent implements OnInit {
                 }
             });
 
+            // Add one blank line after "Our Company Details" before "Bank Details"
+            companyRow++;
+
             // Vessel Details (Top-Right) under the logo - values only, no labels
             // Only write rows that have data to avoid blank lines
-            // For EOS, start at row 8 instead of 9 to match companyRow
-            let vesselRow = this.selectedBank === 'EOS' ? 8 : 9;
+            // Vessel Details starts in row 6
+            let vesselRow = 6;
             const vesselDetails = [
                 this.invoiceData.vesselName,
                 this.invoiceData.vesselName2,
@@ -1138,9 +1149,9 @@ export class InvoiceComponent implements OnInit {
             });
 
             // Calculate the end of company/vessel details section and start bank/invoice details right after
-            // Use the maximum row from company or vessel details, then add 1 row gap
+            // companyRow already includes the blank line, so use it directly
             const topSectionEndRow = Math.max(companyRow, vesselRow);
-            const bankDetailsStartRow = topSectionEndRow + 1;
+            const bankDetailsStartRow = topSectionEndRow;
 
             // Bank Details Section (Left side)
             // Include bank details for all companies (US, UK, and EOS)
@@ -1215,7 +1226,10 @@ export class InvoiceComponent implements OnInit {
                 }
             }
 
-            // Invoice Details Section (Right side - Row 15-21)
+            // Invoice Details Section (Right side)
+            // Add one blank row between Vessel Details and Invoice Details
+            const invoiceDetailsStartRow = vesselRow + 1; // vesselRow already points to the row after the last vessel detail
+
             // Only write rows that have data to avoid blank lines
             const invoiceLabelStyle = { font: { bold: true, size: 11, name: 'Calibri' } };
             const invoiceValueStyle = { font: { size: 11, name: 'Calibri' } };
@@ -1255,7 +1269,7 @@ export class InvoiceComponent implements OnInit {
             const categoryToUse = categoryOverride || this.invoiceData.category;
             // Append "A" to invoice number if requested (for provisions when both categories exist)
             const invoiceNumberToUse = appendAtoInvoiceNumber ? `${this.invoiceData.invoiceNumber}A` : this.invoiceData.invoiceNumber;
-            let invoiceRow = bankDetailsStartRow;
+            let invoiceRow = invoiceDetailsStartRow;
             const invoiceDetails = [
                 { label: 'No', value: invoiceNumberToUse, isDate: false },
                 { label: 'Invoice Date', value: this.invoiceData.invoiceDate, isDate: true },
@@ -1438,8 +1452,8 @@ export class InvoiceComponent implements OnInit {
             // Removed separate grand total line; the total row represents the final amount
 
             // Terms and Conditions
-            // For EOS, reduce gap from 4 rows to 2 rows (remove 2 empty rows above terms)
-            const termsStartRow = this.selectedBank === 'EOS' ? totalsStartRow + 2 : totalsStartRow + 4;
+            // No gap between totals and terms header
+            const termsStartRow = totalsStartRow + 1;
             worksheet.mergeCells(`A${termsStartRow}:G${termsStartRow}`);
             const termsHeader = worksheet.getCell(`A${termsStartRow}`);
             termsHeader.value = 'By placing the order according to the above quotation you are accepting the following terms:';
