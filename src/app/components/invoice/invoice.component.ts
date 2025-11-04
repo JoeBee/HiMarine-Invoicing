@@ -77,7 +77,7 @@ interface InvoiceData {
 export class InvoiceComponent implements OnInit {
     processedData: ProcessedDataRow[] = [];
     hasDataToInvoice = false;
-    selectedBank: string = ''; // Default to blank
+    selectedBank: string = ''; // Default to empty (no selection)
     primaryCurrency: string = '£'; // Default to GBP, will be updated from Excel file
 
     // Toggle switch for Split Invoices / One Invoice
@@ -244,11 +244,11 @@ export class InvoiceComponent implements OnInit {
         // Today's Date
         if (this.invoiceData.invoiceDate) {
             const date = new Date(this.invoiceData.invoiceDate);
-            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
             const month = months[date.getMonth()];
             const day = date.getDate();
             const year = date.getFullYear();
-            parts.push(`${month} ${day} ${year}`);
+            parts.push(`${day}-${month}-${year}`);
         }
 
         // Vessel (from Invoice Details)
@@ -319,7 +319,6 @@ export class InvoiceComponent implements OnInit {
             case 'EOS':
                 this.populateEOSBankDetails();
                 break;
-            case '':
             default:
                 // Keep fields blank
                 break;
@@ -885,6 +884,18 @@ export class InvoiceComponent implements OnInit {
         }, 'InvoiceComponent');
     }
 
+    get isExportDisabled(): boolean {
+        // Disable if no items
+        if (!this.invoiceData.items || this.invoiceData.items.length === 0) {
+            return true;
+        }
+        // Disable if category is empty, null, undefined, or 'Blank'
+        if (!this.invoiceData.category || this.invoiceData.category === '' || this.invoiceData.category === 'Blank') {
+            return true;
+        }
+        return false;
+    }
+
     async exportInvoiceToExcel(): Promise<void> {
         this.loggingService.logButtonClick('export_invoice_excel', 'InvoiceComponent', {
             totalItems: this.invoiceData.items.length,
@@ -998,38 +1009,84 @@ export class InvoiceComponent implements OnInit {
                     worksheet.getRow(6).height = 18;
                 } else {
                     // Default: add Hi Marine top logo image
-                    const topImageResponse = await fetch('assets/images/HIMarineTopImage.png');
+                    const topImageResponse = await fetch('assets/images/HIMarineTopImage_sm.png');
                     const topImageBuffer = await topImageResponse.arrayBuffer();
+
+                    // Get original image dimensions to prevent stretching
+                    const imageBlob = new Blob([topImageBuffer], { type: 'image/png' });
+                    const imageUrl = URL.createObjectURL(imageBlob);
+                    const img = new Image();
+
+                    // Wait for image to load to get natural dimensions
+                    await new Promise<void>((resolve, reject) => {
+                        img.onload = () => {
+                            URL.revokeObjectURL(imageUrl);
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            URL.revokeObjectURL(imageUrl);
+                            reject(new Error('Failed to load image'));
+                        };
+                        img.src = imageUrl;
+                    });
+
                     const topImageId = workbook.addImage({
                         buffer: topImageBuffer,
                         extension: 'png',
                     });
+                    // Use original image dimensions to prevent resizing or stretching
+                    // Position image 45 pixels from left edge (approximately 0.75 column units)
                     worksheet.addImage(topImageId, {
-                        tl: { col: 1.5, row: 0.5 },
-                        ext: { width: 300, height: 180 }
+                        tl: { col: 0.75, row: 0.5 },
+                        ext: { width: img.naturalWidth, height: img.naturalHeight }
                     });
                 }
 
                 // Bottom border image (used for all variants)
-                const bottomImageResponse = await fetch('assets/images/HIMarineBottomBorder.png');
+                const bottomImagePath = this.selectedBank === 'EOS'
+                    ? 'assets/images/EosSupplyLtdBottomBorder.png'
+                    : 'assets/images/HIMarineBottomBorder.png';
+                const bottomImageResponse = await fetch(bottomImagePath);
                 const bottomImageBuffer = await bottomImageResponse.arrayBuffer();
+
+                // Get original image dimensions to maintain aspect ratio
+                const imageBlob = new Blob([bottomImageBuffer], { type: 'image/png' });
+                const imageUrl = URL.createObjectURL(imageBlob);
+                const img = new Image();
+
+                // Wait for image to load to get natural dimensions
+                await new Promise<void>((resolve, reject) => {
+                    img.onload = () => {
+                        URL.revokeObjectURL(imageUrl);
+                        resolve();
+                    };
+                    img.onerror = () => {
+                        URL.revokeObjectURL(imageUrl);
+                        reject(new Error('Failed to load bottom image'));
+                    };
+                    img.src = imageUrl;
+                });
+
                 const bottomImageId = workbook.addImage({
                     buffer: bottomImageBuffer,
                     extension: 'png',
                 });
+                // Store image ID and dimensions for later use
                 (worksheet as any)._bottomImageId = bottomImageId;
+                (worksheet as any)._bottomImageWidth = img.naturalWidth;
+                (worksheet as any)._bottomImageHeight = img.naturalHeight;
             } catch (imageError) {
                 console.warn('Could not render header/footer for Excel export:', imageError);
             }
 
             // Set column widths (converted from pixels to Excel character units: ~7 pixels per unit)
-            worksheet.getColumn('A').width = 42 / 7;   // Pos: 42 pixels = 6 character units
-            worksheet.getColumn('B').width = 300 / 7;  // Description: 300 pixels = ~43 character units
-            worksheet.getColumn('C').width = 200 / 7;  // Remark: 200 pixels = ~29 character units
-            worksheet.getColumn('D').width = 100 / 7;  // Unit: 100 pixels = ~14 character units
-            worksheet.getColumn('E').width = 50 / 7;   // Qty: 50 pixels = ~7 character units (default, not specified)
-            worksheet.getColumn('F').width = 100 / 7;  // Price: 100 pixels = ~14 character units
-            worksheet.getColumn('G').width = 110 / 7;  // Total: 110 pixels = ~16 character units
+            worksheet.getColumn('A').width = 56 / 7;   // Pos: 56 pixels
+            worksheet.getColumn('B').width = 374 / 7;   // Description: 374 pixels
+            worksheet.getColumn('C').width = 254 / 7;   // Remark: 254 pixels
+            worksheet.getColumn('D').width = 80 / 7;    // Unit: 80 pixels
+            worksheet.getColumn('E').width = 82 / 7;   // Qty: 82 pixels
+            worksheet.getColumn('F').width = 131 / 7;  // Price: 131 pixels
+            worksheet.getColumn('G').width = 120 / 7;  // Total: 120 pixels
 
             // Our Company Details (Top-Left) - write concatenated text to column A only, no merges, no wrap
             // Only write rows that have data to avoid blank lines
@@ -1086,45 +1143,75 @@ export class InvoiceComponent implements OnInit {
             const bankDetailsStartRow = topSectionEndRow + 1;
 
             // Bank Details Section (Left side)
-            // Skip entire bank details section when 'US' or 'UK' is selected
+            // Include bank details for all companies (US, UK, and EOS)
             let bankRow = bankDetailsStartRow;
-            if (this.selectedBank !== 'US' && this.selectedBank !== 'UK') {
-                // Only write rows that have data to avoid blank lines
-                const bankLabelStyle = { font: { bold: true, size: 11, name: 'Calibri' } };
-                const bankValueStyle = { font: { size: 11, name: 'Calibri' } };
-                // Merge A:D and write rich text "Label: value" (label bold)
-                const writeBankLine = (row: number, label: string, value: string) => {
-                    worksheet.mergeCells(`A${row}:D${row}`);
-                    const cell = worksheet.getCell(`A${row}`);
-                    cell.value = {
-                        richText: [
-                            { text: `${label}: `, font: { bold: true, size: 11, name: 'Calibri' } },
-                            { text: `${value || ''}`, font: { size: 11, name: 'Calibri', bold: true } }
-                        ]
-                    } as any;
-                    cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true } as any;
-                };
+            // Only write rows that have data to avoid blank lines
+            const bankLabelStyle = { font: { bold: true, size: 11, name: 'Calibri' } };
+            const bankValueStyle = { font: { size: 11, name: 'Calibri' } };
+            // Merge A:D and write rich text "Label: value" (no bold)
+            const writeBankLine = (row: number, label: string, value: string) => {
+                worksheet.mergeCells(`A${row}:D${row}`);
+                const cell = worksheet.getCell(`A${row}`);
+                cell.value = {
+                    richText: [
+                        { text: `${label}: `, font: { bold: false, size: 11, name: 'Calibri' } },
+                        { text: `${value || ''}`, font: { size: 11, name: 'Calibri', bold: false } }
+                    ]
+                } as any;
+                cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true } as any;
+            };
 
-                const standardBankDetails = [
-                    { label: 'Bank Name', value: this.invoiceData.bankName },
-                    { label: 'Bank Address', value: this.invoiceData.bankAddress },
-                    { label: 'IBAN', value: this.invoiceData.iban },
-                    { label: 'Swift Code', value: this.invoiceData.swiftCode },
-                    { label: 'Title on Account', value: this.invoiceData.accountTitle }
-                ];
-                standardBankDetails.forEach(detail => {
-                    if (detail.value && detail.value.trim()) {
-                        writeBankLine(bankRow, detail.label, detail.value);
-                        bankRow++;
-                    }
-                });
+            const standardBankDetails = [
+                { label: 'Bank Name', value: this.invoiceData.bankName },
+                { label: 'Bank Address', value: this.invoiceData.bankAddress },
+                { label: 'IBAN', value: this.invoiceData.iban },
+                { label: 'Swift Code', value: this.invoiceData.swiftCode },
+                { label: 'Title on Account', value: this.invoiceData.accountTitle }
+            ];
+            standardBankDetails.forEach(detail => {
+                if (detail.value && detail.value.trim()) {
+                    writeBankLine(bankRow, detail.label, detail.value);
+                    bankRow++;
+                }
+            });
 
-                // Conditional bank extras (only for EOS now, since US/UK are skipped)
-                if (this.selectedBank === 'EOS') {
-                    if (this.invoiceData.intermediaryBic && this.invoiceData.intermediaryBic.trim()) {
-                        writeBankLine(bankRow, 'Intermediary BIC', this.invoiceData.intermediaryBic);
-                        bankRow++;
-                    }
+            // Conditional bank extras based on company
+            if (this.selectedBank === 'US') {
+                if (this.invoiceData.achRouting && this.invoiceData.achRouting.trim()) {
+                    writeBankLine(bankRow, 'ACH Routing', this.invoiceData.achRouting);
+                    bankRow++;
+                }
+            } else if (this.selectedBank === 'UK') {
+                if (this.invoiceData.accountNumber && this.invoiceData.accountNumber.trim()) {
+                    writeBankLine(bankRow, 'Account Number', this.invoiceData.accountNumber);
+                    bankRow++;
+                }
+                if (this.invoiceData.sortCode && this.invoiceData.sortCode.trim()) {
+                    writeBankLine(bankRow, 'Sort Code', this.invoiceData.sortCode);
+                    bankRow++;
+                }
+
+                // UK DOMESTIC WIRES section
+                bankRow++; // Add space above
+                worksheet.mergeCells(`A${bankRow}:D${bankRow}`);
+                const ukDomesticHeader = worksheet.getCell(`A${bankRow}`);
+                ukDomesticHeader.value = 'UK DOMESTIC WIRES:';
+                ukDomesticHeader.font = { bold: false, size: 11, name: 'Calibri' };
+                ukDomesticHeader.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
+                bankRow++;
+
+                if (this.invoiceData.accountNumber && this.invoiceData.accountNumber.trim()) {
+                    writeBankLine(bankRow, 'Account number', this.invoiceData.accountNumber);
+                    bankRow++;
+                }
+                if (this.invoiceData.sortCode && this.invoiceData.sortCode.trim()) {
+                    writeBankLine(bankRow, 'Sort code', this.invoiceData.sortCode);
+                    bankRow++;
+                }
+            } else if (this.selectedBank === 'EOS') {
+                if (this.invoiceData.intermediaryBic && this.invoiceData.intermediaryBic.trim()) {
+                    writeBankLine(bankRow, 'Intermediary BIC', this.invoiceData.intermediaryBic);
+                    bankRow++;
                 }
             }
 
@@ -1147,7 +1234,7 @@ export class InvoiceComponent implements OnInit {
                 // Write label in column E with colon
                 const labelCell = worksheet.getCell(`E${row}`);
                 labelCell.value = `${label}:`;
-                labelCell.font = { size: 11, name: 'Calibri', bold: true };
+                labelCell.font = { size: 11, name: 'Calibri', bold: false };
                 labelCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
                 // Leave column F empty
@@ -1185,8 +1272,9 @@ export class InvoiceComponent implements OnInit {
 
             // Calculate the end of bank/invoice details section and start table right after
             // Use the maximum row from bank or invoice details, then add 1 row gap
+            // Move table down one additional row
             const middleSectionEndRow = Math.max(bankRow, invoiceRow);
-            const tableStartRow = middleSectionEndRow + 1;
+            const tableStartRow = middleSectionEndRow + 2;
 
             // Table Headers
             const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
@@ -1359,25 +1447,33 @@ export class InvoiceComponent implements OnInit {
             termsHeader.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
             const terms = [
-                'I.    Credit days: 30 calendar days.',
-                'II.   Accounts not paid in this time frame will be charged 10% interest rate per month, any discount given will be null and void.',
-                'III.  Should collection or legal action be required to collect past dues, fees for such action will be added to your account.',
-                'IV.   Subject to unsold. Final weights are subject to vendor packing standards.',
-                'V.    If the transaction is canceled after the order is authorized, we have the right to collect the invoice without claim.'
+                { roman: 'I.', text: 'Credit days: 30 calendar days.' },
+                { roman: 'II.', text: 'Accounts not paid in this time frame will be charged 10% interest rate per month, any discount given will be null and void.' },
+                { roman: 'III.', text: 'Should collection or legal action be required to collect past dues, fees for such action will be added to your account.' },
+                { roman: 'IV.', text: 'Subject to unsold. Final weights are subject to vendor packing standards.' },
+                { roman: 'V.', text: 'If the transaction is canceled after the order is authorized, we have the right to collect the invoice without claim.' }
             ];
 
             terms.forEach((term, index) => {
-                worksheet.mergeCells(`A${termsStartRow + 1 + index}:G${termsStartRow + 1 + index}`);
-                const cell = worksheet.getCell(`A${termsStartRow + 1 + index}`);
-                cell.value = term;
-                cell.font = { size: 10, name: 'Calibri' };
-                cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
+                const row = termsStartRow + 1 + index;
+                // Roman numeral in column A
+                const romanCell = worksheet.getCell(`A${row}`);
+                romanCell.value = term.roman;
+                romanCell.font = { size: 10, name: 'Calibri' };
+                romanCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
+
+                // Text in column B
+                const textCell = worksheet.getCell(`B${row}`);
+                textCell.value = term.text;
+                textCell.font = { size: 10, name: 'Calibri' };
+                textCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
             });
 
-            // If EOS category selected, print company and bank details at bottom (left and right blocks)
-            // This section (7 rows) should ONLY appear for EOS, not for US or UK
+            // Print company and bank details at bottom (left and right blocks) - only for EOS
+            let maxBottomOffset = 0;
             if (this.selectedBank === 'EOS') {
-                const eosFont = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF0B2E66' } } as any;
+                const fontColor = this.selectedBank === 'EOS' ? 'FF0B2E66' : 'FF000000';
+                const bottomFont = { name: 'Calibri', size: 11, bold: true, color: { argb: fontColor } } as any;
                 const bottomSectionStart = termsStartRow + terms.length + 4;
 
                 // Left block: Our Company Details in column A
@@ -1392,7 +1488,7 @@ export class InvoiceComponent implements OnInit {
                     const rowIndex = bottomSectionStart + idx;
                     const cell = worksheet.getCell(`A${rowIndex}`);
                     cell.value = text;
-                    cell.font = eosFont;
+                    cell.font = bottomFont;
                     cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
                 });
 
@@ -1403,7 +1499,7 @@ export class InvoiceComponent implements OnInit {
                     worksheet.mergeCells(`D${row}:G${row}`);
                     const cell = worksheet.getCell(`D${row}`);
                     cell.value = text;
-                    cell.font = eosFont;
+                    cell.font = bottomFont;
                     cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
                 };
 
@@ -1412,28 +1508,38 @@ export class InvoiceComponent implements OnInit {
                 worksheet.mergeCells(`D${headerRow}:G${headerRow}`);
                 const headerCell = worksheet.getCell(`D${headerRow}`);
                 headerCell.value = 'Bank Details';
-                headerCell.font = { ...eosFont, underline: true } as any;
+                headerCell.font = { ...bottomFont, underline: true } as any;
                 headerCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
-                // Bank details moved down one row (offsets 1-4 instead of 0-3), with prefixes removed for Bank Name and Bank Address
-                writeRight(1, this.invoiceData.bankName || '');
-                writeRight(2, this.invoiceData.bankAddress || '');
-                writeRight(3, `IBAN: ${this.invoiceData.iban || ''}`);
-                writeRight(4, `SWIFTBIC: ${this.invoiceData.swiftCode || ''}`);
+                // Bank details - standard fields
+                let currentOffset = 1;
+                writeRight(currentOffset++, this.invoiceData.bankName || '');
+                writeRight(currentOffset++, this.invoiceData.bankAddress || '');
+
+                // EOS bank details
+                writeRight(currentOffset++, `IBAN: ${this.invoiceData.iban || ''}`);
+                writeRight(currentOffset++, `SWIFTBIC: ${this.invoiceData.swiftCode || ''}`);
+
+                // Track the maximum offset used (currentOffset is already incremented past the last write)
+                maxBottomOffset = currentOffset - 1; // Subtract 1 because currentOffset was incremented after the last write
             }
 
             // Add bottom image
             // Calculate the last row of text content
-            // If EOS, the bottom section ends at bottomSectionStart + 4 (5 rows: 0-4)
-            // If not EOS, the last term is at termsStartRow + terms.length
-            const lastTextRow = this.selectedBank === 'EOS' 
-                ? (termsStartRow + terms.length + 4 + 4)  // bottomSectionStart + 4 = termsStartRow + terms.length + 4 + 4
+            // maxBottomOffset is only calculated for EOS now
+            const lastTextRow = (this.selectedBank === 'EOS')
+                ? (termsStartRow + terms.length + 4 + maxBottomOffset)  // bottomSectionStart + maxBottomOffset
                 : (termsStartRow + terms.length);  // Last term row
             const bottomImageRowPosition = lastTextRow + 2; // Leave exactly 2 blank rows
             if ((worksheet as any)._bottomImageId) {
+                const originalWidth = (worksheet as any)._bottomImageWidth || 667;
+                const originalHeight = (worksheet as any)._bottomImageHeight || 80;
+                // Set image width to 1000 pixels, maintain aspect ratio
+                const newWidth = 1000;
+                const newHeight = (originalHeight * newWidth) / originalWidth; // Maintain aspect ratio
                 worksheet.addImage((worksheet as any)._bottomImageId, {
                     tl: { col: 0, row: bottomImageRowPosition }, // Position at bottom
-                    ext: { width: 667, height: 80 } // 2/3 of previous width: 667x80 pixels
+                    ext: { width: newWidth, height: newHeight }
                 });
             }
 
