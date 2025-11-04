@@ -950,7 +950,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
     }
 
     private isFreshProvisionItem(item: ProcessedDataRow): boolean {
-        // Data uploaded via "Provisions" dropzone AND has "Description" containing a word from FRESH_PROVISIONS_LIST but NOT from NOT_FRESH should go in "FRESH PROVISIONS" Excel tab
+        // Data uploaded via "Provisions" dropzone AND has 
+        // "Description" containing a word from FRESH_PROVISIONS_LIST 
+        // but NOT from NOT_FRESH should go in "FRESH PROVISIONS" Excel tab
         if (item.category !== 'Provisions') {
             return false;
         }

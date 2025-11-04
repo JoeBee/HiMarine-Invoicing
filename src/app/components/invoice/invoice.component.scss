@@ -114,7 +114,7 @@
                     // Right column fields - move left and align
                     &:nth-child(2n) {
                         margin-left: -15px; // Move right column fields left
-                        
+
                         .editable-field {
                             width: 80px; // Ensure consistent width for alignment
                         }
@@ -228,7 +228,7 @@
                 }
 
                 // When unchecked (Split invoices is selected)
-                .toggle-input:not(:checked) + .toggle-slider {
+                .toggle-input:not(:checked)+.toggle-slider {
                     .toggle-label-left {
                         color: white;
                         font-weight: 700;
@@ -241,7 +241,7 @@
                 }
 
                 // When checked (One invoice is selected)
-                .toggle-input:checked + .toggle-slider {
+                .toggle-input:checked+.toggle-slider {
                     background-color: #e0e0e0;
 
                     &::before {
@@ -259,7 +259,7 @@
                     }
                 }
 
-                .toggle-input:focus + .toggle-slider {
+                .toggle-input:focus+.toggle-slider {
                     box-shadow: 0 0 0 3px rgba(33, 115, 70, 0.3);
                 }
             }
@@ -322,8 +322,12 @@
                 white-space: nowrap;
             }
 
+            .filename-label {
+                font-weight: bold;
+            }
+
             .filename-input {
-                width: 525px;
+                width: 630px;
                 padding: 8px 12px;
                 border: 1px solid #ccc;
                 border-radius: 4px;
@@ -339,6 +343,14 @@
                 &:hover {
                     border-color: #999;
                 }
+            }
+
+            .file-extension-label {
+                font-size: 14px;
+                font-weight: bold;
+                color: #333;
+                white-space: nowrap;
+                margin-left: 0;
             }
         }
 

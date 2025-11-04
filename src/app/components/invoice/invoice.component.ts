@@ -969,26 +969,26 @@ export class InvoiceComponent implements OnInit {
                     worksheet.mergeCells('A2:D2');
                     const eosTitle = worksheet.getCell('A2');
                     eosTitle.value = 'EOS SUPPLY LTD';
-                    eosTitle.font = { name: 'Arial', size: 18, bold: true, italic: true, color: { argb: 'FF0B2E66' } } as any;
+                    eosTitle.font = { name: 'Calibri', size: 18, bold: true, italic: true, color: { argb: 'FF0B2E66' } } as any;
                     eosTitle.alignment = { horizontal: 'left', vertical: 'middle' } as any;
 
                     // Right contact details
                     worksheet.mergeCells('E2:G2');
                     const eosPhoneUk = worksheet.getCell('E2');
                     eosPhoneUk.value = 'Phone: +44 730 7988228';
-                    eosPhoneUk.font = { name: 'Arial', size: 11, color: { argb: 'FF0B2E66' } } as any;
+                    eosPhoneUk.font = { name: 'Calibri', size: 11, color: { argb: 'FF0B2E66' } } as any;
                     eosPhoneUk.alignment = { horizontal: 'right', vertical: 'middle' } as any;
 
                     worksheet.mergeCells('E3:G3');
                     const eosPhoneUs = worksheet.getCell('E3');
                     eosPhoneUs.value = 'Phone: +1 857 204-5786';
-                    eosPhoneUs.font = { name: 'Arial', size: 11, color: { argb: 'FF0B2E66' } } as any;
+                    eosPhoneUs.font = { name: 'Calibri', size: 11, color: { argb: 'FF0B2E66' } } as any;
                     eosPhoneUs.alignment = { horizontal: 'right', vertical: 'middle' } as any;
 
                     worksheet.mergeCells('E4:G4');
                     const eosEmail = worksheet.getCell('E4');
                     eosEmail.value = 'office@eos-supply.co.uk';
-                    eosEmail.font = { name: 'Arial', size: 11, color: { argb: 'FF0B2E66' } } as any;
+                    eosEmail.font = { name: 'Calibri', size: 11, color: { argb: 'FF0B2E66' } } as any;
                     eosEmail.alignment = { horizontal: 'right', vertical: 'middle' } as any;
 
                     // Navy bar across the sheet
@@ -1033,20 +1033,26 @@ export class InvoiceComponent implements OnInit {
 
             // Our Company Details (Top-Left) - write concatenated text to column A only, no merges, no wrap
             // Only write rows that have data to avoid blank lines
-            let companyRow = 9;
+            // Skip Email field when 'US' or 'UK' is selected
+            // For EOS, start at row 8 instead of 9 to remove the empty row 7
+            let companyRow = this.selectedBank === 'EOS' ? 8 : 9;
             const companyDetails = [
                 { label: 'Name', value: this.invoiceData.ourCompanyName },
                 { label: 'Address', value: this.invoiceData.ourCompanyAddress },
                 { label: 'Address2', value: this.invoiceData.ourCompanyAddress2 },
                 { label: 'City', value: [this.invoiceData.ourCompanyCity, this.invoiceData.ourCompanyCountry].filter(Boolean).join(', ') },
                 { label: 'Phone', value: this.invoiceData.ourCompanyPhone },
-                { label: 'Email', value: this.invoiceData.ourCompanyEmail }
+                { label: 'Email', value: this.invoiceData.ourCompanyEmail, skipForUSUK: true }
             ];
             companyDetails.forEach(detail => {
+                // Skip Email field when 'US' or 'UK' is selected
+                if (detail.skipForUSUK && (this.selectedBank === 'US' || this.selectedBank === 'UK')) {
+                    return;
+                }
                 if (detail.value && detail.value.trim()) {
                     const cell = worksheet.getCell(`A${companyRow}`);
                     cell.value = detail.value;
-                    cell.font = { size: 11, name: 'Arial', bold: true };
+                    cell.font = { size: 11, name: 'Calibri', bold: true };
                     cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
                     companyRow++;
                 }
@@ -1054,7 +1060,8 @@ export class InvoiceComponent implements OnInit {
 
             // Vessel Details (Top-Right) under the logo - values only, no labels
             // Only write rows that have data to avoid blank lines
-            let vesselRow = 9;
+            // For EOS, start at row 8 instead of 9 to match companyRow
+            let vesselRow = this.selectedBank === 'EOS' ? 8 : 9;
             const vesselDetails = [
                 this.invoiceData.vesselName,
                 this.invoiceData.vesselName2,
@@ -1062,7 +1069,7 @@ export class InvoiceComponent implements OnInit {
                 this.invoiceData.vesselAddress2,
                 [this.invoiceData.vesselCity, this.invoiceData.vesselCountry].filter(Boolean).join(', ')
             ];
-            const vesselValueStyle = { font: { size: 11, name: 'Arial', bold: true } };
+            const vesselValueStyle = { font: { size: 11, name: 'Calibri', bold: true } };
             vesselDetails.forEach(value => {
                 if (value && value.trim()) {
                     worksheet.getCell(`E${vesselRow}`).value = value;
@@ -1073,75 +1080,58 @@ export class InvoiceComponent implements OnInit {
                 }
             });
 
-            // Bank Details Section (Left side - Row 15-23)
-            // Only write rows that have data to avoid blank lines
-            const bankLabelStyle = { font: { bold: true, size: 11, name: 'Arial' } };
-            const bankValueStyle = { font: { size: 11, name: 'Arial' } };
-            // Merge A:D and write rich text "Label: value" (label bold)
-            const writeBankLine = (row: number, label: string, value: string) => {
-                worksheet.mergeCells(`A${row}:D${row}`);
-                const cell = worksheet.getCell(`A${row}`);
-                cell.value = {
-                    richText: [
-                        { text: `${label}: `, font: { bold: true, size: 11, name: 'Arial' } },
-                        { text: `${value || ''}`, font: { size: 11, name: 'Arial', bold: true } }
-                    ]
-                } as any;
-                cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true } as any;
-            };
+            // Calculate the end of company/vessel details section and start bank/invoice details right after
+            // Use the maximum row from company or vessel details, then add 1 row gap
+            const topSectionEndRow = Math.max(companyRow, vesselRow);
+            const bankDetailsStartRow = topSectionEndRow + 1;
 
-            let bankRow = 15;
-            const standardBankDetails = [
-                { label: 'Bank Name', value: this.invoiceData.bankName },
-                { label: 'Bank Address', value: this.invoiceData.bankAddress },
-                { label: 'IBAN', value: this.invoiceData.iban },
-                { label: 'Swift Code', value: this.invoiceData.swiftCode },
-                { label: 'Title on Account', value: this.invoiceData.accountTitle }
-            ];
-            standardBankDetails.forEach(detail => {
-                if (detail.value && detail.value.trim()) {
-                    writeBankLine(bankRow, detail.label, detail.value);
-                    bankRow++;
-                }
-            });
+            // Bank Details Section (Left side)
+            // Skip entire bank details section when 'US' or 'UK' is selected
+            let bankRow = bankDetailsStartRow;
+            if (this.selectedBank !== 'US' && this.selectedBank !== 'UK') {
+                // Only write rows that have data to avoid blank lines
+                const bankLabelStyle = { font: { bold: true, size: 11, name: 'Calibri' } };
+                const bankValueStyle = { font: { size: 11, name: 'Calibri' } };
+                // Merge A:D and write rich text "Label: value" (label bold)
+                const writeBankLine = (row: number, label: string, value: string) => {
+                    worksheet.mergeCells(`A${row}:D${row}`);
+                    const cell = worksheet.getCell(`A${row}`);
+                    cell.value = {
+                        richText: [
+                            { text: `${label}: `, font: { bold: true, size: 11, name: 'Calibri' } },
+                            { text: `${value || ''}`, font: { size: 11, name: 'Calibri', bold: true } }
+                        ]
+                    } as any;
+                    cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true } as any;
+                };
 
-            // Conditional bank extras
-            if (this.selectedBank === 'UK') {
-                const hasUkData = (this.invoiceData.accountNumber && this.invoiceData.accountNumber.trim()) ||
-                    (this.invoiceData.sortCode && this.invoiceData.sortCode.trim());
-                if (hasUkData) {
-                    worksheet.mergeCells(`A${bankRow}:D${bankRow}`);
-                    worksheet.getCell(`A${bankRow}`).value = 'UK DOMESTIC WIRES:';
-                    worksheet.getCell(`A${bankRow}`).font = { bold: true, size: 11, name: 'Arial' };
-                    bankRow++;
-
-                    if (this.invoiceData.accountNumber && this.invoiceData.accountNumber.trim()) {
-                        writeBankLine(bankRow, 'Account number', this.invoiceData.accountNumber);
+                const standardBankDetails = [
+                    { label: 'Bank Name', value: this.invoiceData.bankName },
+                    { label: 'Bank Address', value: this.invoiceData.bankAddress },
+                    { label: 'IBAN', value: this.invoiceData.iban },
+                    { label: 'Swift Code', value: this.invoiceData.swiftCode },
+                    { label: 'Title on Account', value: this.invoiceData.accountTitle }
+                ];
+                standardBankDetails.forEach(detail => {
+                    if (detail.value && detail.value.trim()) {
+                        writeBankLine(bankRow, detail.label, detail.value);
                         bankRow++;
                     }
-                    if (this.invoiceData.sortCode && this.invoiceData.sortCode.trim()) {
-                        writeBankLine(bankRow, 'Sort code', this.invoiceData.sortCode);
+                });
+
+                // Conditional bank extras (only for EOS now, since US/UK are skipped)
+                if (this.selectedBank === 'EOS') {
+                    if (this.invoiceData.intermediaryBic && this.invoiceData.intermediaryBic.trim()) {
+                        writeBankLine(bankRow, 'Intermediary BIC', this.invoiceData.intermediaryBic);
                         bankRow++;
                     }
-                }
-            }
-            if (this.selectedBank === 'US') {
-                if (this.invoiceData.achRouting && this.invoiceData.achRouting.trim()) {
-                    writeBankLine(bankRow, 'ACH Routing', this.invoiceData.achRouting);
-                    bankRow++;
-                }
-            }
-            if (this.selectedBank === 'EOS') {
-                if (this.invoiceData.intermediaryBic && this.invoiceData.intermediaryBic.trim()) {
-                    writeBankLine(bankRow, 'Intermediary BIC', this.invoiceData.intermediaryBic);
-                    bankRow++;
                 }
             }
 
             // Invoice Details Section (Right side - Row 15-21)
             // Only write rows that have data to avoid blank lines
-            const invoiceLabelStyle = { font: { bold: true, size: 11, name: 'Arial' } };
-            const invoiceValueStyle = { font: { size: 11, name: 'Arial' } };
+            const invoiceLabelStyle = { font: { bold: true, size: 11, name: 'Calibri' } };
+            const invoiceValueStyle = { font: { size: 11, name: 'Calibri' } };
             // Helper to format date as "November 03, 2025"
             const formatDateAsText = (dateString: string): string => {
                 const date = new Date(dateString);
@@ -1157,7 +1147,7 @@ export class InvoiceComponent implements OnInit {
                 // Write label in column E with colon
                 const labelCell = worksheet.getCell(`E${row}`);
                 labelCell.value = `${label}:`;
-                labelCell.font = { size: 11, name: 'Arial', bold: true };
+                labelCell.font = { size: 11, name: 'Calibri', bold: true };
                 labelCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
                 // Leave column F empty
@@ -1171,14 +1161,14 @@ export class InvoiceComponent implements OnInit {
                 } else {
                     valueCell.value = value || '';
                 }
-                valueCell.font = { size: 11, name: 'Arial', bold: false };
+                valueCell.font = { size: 11, name: 'Calibri', bold: false };
                 valueCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
             };
 
             const categoryToUse = categoryOverride || this.invoiceData.category;
             // Append "A" to invoice number if requested (for provisions when both categories exist)
             const invoiceNumberToUse = appendAtoInvoiceNumber ? `${this.invoiceData.invoiceNumber}A` : this.invoiceData.invoiceNumber;
-            let invoiceRow = 15;
+            let invoiceRow = bankDetailsStartRow;
             const invoiceDetails = [
                 { label: 'No', value: invoiceNumberToUse, isDate: false },
                 { label: 'Invoice Date', value: this.invoiceData.invoiceDate, isDate: true },
@@ -1193,15 +1183,17 @@ export class InvoiceComponent implements OnInit {
                 invoiceRow++;
             });
 
-            // Items Table (Starting from row 25)
-            const tableStartRow = 25;
+            // Calculate the end of bank/invoice details section and start table right after
+            // Use the maximum row from bank or invoice details, then add 1 row gap
+            const middleSectionEndRow = Math.max(bankRow, invoiceRow);
+            const tableStartRow = middleSectionEndRow + 1;
 
             // Table Headers
             const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
             headers.forEach((header, index) => {
                 const cell = worksheet.getCell(tableStartRow, index + 1);
                 cell.value = header;
-                cell.font = { bold: true, size: 11, name: 'Arial', color: { argb: 'FFFFFFFF' } };
+                cell.font = { bold: true, size: 11, name: 'Calibri', color: { argb: 'FFFFFFFF' } };
                 const headerFillColor = this.selectedBank === 'EOS' ? 'FF0B2E66' : 'FF808080';
                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: headerFillColor } } as any;
                 cell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -1225,37 +1217,37 @@ export class InvoiceComponent implements OnInit {
                 // Pos (renumber from 1 for this file)
                 const posCell = worksheet.getCell(rowIndex, 1);
                 posCell.value = index + 1;
-                posCell.font = { size: 10, name: 'Arial' };
+                posCell.font = { size: 10, name: 'Calibri' };
                 posCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
                 // Description
                 const descCell = worksheet.getCell(rowIndex, 2);
                 descCell.value = item.description;
-                descCell.font = { size: 10, name: 'Arial' };
+                descCell.font = { size: 10, name: 'Calibri' };
                 descCell.alignment = { horizontal: 'left', vertical: 'middle' };
 
                 // Remark
                 const remarkCell = worksheet.getCell(rowIndex, 3);
                 remarkCell.value = item.remark;
-                remarkCell.font = { size: 10, name: 'Arial' };
+                remarkCell.font = { size: 10, name: 'Calibri' };
                 remarkCell.alignment = { horizontal: 'left', vertical: 'middle' };
 
                 // Unit
                 const unitCell = worksheet.getCell(rowIndex, 4);
                 unitCell.value = item.unit;
-                unitCell.font = { size: 10, name: 'Arial' };
+                unitCell.font = { size: 10, name: 'Calibri' };
                 unitCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
                 // Qty (default to 0)
                 const qtyCell = worksheet.getCell(rowIndex, 5);
                 qtyCell.value = (item.qty ?? 0);
-                qtyCell.font = { size: 10, name: 'Arial' };
+                qtyCell.font = { size: 10, name: 'Calibri' };
                 qtyCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
                 // Price (rounded to nearest penny)
                 const priceCell = worksheet.getCell(rowIndex, 6);
                 priceCell.value = Math.round(item.price * 100) / 100;
-                priceCell.font = { size: 10, name: 'Arial' };
+                priceCell.font = { size: 10, name: 'Calibri' };
                 priceCell.alignment = { horizontal: 'right', vertical: 'middle' };
                 // Use dynamic currency formatting based on item currency
                 const currencyFormat = this.getCurrencyExcelFormat(item.currency);
@@ -1264,7 +1256,7 @@ export class InvoiceComponent implements OnInit {
                 // Total (formula = E * F)
                 const totalCell = worksheet.getCell(rowIndex, 7);
                 totalCell.value = { formula: `E${rowIndex}*F${rowIndex}` } as any;
-                totalCell.font = { size: 10, name: 'Arial' };
+                totalCell.font = { size: 10, name: 'Calibri' };
                 totalCell.alignment = { horizontal: 'right', vertical: 'middle' };
                 totalCell.numFmt = currencyFormat;
 
@@ -1289,13 +1281,13 @@ export class InvoiceComponent implements OnInit {
             // Add label in column F
             const subtotalLabelCell = worksheet.getCell(`F${subtotalRow}`);
             subtotalLabelCell.value = `TOTAL ${this.getCurrencyLabel(this.primaryCurrency)}`;
-            subtotalLabelCell.font = { size: 11, name: 'Arial', bold: true };
+            subtotalLabelCell.font = { size: 11, name: 'Calibri', bold: true };
             subtotalLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
             // Add formula in column G (no border, no shading)
             const subtotalCell = worksheet.getCell(`G${subtotalRow}`);
             subtotalCell.value = { formula: `SUM(G${firstDataRow}:G${lastDataRow})` } as any;
-            subtotalCell.font = { size: 11, name: 'Arial', bold: true };
+            subtotalCell.font = { size: 11, name: 'Calibri', bold: true };
             subtotalCell.alignment = { horizontal: 'right', vertical: 'middle' };
             subtotalCell.numFmt = primaryCurrencyFormat;
 
@@ -1325,14 +1317,14 @@ export class InvoiceComponent implements OnInit {
                 const rowIndex = totalsStartRow + idx;
                 const labelCell = worksheet.getCell(`F${rowIndex}`);
                 labelCell.value = fee.label;
-                labelCell.font = { bold: true, size: 11, name: 'Arial' };
+                labelCell.font = { bold: true, size: 11, name: 'Calibri' };
                 labelCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
                 const valueCell = worksheet.getCell(`G${rowIndex}`);
                 valueCell.value = fee.value as number;
                 valueCell.numFmt = primaryCurrencyFormat;
                 if (fee.includeInSum) feeAmountRowRefs.push(`G${rowIndex}`);
-                valueCell.font = { bold: true, size: 11, name: 'Arial' };
+                valueCell.font = { bold: true, size: 11, name: 'Calibri' };
                 valueCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
                 // Use standard line height like the rest of the page
@@ -1351,18 +1343,19 @@ export class InvoiceComponent implements OnInit {
             const discountFactor = this.invoiceData.discountPercent ? `(1-${this.invoiceData.discountPercent}/100)` : '1';
             const totalFormula = `(${itemsSumFormula}*${discountFactor})${feeSumPart}`;
             worksheet.getCell(`G${totalsStartRow}`).value = { formula: totalFormula } as any;
-            worksheet.getCell(`G${totalsStartRow}`).font = { bold: true, size: 11, name: 'Arial' };
+            worksheet.getCell(`G${totalsStartRow}`).font = { bold: true, size: 11, name: 'Calibri' };
             worksheet.getCell(`G${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
             worksheet.getCell(`G${totalsStartRow}`).numFmt = primaryCurrencyFormat;
 
             // Removed separate grand total line; the total row represents the final amount
 
             // Terms and Conditions
-            const termsStartRow = totalsStartRow + 4;
+            // For EOS, reduce gap from 4 rows to 2 rows (remove 2 empty rows above terms)
+            const termsStartRow = this.selectedBank === 'EOS' ? totalsStartRow + 2 : totalsStartRow + 4;
             worksheet.mergeCells(`A${termsStartRow}:G${termsStartRow}`);
             const termsHeader = worksheet.getCell(`A${termsStartRow}`);
             termsHeader.value = 'By placing the order according to the above quotation you are accepting the following terms:';
-            termsHeader.font = { bold: true, size: 11, name: 'Arial' };
+            termsHeader.font = { bold: true, size: 11, name: 'Calibri' };
             termsHeader.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
             const terms = [
@@ -1377,13 +1370,14 @@ export class InvoiceComponent implements OnInit {
                 worksheet.mergeCells(`A${termsStartRow + 1 + index}:G${termsStartRow + 1 + index}`);
                 const cell = worksheet.getCell(`A${termsStartRow + 1 + index}`);
                 cell.value = term;
-                cell.font = { size: 10, name: 'Arial' };
+                cell.font = { size: 10, name: 'Calibri' };
                 cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
             });
 
             // If EOS category selected, print company and bank details at bottom (left and right blocks)
+            // This section (7 rows) should ONLY appear for EOS, not for US or UK
             if (this.selectedBank === 'EOS') {
-                const eosFont = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF0B2E66' } } as any;
+                const eosFont = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF0B2E66' } } as any;
                 const bottomSectionStart = termsStartRow + terms.length + 4;
 
                 // Left block: Our Company Details in column A
@@ -1429,7 +1423,13 @@ export class InvoiceComponent implements OnInit {
             }
 
             // Add bottom image
-            const bottomImageRowPosition = termsStartRow + terms.length + 8; // Leave extra spacing after shifting sections down
+            // Calculate the last row of text content
+            // If EOS, the bottom section ends at bottomSectionStart + 4 (5 rows: 0-4)
+            // If not EOS, the last term is at termsStartRow + terms.length
+            const lastTextRow = this.selectedBank === 'EOS' 
+                ? (termsStartRow + terms.length + 4 + 4)  // bottomSectionStart + 4 = termsStartRow + terms.length + 4 + 4
+                : (termsStartRow + terms.length);  // Last term row
+            const bottomImageRowPosition = lastTextRow + 2; // Leave exactly 2 blank rows
             if ((worksheet as any)._bottomImageId) {
                 worksheet.addImage((worksheet as any)._bottomImageId, {
                     tl: { col: 0, row: bottomImageRowPosition }, // Position at bottom
@@ -1441,6 +1441,11 @@ export class InvoiceComponent implements OnInit {
             // bottomImageRowPosition is 0-based, so add 1 to convert to 1-based, then add 3 more rows
             const printAreaEndRow = bottomImageRowPosition + 1 + 3;
             worksheet.pageSetup.printArea = `A1:G${printAreaEndRow}`;
+
+            // Set page setup to fit to page width (1 page wide), allow multiple pages for height
+            worksheet.pageSetup.fitToPage = true;
+            worksheet.pageSetup.fitToWidth = 1;
+            // Don't set fitToHeight to allow multiple pages for height
 
             // Generate Excel file
             const buffer = await workbook.xlsx.writeBuffer();
