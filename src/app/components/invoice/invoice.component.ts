@@ -305,7 +305,7 @@ export class InvoiceComponent implements OnInit {
         this.generateAutoFileName();
     }
 
-    onBankSelectionChange(): void {
+    onCompanySelectionChange(): void {
         // Clear all bank details first
         this.clearBankDetails();
 
@@ -886,6 +886,10 @@ export class InvoiceComponent implements OnInit {
     }
 
     get isExportDisabled(): boolean {
+        // Disable if no company is selected
+        if (!this.selectedBank || this.selectedBank === '') {
+            return true;
+        }
         // Disable if no items
         if (!this.invoiceData.items || this.invoiceData.items.length === 0) {
             return true;

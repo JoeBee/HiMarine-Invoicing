@@ -9,7 +9,8 @@
                 </div>
                 <div class="export-buttons-section">
                     <!-- Toggle Switch for Split Invoices / One Invoice -->
-                    <div class="toggle-group">
+                    <div class="toggle-group"
+                        [ngClass]="{ 'eos-toggle': selectedBank === 'EOS', 'us-uk-toggle': selectedBank === 'US' || selectedBank === 'UK' }">
                         <label class="toggle-switch">
                             <input type="checkbox" [(ngModel)]="splitFileMode" (change)="onToggleChange()"
                                 class="toggle-input">
@@ -19,7 +20,8 @@
                             </span>
                         </label>
                     </div>
-                    <button class="export-btn excel-btn" [disabled]="isExportDisabled" (click)="exportInvoiceToExcel()">
+                    <button class="export-btn excel-btn" [ngClass]="{ 'eos-blue': selectedBank === 'EOS' }"
+                        [disabled]="isExportDisabled" (click)="exportInvoiceToExcel()">
                         <span class="btn-icon">📊</span>
                         Export Invoice
                     </button>
@@ -40,23 +42,23 @@
 
         <!-- Selection and Fees Section -->
         <div class="selection-fees-section">
-            <!-- Bank Selection Radio Buttons - Left Half -->
+            <!-- Company Selection Radio Buttons - Left Half -->
             <div class="bank-selection-section">
                 <h3>Companies:</h3>
                 <div class="radio-group">
                     <label class="radio-option">
-                        <input type="radio" name="bankSelection" value="US" [(ngModel)]="selectedBank"
-                            (change)="onBankSelectionChange()">
+                        <input type="radio" name="companySelection" value="US" [(ngModel)]="selectedBank"
+                            (change)="onCompanySelectionChange()">
                         <span class="radio-label">HM US</span>
                     </label>
                     <label class="radio-option">
-                        <input type="radio" name="bankSelection" value="UK" [(ngModel)]="selectedBank"
-                            (change)="onBankSelectionChange()">
+                        <input type="radio" name="companySelection" value="UK" [(ngModel)]="selectedBank"
+                            (change)="onCompanySelectionChange()">
                         <span class="radio-label">HM UK</span>
                     </label>
                     <label class="radio-option">
-                        <input type="radio" name="bankSelection" value="EOS" [(ngModel)]="selectedBank"
-                            (change)="onBankSelectionChange()">
+                        <input type="radio" name="companySelection" value="EOS" [(ngModel)]="selectedBank"
+                            (change)="onCompanySelectionChange()">
                         <span class="radio-label">EOS</span>
                     </label>
                 </div>

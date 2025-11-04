@@ -201,10 +201,32 @@
                         width: 98px;
                         left: 4px;
                         bottom: 4px;
-                        background-color: #217346;
+                        background-color: #2E7D32; // Default darker green for US/UK
                         transition: .4s;
                         border-radius: 40px;
                         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                    }
+                }
+
+                // Darker green for US/UK
+                &.us-uk-toggle {
+                    .toggle-slider::before {
+                        background-color: #2E7D32; // Darker green
+                    }
+
+                    .toggle-input:focus+.toggle-slider {
+                        box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.3);
+                    }
+                }
+
+                // Darker blue for EOS
+                &.eos-toggle {
+                    .toggle-slider::before {
+                        background-color: #1976D2; // Darker blue
+                    }
+
+                    .toggle-input:focus+.toggle-slider {
+                        box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.3);
                     }
                 }
 
@@ -259,9 +281,6 @@
                     }
                 }
 
-                .toggle-input:focus+.toggle-slider {
-                    box-shadow: 0 0 0 3px rgba(33, 115, 70, 0.3);
-                }
             }
 
             .export-btn {
@@ -296,6 +315,27 @@
 
                     &:hover {
                         background-color: #1a5a36;
+                    }
+
+                    &.eos-blue {
+                        background-color: #0B2E66;
+                        color: white;
+
+                        &:hover:not(:disabled) {
+                            background-color: #0a2548;
+                        }
+
+                        &:disabled {
+                            background-color: #6c757d;
+                            cursor: not-allowed;
+                            opacity: 0.6;
+                        }
+                    }
+
+                    &:disabled {
+                        background-color: #6c757d;
+                        cursor: not-allowed;
+                        opacity: 0.6;
                     }
                 }
 
