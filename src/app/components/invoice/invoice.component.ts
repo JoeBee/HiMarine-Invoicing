@@ -1121,8 +1121,15 @@ export class InvoiceComponent implements OnInit {
 
             // Vessel Details (Top-Right) under the logo - values only, no labels
             // Only write rows that have data to avoid blank lines
-            // Vessel Details starts in row 6 for US/UK, row 8 for EOS
-            let vesselRow = this.selectedBank === 'EOS' ? 8 : 6;
+            // Vessel Details starts in row 9 for US/UK, row 8 for EOS, row 6 for others
+            let vesselRow: number;
+            if (this.selectedBank === 'US' || this.selectedBank === 'UK') {
+                vesselRow = 9;
+            } else if (this.selectedBank === 'EOS') {
+                vesselRow = 8;
+            } else {
+                vesselRow = 6;
+            }
             const vesselDetails = [
                 this.invoiceData.vesselName,
                 this.invoiceData.vesselName2,
@@ -1244,11 +1251,8 @@ export class InvoiceComponent implements OnInit {
                 labelCell.font = { size: 11, name: 'Calibri', bold: false };
                 labelCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
-                // Leave column F empty
-                worksheet.getCell(`F${row}`).value = null as any;
-
-                // Write value in column G
-                const valueCell = worksheet.getCell(`G${row}`);
+                // Write value in column F
+                const valueCell = worksheet.getCell(`F${row}`);
                 // Format date as text if needed
                 if (isDate && value) {
                     valueCell.value = formatDateAsText(value);
@@ -1562,6 +1566,8 @@ export class InvoiceComponent implements OnInit {
             const lastTextRow = (this.selectedBank === 'EOS')
                 ? (termsStartRow + terms.length + 4 + maxBottomOffset)  // bottomSectionStart + maxBottomOffset
                 : (termsStartRow + terms.length);  // Last term row
+            // For US/UK: position image 2 rows below lastTextRow (2 blank rows)
+            // For EOS: position image 2 rows below lastTextRow (2 blank rows)
             const bottomImageRowPosition = lastTextRow + 2; // Leave exactly 2 blank rows
             if ((worksheet as any)._bottomImageId) {
                 const originalWidth = (worksheet as any)._bottomImageWidth || 667;
@@ -1575,9 +1581,19 @@ export class InvoiceComponent implements OnInit {
                 });
             }
 
-            // Set print area: columns A-G starting from row 1, ending 3 rows below the bottom image
-            // bottomImageRowPosition is 0-based, so add 1 to convert to 1-based, then add 3 more rows
-            const printAreaEndRow = bottomImageRowPosition + 1 + 3;
+            // Set print area: columns A-G starting from row 1
+            // For US/UK: extend 10 rows below the last text to account for bottom image
+            // For EOS: extend 3 rows below the bottom image (existing behavior)
+            let printAreaEndRow: number;
+            if (this.selectedBank === 'US' || this.selectedBank === 'UK') {
+                // 10 rows below last text (lastTextRow is 1-based)
+                // bottomImageRowPosition = lastTextRow + 2 (0-based, 2 rows below last text)
+                printAreaEndRow = lastTextRow + 10;
+            } else {
+                // For EOS and others: 3 rows below the bottom image
+                // bottomImageRowPosition is 0-based, so add 1 to convert to 1-based, then add 3 more rows
+                printAreaEndRow = bottomImageRowPosition + 1 + 3;
+            }
             worksheet.pageSetup.printArea = `A1:G${printAreaEndRow}`;
 
             // Set page setup to fit to page width (1 page wide), allow multiple pages for height

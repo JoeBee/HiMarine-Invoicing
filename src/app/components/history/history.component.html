@@ -96,7 +96,8 @@
                             <th>
                                 <div class="ip-filter-header">
                                     <label for="ipAddressFilter" class="sr-only">Filter by IP Address</label>
-                                    <select id="ipAddressFilter" [(ngModel)]="selectedIpAddress" (change)="onFilterChange()" class="ip-filter-dropdown">
+                                    <select id="ipAddressFilter" [(ngModel)]="selectedIpAddress"
+                                        (change)="onFilterChange()" class="ip-filter-dropdown">
                                         <option value="">All IPs</option>
                                         <option *ngFor="let ip of ipAddresses" [value]="ip">{{ ip }}</option>
                                     </select>
@@ -145,13 +146,9 @@
 
                 <div class="page-jump">
                     <label for="pageJumpInput">Go to:</label>
-                    <input type="number" id="pageJumpInput" 
-                        [value]="currentPage" 
-                        min="1" 
-                        [max]="totalPages"
+                    <input type="number" id="pageJumpInput" [value]="currentPage" min="1" [max]="totalPages"
                         (keyup.enter)="onPageJump($any($event.target).value)"
-                        (blur)="onPageJump($any($event.target).value)"
-                        class="page-jump-input">
+                        (blur)="onPageJump($any($event.target).value)" class="page-jump-input">
                     <span class="page-jump-max">/ {{ totalPages }}</span>
                 </div>
 
@@ -165,7 +162,7 @@
         <!-- No Logs Message -->
         <div class="no-logs-message" *ngIf="!isLoading && logs.length === 0">
             <div class="no-logs-content">
-                <h3>📝 No Logs Available</h3>
+                <h3>📝 Are you offline?</h3>
                 <p>No application logs have been recorded yet. Logs will appear here as you use the application.</p>
                 <div class="historical-image">
                     <img src="images/HandingInvoiceToShipCaptain.png" alt="Handing Invoice to Ship Captain"
