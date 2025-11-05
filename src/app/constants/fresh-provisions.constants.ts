@@ -23,7 +23,17 @@ export const NOT_FRESH = [
     'QF',
     'SAUCE',
     'SYRUP',
-    'TIN'
+    'TIN',
+    'MILK',
+    'POWDER',
+    'WHOLE',
+    'FLAKES',
+    'FLOUR',
+    'TEA',
+    'BISCUITS',
+    'COOKIES',
+    'WAFER',
+    'CONSERVE'
 ];
 
 

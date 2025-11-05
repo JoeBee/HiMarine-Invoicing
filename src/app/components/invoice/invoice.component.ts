@@ -1368,26 +1368,54 @@ export class InvoiceComponent implements OnInit {
             // Get currency format for totals
             const primaryCurrencyFormat = this.getCurrencyExcelFormat(this.primaryCurrency);
 
-            // Add subtotal row for Total column at the bottom of datatable - moved down 1 row
-            const subtotalRow = tableStartRow + items.length + 2;
             const firstDataRow = tableStartRow + 1;
             const lastDataRow = tableStartRow + items.length;
 
-            // Add label in column F
-            const subtotalLabelCell = worksheet.getCell(`F${subtotalRow}`);
-            subtotalLabelCell.value = `TOTAL ${this.getCurrencyLabel(this.primaryCurrency)}`;
-            subtotalLabelCell.font = { size: 11, name: 'Calibri', bold: true };
-            subtotalLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+            // Check if there are any fees or discounts to determine if we should show the subtotal row
+            const hasDiscount = discountAmount > 0;
+            const hasFees = feesTotal > 0;
+            const shouldShowSubtotal = hasDiscount || hasFees;
 
-            // Add formula in column G (no border, no shading)
-            const subtotalCell = worksheet.getCell(`G${subtotalRow}`);
-            subtotalCell.value = { formula: `SUM(G${firstDataRow}:G${lastDataRow})` } as any;
-            subtotalCell.font = { size: 11, name: 'Calibri', bold: true };
-            subtotalCell.alignment = { horizontal: 'right', vertical: 'middle' };
-            subtotalCell.numFmt = primaryCurrencyFormat;
+            // Add subtotal row for Total column at the bottom of datatable - only if there are fees or discount
+            let totalsStartRow: number;
+            if (shouldShowSubtotal) {
+                const subtotalRow = tableStartRow + items.length + 2;
 
-            // Totals and Fees Section
-            let totalsStartRow = tableStartRow + items.length + 4; // moved down by 2 rows now
+                // Add label in column F
+                const subtotalLabelCell = worksheet.getCell(`F${subtotalRow}`);
+                subtotalLabelCell.value = `TOTAL ${this.getCurrencyLabel(this.primaryCurrency)}`;
+                subtotalLabelCell.font = { size: 11, name: 'Calibri', bold: true };
+                subtotalLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+
+                // Add formula in column G (no border, no shading)
+                const subtotalCell = worksheet.getCell(`G${subtotalRow}`);
+                subtotalCell.value = { formula: `SUM(G${firstDataRow}:G${lastDataRow})` } as any;
+                subtotalCell.font = { size: 11, name: 'Calibri', bold: true };
+                subtotalCell.alignment = { horizontal: 'right', vertical: 'middle' };
+                subtotalCell.numFmt = primaryCurrencyFormat;
+
+                // Totals and Fees Section
+                totalsStartRow = tableStartRow + items.length + 4; // moved down by 2 rows now
+            } else {
+                // No fees or discount - show total row with label in column F
+                const totalRow = tableStartRow + items.length + 2;
+
+                // Add "TOTAL <currency>" label in column F
+                const totalLabelCell = worksheet.getCell(`F${totalRow}`);
+                totalLabelCell.value = `TOTAL ${this.getCurrencyLabel(this.primaryCurrency)}`;
+                totalLabelCell.font = { size: 11, name: 'Calibri', bold: true };
+                totalLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+
+                // Add formula in column G for the total amount
+                const totalCell = worksheet.getCell(`G${totalRow}`);
+                totalCell.value = { formula: `SUM(G${firstDataRow}:G${lastDataRow})` } as any;
+                totalCell.font = { size: 11, name: 'Calibri', bold: true };
+                totalCell.alignment = { horizontal: 'right', vertical: 'middle' };
+                totalCell.numFmt = primaryCurrencyFormat;
+
+                // Skip the fees section since there are none
+                totalsStartRow = totalRow + 1;
+            }
 
             // List discount (amount) and non-zero fees just above the Total
             // Discount is always included (applied to items), fees are conditional
@@ -1428,19 +1456,24 @@ export class InvoiceComponent implements OnInit {
 
             totalsStartRow += feeLines.length;
 
-            // Final TOTAL (formula: sum of G column item totals + all monetary fee cells) - no label
-            worksheet.getCell(`F${totalsStartRow}`).value = '';
-            worksheet.getCell(`F${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
+            // Final TOTAL (formula: sum of G column item totals + all monetary fee cells)
+            // Only render if there are fees or discounts (otherwise already rendered above)
+            if (shouldShowSubtotal) {
+                // Final TOTAL with no label (fees/discounts are shown above)
+                worksheet.getCell(`F${totalsStartRow}`).value = '';
+                worksheet.getCell(`F${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
 
-            // firstDataRow and lastDataRow already defined above
-            const itemsSumFormula = `SUM(G${firstDataRow}:G${lastDataRow})`;
-            const feeSumPart = feeAmountRowRefs.length ? `+${feeAmountRowRefs.join('+')}` : '';
-            const discountFactor = this.invoiceData.discountPercent ? `(1-${this.invoiceData.discountPercent}/100)` : '1';
-            const totalFormula = `(${itemsSumFormula}*${discountFactor})${feeSumPart}`;
-            worksheet.getCell(`G${totalsStartRow}`).value = { formula: totalFormula } as any;
-            worksheet.getCell(`G${totalsStartRow}`).font = { bold: true, size: 11, name: 'Calibri' };
-            worksheet.getCell(`G${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
-            worksheet.getCell(`G${totalsStartRow}`).numFmt = primaryCurrencyFormat;
+                // firstDataRow and lastDataRow already defined above
+                const itemsSumFormula = `SUM(G${firstDataRow}:G${lastDataRow})`;
+                const feeSumPart = feeAmountRowRefs.length ? `+${feeAmountRowRefs.join('+')}` : '';
+                const discountFactor = this.invoiceData.discountPercent ? `(1-${this.invoiceData.discountPercent}/100)` : '1';
+                const totalFormula = `(${itemsSumFormula}*${discountFactor})${feeSumPart}`;
+                worksheet.getCell(`G${totalsStartRow}`).value = { formula: totalFormula } as any;
+                worksheet.getCell(`G${totalsStartRow}`).font = { bold: true, size: 11, name: 'Calibri' };
+                worksheet.getCell(`G${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
+                worksheet.getCell(`G${totalsStartRow}`).numFmt = primaryCurrencyFormat;
+            }
+            // When there are no fees/discounts, the total is already rendered above with the label
 
             // Removed separate grand total line; the total row represents the final amount
 
