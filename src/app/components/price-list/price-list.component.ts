@@ -374,17 +374,21 @@ export class PriceListComponent implements OnInit, OnDestroy {
         try {
             const workbook = new ExcelJS.Workbook();
 
-            // Check which data types we have
+            // Check which data types we have and get the separateFreshProvisions setting
+            const separateFreshProvisions = this.dataService.getSeparateFreshProvisions();
             const hasProvisionsData = this.hasProvisionsData();
             const hasBondData = this.hasBondData();
 
-            // Create Cover Sheet (pass data availability flags)
-            this.createCoverSheet(workbook, hasProvisionsData, hasBondData);
+            // Create Cover Sheet (pass data availability flags and separateFreshProvisions setting)
+            this.createCoverSheet(workbook, hasProvisionsData, hasBondData, separateFreshProvisions);
 
             // Create sheets only if they have data
             if (hasProvisionsData) {
-                this.createProvisionsSheet(workbook);
-                this.createFreshProvisionsSheet(workbook);
+                this.createProvisionsSheet(workbook, separateFreshProvisions);
+                // Only create Fresh Provisions sheet if separateFreshProvisions is enabled
+                if (separateFreshProvisions) {
+                    this.createFreshProvisionsSheet(workbook);
+                }
             }
 
             if (hasBondData) {
@@ -419,7 +423,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         }
     }
 
-    private createCoverSheet(workbook: ExcelJS.Workbook, hasProvisionsData: boolean, hasBondData: boolean): void {
+    private createCoverSheet(workbook: ExcelJS.Workbook, hasProvisionsData: boolean, hasBondData: boolean, separateFreshProvisions: boolean): void {
         const worksheet = workbook.addWorksheet('COVER SHEET');
 
         // Set tab color - white with green underline (using light green for tab color)
@@ -455,8 +459,15 @@ export class PriceListComponent implements OnInit, OnDestroy {
         if (hasProvisionsData) {
             const provisionsRow = worksheet.getRow(currentRow);
             provisionsRow.getCell(2).value = 'PROVISIONS';
-            // Calculate the total row number dynamically based on data length (only included items with valid prices)
-            const provisionsDataLength = this.getValidPriceRecords().filter(item => this.isProvisionItem(item) && !this.isFreshProvisionItem(item) && item.included).length;
+            // Calculate the total row number dynamically based on data length
+            // If separateFreshProvisions is false, include all provisions (including fresh) in PROVISIONS
+            // If separateFreshProvisions is true, only include non-fresh provisions
+            let provisionsDataLength: number;
+            if (separateFreshProvisions) {
+                provisionsDataLength = this.getValidPriceRecords().filter(item => this.isProvisionItem(item) && !this.isFreshProvisionItem(item) && item.included).length;
+            } else {
+                provisionsDataLength = this.getValidPriceRecords().filter(item => this.isProvisionItem(item) && item.included).length;
+            }
             const provisionsTotalRow = provisionsDataLength + 3; // +1 for header, +2 for two rows below last data
             if (provisionsDataLength > 0) {
                 provisionsRow.getCell(3).value = { formula: `PROVISIONS!G${provisionsTotalRow}` };
@@ -507,8 +518,8 @@ export class PriceListComponent implements OnInit, OnDestroy {
             currentRow++;
         }
 
-        // Add FRESH PROVISIONS row - only if we have provisions data
-        if (hasProvisionsData) {
+        // Add FRESH PROVISIONS row - only if we have provisions data AND separateFreshProvisions is enabled
+        if (hasProvisionsData && separateFreshProvisions) {
             const freshProvisionsRow = worksheet.getRow(currentRow);
             freshProvisionsRow.getCell(2).value = 'FRESH PROVISIONS';
             // Calculate the total row number dynamically based on data length (only included items with valid prices)
@@ -622,10 +633,14 @@ export class PriceListComponent implements OnInit, OnDestroy {
         totalRow.getCell(2).value = `TOTAL ORDER, ${this.getCurrencyCode()}`;
         // Build dynamic SUM formula based on which rows are present
         let sumFormula = '=';
-        if (hasProvisionsData && hasBondData) {
-            sumFormula = '=SUM(C14:C16)'; // All three rows
-        } else if (hasProvisionsData && !hasBondData) {
+        if (hasProvisionsData && hasBondData && separateFreshProvisions) {
+            sumFormula = '=SUM(C14:C16)'; // All three rows (provisions, fresh provisions, bond)
+        } else if (hasProvisionsData && hasBondData && !separateFreshProvisions) {
+            sumFormula = '=SUM(C14:C15)'; // Provisions (includes fresh) and bond
+        } else if (hasProvisionsData && !hasBondData && separateFreshProvisions) {
             sumFormula = '=SUM(C14:C15)'; // Only provisions and fresh provisions
+        } else if (hasProvisionsData && !hasBondData && !separateFreshProvisions) {
+            sumFormula = '=C14'; // Only provisions (includes fresh)
         } else if (!hasProvisionsData && hasBondData) {
             sumFormula = '=C14'; // Only bond
         } else {
@@ -650,11 +665,22 @@ export class PriceListComponent implements OnInit, OnDestroy {
         totalRow.getCell(3).numFmt = this.getCurrencyFormat();
     }
 
-    private createProvisionsSheet(workbook: ExcelJS.Workbook): void {
-        // Filter data for provisions: Data uploaded via "Provisions" dropzone AND NOT fresh provisions AND valid price
-        const provisionsData = this.getValidPriceRecords().filter(item =>
-            this.isProvisionItem(item) && !this.isFreshProvisionItem(item) && item.included
-        );
+    private createProvisionsSheet(workbook: ExcelJS.Workbook, separateFreshProvisions: boolean): void {
+        // Filter data for provisions
+        // If separateFreshProvisions is false, include all provisions (including fresh)
+        // If separateFreshProvisions is true, only include non-fresh provisions
+        let provisionsData: ProcessedDataRow[];
+        if (separateFreshProvisions) {
+            // Data uploaded via "Provisions" dropzone AND NOT fresh provisions AND valid price
+            provisionsData = this.getValidPriceRecords().filter(item =>
+                this.isProvisionItem(item) && !this.isFreshProvisionItem(item) && item.included
+            );
+        } else {
+            // Data uploaded via "Provisions" dropzone AND valid price (includes fresh provisions)
+            provisionsData = this.getValidPriceRecords().filter(item =>
+                this.isProvisionItem(item) && item.included
+            );
+        }
 
         const worksheet = workbook.addWorksheet('PROVISIONS');
 

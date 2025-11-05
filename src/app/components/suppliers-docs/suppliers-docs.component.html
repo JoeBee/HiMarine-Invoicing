@@ -34,6 +34,16 @@
             <span class="price-divider-label">(e.g., 0.9 increases prices by ~11%)</span>
         </div>
 
+        <div class="separate-fresh-provisions-group">
+            <div class="toggle-container">
+                <span class="toggle-label">{{ separateFreshProvisions ? 'Separate Fresh Provisions:' : 'Do not Separate Provisions' }}</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="separateFreshProvisions" [(ngModel)]="separateFreshProvisions"
+                        (ngModelChange)="onSeparateFreshProvisionsChange()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
     </div>
 
     <div *ngIf="isProcessing" class="processing-message">

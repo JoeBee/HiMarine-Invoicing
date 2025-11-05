@@ -29,6 +29,7 @@ export class SuppliersDocsComponent implements OnInit {
     hasNewFiles = false;
     priceDividerChanged = false;
     initialPriceDivider: number = 0.9;
+    separateFreshProvisions: boolean = false; // Default to "Do not Separate"
 
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
@@ -38,6 +39,9 @@ export class SuppliersDocsComponent implements OnInit {
         // Load price divider from data service
         this.priceDivider = this.dataService.getPriceDivider();
         this.initialPriceDivider = this.priceDivider;
+
+        // Load separate fresh provisions setting from data service
+        this.separateFreshProvisions = this.dataService.getSeparateFreshProvisions();
 
         this.dataService.supplierFiles$.subscribe(files => {
             this.supplierFiles = files;
@@ -312,6 +316,16 @@ export class SuppliersDocsComponent implements OnInit {
     updateButtonState(): void {
         // Button is always disabled since we removed the process button
         this.buttonDisabled = true;
+    }
+
+    onSeparateFreshProvisionsChange(): void {
+        this.loggingService.logFormSubmission('separate_fresh_provisions_change', {
+            newValue: this.separateFreshProvisions,
+            previousValue: !this.separateFreshProvisions
+        }, 'SuppliersDocsComponent');
+
+        // Update separate fresh provisions setting in data service
+        this.dataService.setSeparateFreshProvisions(this.separateFreshProvisions);
     }
 
 }

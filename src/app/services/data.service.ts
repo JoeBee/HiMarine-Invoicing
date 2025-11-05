@@ -59,11 +59,13 @@ export class DataService {
     private supplierFilesSubject = new BehaviorSubject<SupplierFileInfo[]>([]);
     private processedDataSubject = new BehaviorSubject<ProcessedDataRow[]>([]);
     private priceDividerSubject = new BehaviorSubject<number>(0.9);
+    private separateFreshProvisionsSubject = new BehaviorSubject<boolean>(false); // Default to "Do not Separate"
     private excelDataSubject = new BehaviorSubject<ExcelProcessedData | null>(null);
 
     supplierFiles$: Observable<SupplierFileInfo[]> = this.supplierFilesSubject.asObservable();
     processedData$: Observable<ProcessedDataRow[]> = this.processedDataSubject.asObservable();
     priceDivider$: Observable<number> = this.priceDividerSubject.asObservable();
+    separateFreshProvisions$: Observable<boolean> = this.separateFreshProvisionsSubject.asObservable();
     excelData$: Observable<ExcelProcessedData | null> = this.excelDataSubject.asObservable();
 
     constructor() { }
@@ -394,6 +396,14 @@ export class DataService {
 
     clearExcelData(): void {
         this.excelDataSubject.next(null);
+    }
+
+    setSeparateFreshProvisions(separate: boolean): void {
+        this.separateFreshProvisionsSubject.next(separate);
+    }
+
+    getSeparateFreshProvisions(): boolean {
+        return this.separateFreshProvisionsSubject.value;
     }
 }
 
