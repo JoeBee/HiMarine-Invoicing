@@ -208,7 +208,7 @@ export class RfqComponent {
                                     tabInfos.push({
                                         tabName: sheetName,
                                         rowCount: 0,
-                                        topLeftCell: 'NOT FOUND',
+                                        topLeftCell: '',
                                         product: '',
                                         qty: '',
                                         unit: '',
@@ -289,7 +289,7 @@ export class RfqComponent {
                                 tabInfos.push({
                                     tabName: sheetName,
                                     rowCount: 0,
-                                    topLeftCell: 'NOT FOUND',
+                                    topLeftCell: '',
                                     product: '',
                                     qty: '',
                                     unit: '',
@@ -365,7 +365,7 @@ export class RfqComponent {
         let qtyColumn = -1;
         let unitColumn = -1;
         let remarkColumn = -1;
-        let topLeftCell = 'NOT FOUND';
+        let topLeftCell = '';
 
         // Find the header row with description and price columns
         for (let row = range.s.r; row <= range.e.r; row++) {
@@ -463,7 +463,7 @@ export class RfqComponent {
         if (headerRow === -1 || descriptionColumn === -1 || priceColumn === -1) {
             return {
                 rowCount: 0,
-                topLeftCell: 'NOT FOUND',
+                topLeftCell: '',
                 product: '',
                 qty: '',
                 unit: '',
@@ -588,6 +588,98 @@ export class RfqComponent {
             columnType: columnType,
             selectedValue: tab[columnType]
         }, 'RfqComponent');
+    }
+
+    getTopLeftCellOptions(): string[] {
+        const options: string[] = [];
+        // Generate A1 through A25
+        for (let i = 1; i <= 25; i++) {
+            options.push('A' + i);
+        }
+        return options;
+    }
+
+    getTopLeftCellOptionsLimited(): string[] {
+        // Return only first 10 options to limit visible items in dropdown (A1-A10)
+        // Users can still type any cell reference freely (e.g., A13, A25, B5, etc.)
+        return this.getTopLeftCellOptions().slice(0, 10);
+    }
+
+    onTopLeftCellChange(event: Event, tab: TabInfo): void {
+        const input = event.target as HTMLInputElement;
+        let value = input.value.toUpperCase();
+
+        // Only allow one letter followed by 1-2 digits
+        const regex = /^[A-Z][0-9]{1,2}$/;
+        if (value && !regex.test(value)) {
+            // Remove invalid characters
+            value = value.replace(/[^A-Z0-9]/g, '');
+            // Ensure it starts with a letter
+            if (value && !/^[A-Z]/.test(value)) {
+                value = '';
+            }
+            // Limit to one letter + max 2 digits
+            const match = value.match(/^([A-Z])([0-9]{0,2})/);
+            if (match) {
+                value = match[0];
+            } else if (value.length > 0 && /^[A-Z]/.test(value)) {
+                // If it starts with a letter but has no digits yet, keep just the letter
+                value = value.charAt(0);
+            }
+        }
+
+        input.value = value;
+        tab.topLeftCell = value;
+
+        // Remove datalist when there's a value
+        if (value && value.trim() !== '') {
+            input.removeAttribute('list');
+        }
+    }
+
+    onTopLeftCellFocus(event: Event, fileIndex: number, tabIndex: number): void {
+        const input = event.target as HTMLInputElement;
+        // Only show datalist if field is empty
+        if (!input.value || input.value.trim() === '') {
+            input.setAttribute('list', `topLeftList-${fileIndex}-${tabIndex}`);
+        }
+    }
+
+    onTopLeftCellSelectChange(event: Event, tab: TabInfo): void {
+        const select = event.target as HTMLSelectElement;
+        const value = select.value;
+
+        this.loggingService.logButtonClick('top_left_cell_select_change', 'RfqComponent', {
+            value: value
+        });
+
+        // If user selects "custom", clear the value to show the input field
+        if (value === 'custom') {
+            tab.topLeftCell = '';
+            // Use setTimeout to ensure the input appears before focusing
+            setTimeout(() => {
+                const input = select.closest('td')?.querySelector('.top-left-input') as HTMLInputElement;
+                if (input) {
+                    input.focus();
+                }
+            }, 0);
+        }
+    }
+
+    validateTopLeftCell(tab: TabInfo): void {
+        const regex = /^[A-Z][0-9]{1,2}$/;
+        if (tab.topLeftCell && !regex.test(tab.topLeftCell)) {
+            // If invalid, try to fix common issues
+            if (tab.topLeftCell.trim() !== '') {
+                const match = tab.topLeftCell.match(/^([A-Z])([0-9]{1,2})/);
+                if (match) {
+                    tab.topLeftCell = match[0];
+                } else {
+                    // If can't be fixed, clear it
+                    tab.topLeftCell = '';
+                }
+            }
+        }
     }
 
     private autoSelectColumns(columnHeaders: string[]): { product: string; qty: string; unit: string; remark: string } {

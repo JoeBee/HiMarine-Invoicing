@@ -288,6 +288,78 @@
                             font-weight: 500;
                             color: #333;
                             font-family: monospace;
+                            padding: 8px 15px;
+
+                            .top-left-select {
+                                width: 25%;
+                                min-width: 100px;
+                                padding: 6px 10px;
+                                border: 1px solid #ccc;
+                                border-radius: 4px;
+                                background-color: white;
+                                font-size: 14px;
+                                color: #333;
+                                font-family: monospace;
+                                cursor: pointer;
+                                transition: border-color 0.3s ease;
+                                overflow-y: auto;
+
+                                &:hover {
+                                    border-color: #2e7d32;
+                                }
+
+                                &:focus {
+                                    outline: none;
+                                    border-color: #2e7d32;
+                                    box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+                                }
+
+                                option {
+                                    padding: 4px 8px;
+                                    
+                                    &:hover {
+                                        background-color: #e8f5e9;
+                                    }
+                                }
+                            }
+
+                            .top-left-input {
+                                width: 25%;
+                                min-width: 100px;
+                                padding: 6px 10px;
+                                border: 1px solid #ccc;
+                                border-radius: 4px;
+                                background-color: white;
+                                font-size: 14px;
+                                color: #333;
+                                font-family: monospace;
+                                text-transform: uppercase;
+                                transition: border-color 0.3s ease;
+
+                                &:hover {
+                                    border-color: #2e7d32;
+                                }
+
+                                &:focus {
+                                    outline: none;
+                                    border-color: #2e7d32;
+                                    box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+                                }
+
+                                &:invalid {
+                                    border-color: #dc3545;
+                                }
+                            }
+
+                            datalist {
+                                max-height: 120px;
+                                overflow-y: auto;
+                                
+                                option {
+                                    padding: 4px 8px;
+                                    font-family: monospace;
+                                }
+                            }
                         }
 
                         &.row-count {
