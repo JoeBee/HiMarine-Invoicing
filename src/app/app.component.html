@@ -2,6 +2,7 @@
     <header>
         <!-- Main Navigation Row -->
         <nav class="nav-tabs main-nav">
+            <a (click)="onMainTabClick('rfq')" [class.active]="activeMainTab === 'rfq'">📋 Request for Quotation (RFQ)</a>
             <a (click)="onMainTabClick('suppliers')" [class.active]="activeMainTab === 'suppliers'">🏢 Suppliers</a>
             <a (click)="onMainTabClick('invoicing')" [class.active]="activeMainTab === 'invoicing'">📄 Invoicing</a>
             <a (click)="onMainTabClick('history')" [class.active]="activeMainTab === 'history'">&#x23F3; History</a>

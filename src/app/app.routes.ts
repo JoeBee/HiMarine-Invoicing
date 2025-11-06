@@ -41,6 +41,10 @@ export const routes: Routes = [
     {
         path: 'invoicing/invoice',
         loadComponent: () => import('./components/invoice/invoice.component').then(m => m.InvoiceComponent)
+    },
+    {
+        path: 'rfq',
+        loadComponent: () => import('./components/rfq/rfq.component').then(m => m.RfqComponent)
     }
 ];
 

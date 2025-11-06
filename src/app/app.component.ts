@@ -31,6 +31,8 @@ export class AppComponent {
             this.activeMainTab = 'suppliers';
         } else if (url.startsWith('/invoicing')) {
             this.activeMainTab = 'invoicing';
+        } else if (url.startsWith('/rfq')) {
+            this.activeMainTab = 'rfq';
         } else if (url.startsWith('/history')) {
             this.activeMainTab = 'history';
         } else {
@@ -48,6 +50,8 @@ export class AppComponent {
             this.router.navigate(['/suppliers/supplier-docs']);
         } else if (tab === 'invoicing') {
             this.router.navigate(['/invoicing/captains-order']);
+        } else if (tab === 'rfq') {
+            this.router.navigate(['/rfq']);
         } else if (tab === 'history') {
             this.router.navigate(['/history']);
         }

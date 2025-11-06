@@ -1,0 +1,120 @@
+<div class="rfq-container">
+    <div class="content-wrapper">
+        <h1>Request for Quotation (RFQ)</h1>
+
+        <!-- Dropzone for Excel file upload -->
+        <div class="dropzone-container">
+            <div class="dropzone" [class.drag-over]="isDragOver" (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="fileInput.click()">
+                <div class="dropzone-content">
+                    <span class="upload-icon" aria-hidden="true">📋</span>
+                    <p class="dropzone-text">Captains Quotation Request</p>
+                    <p class="dropzone-subtext">Drop Excel files here or click to browse</p>
+                    <p class="dropzone-subtext">Only .xlsx, .xls, and .xlsm files are accepted</p>
+                </div>
+            </div>
+            <input #fileInput type="file" accept=".xlsx,.xls,.xlsm" multiple (change)="onFileSelected($event)"
+                style="display: none;">
+        </div>
+
+        <!-- Company Selection -->
+        <div class="company-selection">
+            <label class="radio-label">
+                <input type="radio" name="company" value="HI US" [(ngModel)]="selectedCompany"
+                    (change)="onCompanyChange('HI US')">
+                <span>HI US</span>
+            </label>
+            <label class="radio-label">
+                <input type="radio" name="company" value="HI UK" [(ngModel)]="selectedCompany"
+                    (change)="onCompanyChange('HI UK')">
+                <span>HI UK</span>
+            </label>
+            <label class="radio-label">
+                <input type="radio" name="company" value="EOS" [(ngModel)]="selectedCompany"
+                    (change)="onCompanyChange('EOS')">
+                <span>EOS</span>
+            </label>
+        </div>
+
+        <!-- Processing status -->
+        <div *ngIf="isProcessing" class="processing-status">
+            <div class="spinner"></div>
+            <p>Processing Excel files...</p>
+        </div>
+
+        <!-- Error display -->
+        <div *ngIf="errorMessage" class="error-message">
+            <p>{{ errorMessage }}</p>
+        </div>
+
+        <!-- Results display -->
+        <div *ngIf="fileAnalyses.length > 0 && !isProcessing" class="results-container">
+            <div class="results-header">
+                <h2>File Analysis Results</h2>
+                <button class="clear-button" (click)="clearAllFiles()">Clear All Files</button>
+            </div>
+
+            <div class="results-table-container">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Tab Name</th>
+                            <th>Top Left</th>
+                            <th>#Rows</th>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Unit</th>
+                            <th>Remark</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <ng-container *ngFor="let analysis of fileAnalyses; let fileIndex = index">
+                            <tr *ngFor="let tab of analysis.tabs; let isFirst = first; let tabIndex = index"
+                                [class.file-first-row]="isFirst">
+                                <td *ngIf="isFirst" [attr.rowspan]="analysis.tabs.length" class="file-name-cell" (click)="openFile(analysis)">
+                                    {{ analysis.fileName }}
+                                </td>
+                                <td class="tab-name-cell" [class.hidden-tab]="tab.isHidden">
+                                    {{ tab.tabName }}
+                                    <span *ngIf="tab.isHidden" class="hidden-label">(Hidden)</span>
+                                </td>
+                                <td class="top-left-cell">{{ tab.topLeftCell }}</td>
+                                <td class="row-count">{{ tab.rowCount }}</td>
+                                <td class="product-cell">
+                                    <select *ngIf="tab.topLeftCell !== 'NOT FOUND' && tab.rowCount > 0" [(ngModel)]="tab.product" (change)="onColumnChange(analysis, tab, 'product')" class="column-select">
+                                        <option value="">-- Select --</option>
+                                        <option *ngFor="let header of tab.columnHeaders" [value]="header">{{ header }}</option>
+                                    </select>
+                                    <span *ngIf="tab.topLeftCell === 'NOT FOUND' || tab.rowCount === 0" class="no-dropdown-text">—</span>
+                                </td>
+                                <td class="qty-cell">
+                                    <select *ngIf="tab.topLeftCell !== 'NOT FOUND' && tab.rowCount > 0" [(ngModel)]="tab.qty" (change)="onColumnChange(analysis, tab, 'qty')" class="column-select">
+                                        <option value="">-- Select --</option>
+                                        <option *ngFor="let header of tab.columnHeaders" [value]="header">{{ header }}</option>
+                                    </select>
+                                    <span *ngIf="tab.topLeftCell === 'NOT FOUND' || tab.rowCount === 0" class="no-dropdown-text">—</span>
+                                </td>
+                                <td class="unit-cell">
+                                    <select *ngIf="tab.topLeftCell !== 'NOT FOUND' && tab.rowCount > 0" [(ngModel)]="tab.unit" (change)="onColumnChange(analysis, tab, 'unit')" class="column-select">
+                                        <option value="">-- Select --</option>
+                                        <option *ngFor="let header of tab.columnHeaders" [value]="header">{{ header }}</option>
+                                    </select>
+                                    <span *ngIf="tab.topLeftCell === 'NOT FOUND' || tab.rowCount === 0" class="no-dropdown-text">—</span>
+                                </td>
+                                <td class="remark-cell">
+                                    <select *ngIf="tab.topLeftCell !== 'NOT FOUND' && tab.rowCount > 0" [(ngModel)]="tab.remark" (change)="onColumnChange(analysis, tab, 'remark')" class="column-select">
+                                        <option value="">-- Select --</option>
+                                        <option *ngFor="let header of tab.columnHeaders" [value]="header">{{ header }}</option>
+                                    </select>
+                                    <span *ngIf="tab.topLeftCell === 'NOT FOUND' || tab.rowCount === 0" class="no-dropdown-text">—</span>
+                                </td>
+                            </tr>
+                        </ng-container>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -46,8 +46,23 @@ header {
 .main-nav {
     border-bottom: 1px solid #e0e0e0;
 
-    // Suppliers tab - Red theme
+    // RFQ tab - Dark Green theme (first tab)
     a:first-child {
+        color: #2e7d32;
+
+        &:hover {
+            color: #1b5e20;
+            background-color: #e0f2e0;
+        }
+
+        &.active {
+            color: #1b5e20;
+            background-color: #e0f2e0;
+        }
+    }
+
+    // Suppliers tab - Red theme
+    a:nth-child(2) {
         color: #d32f2f;
 
         &:hover {
@@ -62,7 +77,7 @@ header {
     }
 
     // Invoicing tab - Blue theme
-    a:nth-child(2) {
+    a:nth-child(3) {
         color: #1976d2;
 
         &:hover {

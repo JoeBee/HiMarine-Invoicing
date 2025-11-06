@@ -1,0 +1,401 @@
+.rfq-container {
+    background-color: #f0f8f0;
+    /* Very light dark green background */
+    min-height: calc(100vh - 120px);
+    margin: -40px -20px;
+    padding: 60px 40px;
+    max-width: none;
+
+    .content-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    h1 {
+        color: #1b5e20;
+        margin-bottom: 30px;
+        font-size: 32px;
+        text-align: center;
+    }
+
+    p {
+        color: #666;
+        font-size: 16px;
+        line-height: 1.5;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+}
+
+// Company Selection
+.company-selection {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin: 30px 0;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    .radio-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+        padding: 10px 20px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+
+        &:hover {
+            background-color: #f8f9fa;
+        }
+
+        input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #2e7d32;
+        }
+
+        span {
+            user-select: none;
+        }
+    }
+}
+
+// Dropzone styles
+.dropzone-container {
+    margin: 30px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.dropzone {
+    border: 3px dashed #ccc;
+    border-radius: 12px;
+    padding: 25px 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #fafafa;
+    min-width: 400px;
+    max-width: 600px;
+    width: 100%;
+
+    &:hover {
+        border-color: #2e7d32;
+        background-color: #f0f8f0;
+    }
+
+    &.drag-over {
+        border-color: #2e7d32;
+        background-color: #e0f2e0;
+        transform: scale(1.02);
+    }
+
+    .dropzone-content {
+        .upload-icon {
+            font-size: 80px;
+            margin-bottom: 12px;
+            display: block;
+            font-style: normal;
+            line-height: 1;
+        }
+
+        .dropzone-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .dropzone-subtext {
+            font-size: 14px;
+            color: #666;
+            margin: 2px 0;
+        }
+    }
+}
+
+// Processing status
+.processing-status {
+    text-align: center;
+    margin: 30px 0;
+    padding: 20px;
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #2e7d32;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 16px;
+    }
+
+    p {
+        color: #2e7d32;
+        font-size: 16px;
+        font-weight: 500;
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+// Results display
+.results-container {
+    margin-top: 40px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+
+        h2 {
+            color: #1b5e20;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .clear-button {
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+
+            &:hover {
+                background-color: #1b5e20;
+            }
+        }
+    }
+
+    .results-table-container {
+        overflow-x: auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
+
+            thead {
+                background-color: #2e7d32;
+                color: white;
+
+                th {
+                    padding: 15px 20px;
+                    text-align: left;
+                    font-weight: 600;
+                    font-size: 16px;
+                    border: none;
+
+                    &:first-child {
+                        border-top-left-radius: 8px;
+                    }
+
+                    &:last-child {
+                        border-top-right-radius: 8px;
+                    }
+
+                    // Product, Qty, Unit, Remark headers - slightly lighter
+                    &:nth-child(5),
+                    &:nth-child(6),
+                    &:nth-child(7),
+                    &:nth-child(8) {
+                        background-color: #4caf50;
+                    }
+                }
+            }
+
+            tbody {
+                tr {
+                    border-bottom: 1px solid #e9ecef;
+                    transition: background-color 0.2s ease;
+
+                    &:hover {
+                        background-color: #f8f9fa;
+                    }
+
+                    &:last-child {
+                        border-bottom: none;
+                    }
+
+                    &.file-first-row {
+                        border-top: 2px solid #2e7d32;
+                    }
+
+                    td {
+                        padding: 15px 20px;
+                        vertical-align: middle;
+
+                        &.file-name-cell {
+                            font-weight: 600;
+                            color: #2e7d32;
+                            background-color: #f0f8f0;
+                            border-right: 2px solid #2e7d32;
+                            cursor: pointer;
+                            text-decoration: underline;
+
+                            &:hover {
+                                background-color: #e0f2e0;
+                                color: #1b5e20;
+                            }
+                        }
+
+                        &.tab-name-cell {
+                            font-weight: 500;
+                            color: #333;
+
+                            &.hidden-tab {
+                                background-color: #e0e0e0;
+                                color: #666;
+                            }
+
+                            .hidden-label {
+                                display: block;
+                                font-size: 12px;
+                                font-weight: normal;
+                                color: #999;
+                                font-style: italic;
+                                margin-top: 4px;
+                            }
+                        }
+
+                        &.top-left-cell {
+                            font-weight: 500;
+                            color: #333;
+                            font-family: monospace;
+                        }
+
+                        &.row-count {
+                            text-align: center;
+                            color: #2e7d32;
+                            font-weight: 600;
+                        }
+
+                        &.product-cell,
+                        &.qty-cell,
+                        &.unit-cell,
+                        &.remark-cell {
+                            background-color: #e8f5e9;
+                            font-weight: 500;
+                            color: #555;
+                            padding: 8px 15px;
+
+                            .column-select {
+                                width: 100%;
+                                padding: 6px 10px;
+                                border: 1px solid #ccc;
+                                border-radius: 4px;
+                                background-color: white;
+                                font-size: 14px;
+                                color: #333;
+                                cursor: pointer;
+                                transition: border-color 0.3s ease;
+
+                                &:hover {
+                                    border-color: #2e7d32;
+                                }
+
+                                &:focus {
+                                    outline: none;
+                                    border-color: #2e7d32;
+                                    box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+                                }
+                            }
+
+                            .no-dropdown-text {
+                                color: #999;
+                                font-style: italic;
+                            }
+                        }
+
+                        &.qty-cell {
+                            text-align: center;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Error message
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 16px;
+    border-radius: 6px;
+    margin: 20px 0;
+    text-align: center;
+    border: 1px solid #f5c6cb;
+
+    p {
+        margin: 0;
+        font-weight: 500;
+    }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+    .rfq-container {
+        padding: 10px;
+    }
+
+    .company-selection {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .dropzone {
+        min-width: 300px;
+        padding: 30px 20px;
+    }
+
+    .results-container {
+        .results-header {
+            flex-direction: column;
+            gap: 15px;
+            align-items: stretch;
+
+            .clear-button {
+                width: 100%;
+            }
+        }
+
+        .results-table-container {
+            .results-table {
+                font-size: 14px;
+
+                thead th,
+                tbody td {
+                    padding: 10px 12px;
+                }
+            }
+        }
+    }
+}
+
