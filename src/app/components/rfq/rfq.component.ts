@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LoggingService } from '../../services/logging.service';
@@ -38,7 +38,10 @@ export class RfqComponent {
     errorMessage = '';
     selectedCompany: 'HI US' | 'HI UK' | 'EOS' = 'HI US';
 
-    constructor(private loggingService: LoggingService) { }
+    constructor(
+        private loggingService: LoggingService,
+        private cdr: ChangeDetectorRef
+    ) { }
 
     onDragOver(event: DragEvent): void {
         event.preventDefault();
@@ -135,12 +138,40 @@ export class RfqComponent {
                         cellFormula: false,
                         cellHTML: false,
                         cellStyles: false,
-                        sheetStubs: false
+                        sheetStubs: false,
+                        // Options to handle hidden columns and protected files
+                        cellText: true,
+                        cellDates: true
                     });
 
                     // Validate workbook structure
-                    if (!workbook || (!workbook.Sheets && !workbook.SheetNames)) {
+                    if (!workbook) {
+                        throw new Error('Failed to read workbook - workbook is null or undefined');
+                    }
+
+                    // Log workbook structure for debugging
+                    if (!workbook.Sheets && !workbook.SheetNames) {
+                        this.loggingService.logError(
+                            new Error('Workbook has no Sheets or SheetNames'),
+                            'workbook_structure_invalid',
+                            'RfqComponent',
+                            {
+                                fileName: file.name,
+                                workbookKeys: workbook ? Object.keys(workbook) : [],
+                                hasWorkbook: !!workbook
+                            }
+                        );
                         throw new Error('Invalid workbook structure - workbook, Sheets, or SheetNames missing');
+                    }
+
+                    // Log if Sheets is empty but SheetNames exists
+                    if ((!workbook.Sheets || Object.keys(workbook.Sheets).length === 0) &&
+                        workbook.SheetNames && workbook.SheetNames.length > 0) {
+                        console.warn('Workbook has SheetNames but Sheets object is empty', {
+                            fileName: file.name,
+                            sheetNames: workbook.SheetNames,
+                            workbookKeys: Object.keys(workbook)
+                        });
                     }
 
                     const tabInfos: TabInfo[] = [];
@@ -539,6 +570,264 @@ export class RfqComponent {
         return { rowCount, topLeftCell, product, qty, unit, remark, columnHeaders };
     }
 
+    private async reanalyzeTabWithTopLeft(analysis: FileAnalysis, tab: TabInfo, topLeftCell: string): Promise<void> {
+        try {
+            // Read the Excel file
+            const file = analysis.file;
+            const fileData = await this.readFileAsArrayBuffer(file);
+            const workbook = XLSX.read(fileData, {
+                type: 'array',
+                cellFormula: false,
+                cellHTML: false,
+                cellStyles: false,
+                sheetStubs: false,
+                // Options to handle hidden columns and protected files
+                cellText: true,
+                cellDates: true
+            });
+
+            // Find the worksheet by tab name - try exact match first, then case-insensitive
+            let worksheet = workbook.Sheets[tab.tabName];
+            if (!worksheet) {
+                // Try case-insensitive match
+                const sheetNames = Object.keys(workbook.Sheets);
+                const matchingSheet = sheetNames.find(name => name.toLowerCase() === tab.tabName.toLowerCase());
+                if (matchingSheet) {
+                    worksheet = workbook.Sheets[matchingSheet];
+                }
+            }
+
+            if (!worksheet) {
+                this.loggingService.logError(
+                    new Error(`Worksheet "${tab.tabName}" not found`),
+                    'worksheet_not_found',
+                    'RfqComponent',
+                    {
+                        tabName: tab.tabName,
+                        fileName: analysis.fileName,
+                        availableSheets: Object.keys(workbook.Sheets)
+                    }
+                );
+                return;
+            }
+
+            // Parse the topLeftCell (e.g., "A19" -> row 18, col 0)
+            // XLSX uses 0-based indexing, so A19 = row 18 (0-indexed)
+            let cellRef;
+            try {
+                cellRef = XLSX.utils.decode_cell(topLeftCell);
+            } catch (error) {
+                this.loggingService.logError(
+                    new Error(`Invalid cell reference: ${topLeftCell}`),
+                    'invalid_cell_reference',
+                    'RfqComponent',
+                    { topLeftCell, tabName: tab.tabName, fileName: analysis.fileName }
+                );
+                return;
+            }
+
+            const headerRow = cellRef.r;
+            const startCol = cellRef.c;
+
+            // Get the range of the worksheet
+            const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
+
+            // Extract all column headers from the header row starting from topLeftCell
+            const columnHeaders: string[] = [];
+            // Extend range to check more columns (up to column Z or beyond if needed)
+            const maxCol = Math.max(range.e.c, 25); // At least check up to column Z (25)
+
+            // Also check if we need to go beyond the detected range
+            // Try reading up to column N (13) or more to handle cases where range detection is limited
+            const extendedMaxCol = Math.max(maxCol, 13); // At least up to column N
+
+            // Read all columns, including potentially hidden ones
+            // Don't stop at first empty cell - continue until we find a sequence of empty cells
+            let emptyCellCount = 0;
+            const maxEmptyCells = 2; // Stop after 2 consecutive empty cells
+
+            for (let col = startCol; col <= extendedMaxCol; col++) {
+                const headerAddress = XLSX.utils.encode_cell({ r: headerRow, c: col });
+                const headerCell = worksheet[headerAddress];
+
+                // Check both .v (value) and .w (formatted text) properties
+                let cellValue: any = null;
+                if (headerCell) {
+                    cellValue = headerCell.v !== null && headerCell.v !== undefined ? headerCell.v :
+                        (headerCell.w !== null && headerCell.w !== undefined ? headerCell.w : null);
+                }
+
+                if (cellValue !== null && cellValue !== undefined) {
+                    const headerValue = String(cellValue).trim();
+                    if (headerValue) {
+                        columnHeaders.push(headerValue);
+                        emptyCellCount = 0; // Reset empty cell counter
+                    } else {
+                        emptyCellCount++;
+                        if (emptyCellCount >= maxEmptyCells) {
+                            break;
+                        }
+                    }
+                } else {
+                    emptyCellCount++;
+                    if (emptyCellCount >= maxEmptyCells) {
+                        break;
+                    }
+                }
+            }
+
+            // Log for debugging
+            this.loggingService.logUserAction('headers_extracted', {
+                fileName: analysis.fileName,
+                tabName: tab.tabName,
+                topLeftCell: topLeftCell,
+                headerRow: headerRow,
+                startCol: startCol,
+                columnCount: columnHeaders.length,
+                headers: columnHeaders,
+                worksheetRange: worksheet['!ref'],
+                extendedMaxCol: extendedMaxCol
+            }, 'RfqComponent');
+
+            // If no headers found, try a different approach - read cells directly
+            if (columnHeaders.length === 0) {
+                console.warn('No headers found with standard approach, trying alternative method');
+                // Try reading cells directly without relying on range
+                for (let col = 0; col <= 20; col++) { // Try up to column U
+                    const headerAddress = XLSX.utils.encode_cell({ r: headerRow, c: col });
+                    const headerCell = worksheet[headerAddress];
+                    if (headerCell) {
+                        const cellValue = headerCell.v !== null && headerCell.v !== undefined ? headerCell.v :
+                            (headerCell.w !== null && headerCell.w !== undefined ? headerCell.w : null);
+                        if (cellValue !== null && cellValue !== undefined) {
+                            const headerValue = String(cellValue).trim();
+                            if (headerValue) {
+                                columnHeaders.push(headerValue);
+                            }
+                        }
+                    }
+                }
+
+                // If we found headers with alternative method, log it
+                if (columnHeaders.length > 0) {
+                    this.loggingService.logUserAction('headers_extracted_alternative', {
+                        fileName: analysis.fileName,
+                        tabName: tab.tabName,
+                        topLeftCell: topLeftCell,
+                        columnCount: columnHeaders.length,
+                        headers: columnHeaders
+                    }, 'RfqComponent');
+                }
+            }
+
+            // Update the tab's column headers
+            tab.columnHeaders = columnHeaders;
+
+            // Re-run auto-select to update Product, Qty, Unit, Remark
+            const autoSelected = this.autoSelectColumns(columnHeaders);
+            if (autoSelected.product) {
+                tab.product = autoSelected.product;
+            }
+            if (autoSelected.qty) {
+                tab.qty = autoSelected.qty;
+            }
+            if (autoSelected.unit) {
+                tab.unit = autoSelected.unit;
+            }
+            if (autoSelected.remark) {
+                tab.remark = autoSelected.remark;
+            }
+
+            // Recalculate row count based on the new header row
+            // Find description column in the new headers
+            let descriptionColumn = -1;
+            for (let i = 0; i < columnHeaders.length; i++) {
+                const header = columnHeaders[i].toLowerCase().trim();
+                if (header.includes('description') ||
+                    header.includes('descrption') ||
+                    header.includes('product') ||
+                    header.includes('item') ||
+                    header.includes('name')) {
+                    descriptionColumn = startCol + i;
+                    break;
+                }
+            }
+
+            // Count data rows if we found a description column
+            if (descriptionColumn !== -1) {
+                let rowCount = 0;
+                for (let dataRow = headerRow + 1; dataRow <= range.e.r; dataRow++) {
+                    const descAddress = XLSX.utils.encode_cell({ r: dataRow, c: descriptionColumn });
+                    const descCell = worksheet[descAddress];
+                    const hasDescription = descCell && descCell.v !== null && descCell.v !== undefined && String(descCell.v).trim() !== '';
+                    if (hasDescription) {
+                        rowCount++;
+                    }
+                }
+                tab.rowCount = rowCount;
+            } else {
+                // If no description column found, count all non-empty rows after header
+                let rowCount = 0;
+                for (let dataRow = headerRow + 1; dataRow <= range.e.r; dataRow++) {
+                    let hasData = false;
+                    for (let col = startCol; col <= startCol + columnHeaders.length - 1 && col <= range.e.c; col++) {
+                        const cellAddress = XLSX.utils.encode_cell({ r: dataRow, c: col });
+                        const cell = worksheet[cellAddress];
+                        if (cell && cell.v !== null && cell.v !== undefined && String(cell.v).trim() !== '') {
+                            hasData = true;
+                            break;
+                        }
+                    }
+                    if (hasData) {
+                        rowCount++;
+                    } else {
+                        // Stop at first empty row
+                        break;
+                    }
+                }
+                tab.rowCount = rowCount;
+            }
+
+            this.loggingService.logUserAction('tab_reanalyzed', {
+                fileName: analysis.fileName,
+                tabName: tab.tabName,
+                topLeftCell: topLeftCell,
+                columnCount: columnHeaders.length,
+                rowCount: tab.rowCount
+            }, 'RfqComponent');
+
+            // Force change detection to update the UI
+            this.cdr.detectChanges();
+
+        } catch (error) {
+            this.loggingService.logError(
+                error as Error,
+                'tab_reanalysis_error',
+                'RfqComponent',
+                {
+                    fileName: analysis.fileName,
+                    tabName: tab.tabName,
+                    topLeftCell: topLeftCell
+                }
+            );
+        }
+    }
+
+    private readFileAsArrayBuffer(file: File): Promise<Uint8Array> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e: any) => {
+                try {
+                    resolve(new Uint8Array(e.target.result));
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
     removeFile(index: number): void {
         this.loggingService.logUserAction('file_removed', {
             fileName: this.fileAnalyses[index].fileName
@@ -634,6 +923,36 @@ export class RfqComponent {
         // Remove datalist when there's a value
         if (value && value.trim() !== '') {
             input.removeAttribute('list');
+
+            // Re-analyze the tab with the new topLeftCell value
+            // Find the file analysis that contains this tab
+            for (const analysis of this.fileAnalyses) {
+                if (analysis.tabs.includes(tab)) {
+                    // Call async method and handle any errors
+                    this.reanalyzeTabWithTopLeft(analysis, tab, value).catch(error => {
+                        console.error('Error re-analyzing tab:', error);
+                        this.loggingService.logError(
+                            error as Error,
+                            'tab_reanalysis_error',
+                            'RfqComponent',
+                            {
+                                fileName: analysis.fileName,
+                                tabName: tab.tabName,
+                                topLeftCell: value
+                            }
+                        );
+                    });
+                    break;
+                }
+            }
+        } else {
+            // If value is cleared, reset column headers and dropdowns
+            tab.columnHeaders = [];
+            tab.product = '';
+            tab.qty = '';
+            tab.unit = '';
+            tab.remark = '';
+            tab.rowCount = 0;
         }
     }
 
