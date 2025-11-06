@@ -87,7 +87,7 @@ export class RfqComponent {
         }
 
         this.errorMessage = '';
-        
+
         // Log file uploads
         excelFiles.forEach(file => {
             this.loggingService.logFileUpload(file.name, file.size, file.type, 'rfq', 'RfqComponent');
@@ -130,29 +130,29 @@ export class RfqComponent {
             reader.onload = (e: any) => {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { 
-                        type: 'array', 
+                    const workbook = XLSX.read(data, {
+                        type: 'array',
                         cellFormula: false,
                         cellHTML: false,
                         cellStyles: false,
                         sheetStubs: false
                     });
-                    
+
                     // Validate workbook structure
                     if (!workbook || (!workbook.Sheets && !workbook.SheetNames)) {
                         throw new Error('Invalid workbook structure - workbook, Sheets, or SheetNames missing');
                     }
-                    
+
                     const tabInfos: TabInfo[] = [];
-                    
+
                     // Get hidden sheet information from workbook properties
                     const hiddenSheets = new Set<string>();
-                    
+
                     // XLSX library stores hidden sheet info in workbook.Workbook.Sheets array
                     // Each sheet entry has a 'state' property: 'visible', 'hidden', or 'veryHidden'
                     if (workbook.Workbook && workbook.Workbook.Sheets) {
                         const sheets = workbook.Workbook.Sheets;
-                        
+
                         // Handle both array and object formats
                         if (Array.isArray(sheets)) {
                             sheets.forEach((sheet: any, index: number) => {
@@ -172,7 +172,7 @@ export class RfqComponent {
                                     hiddenSheets.add(name);
                                 }
                             });
-                            
+
                             // Also try matching by index
                             workbook.SheetNames.forEach((sheetName: string, index: number) => {
                                 const sheet = (sheets as any)[index] || (sheets as any)[index.toString()];
@@ -194,7 +194,7 @@ export class RfqComponent {
                             // Try alternative approach - access sheets directly by name
                             workbook.SheetNames.forEach(sheetName => {
                                 const isHidden = hiddenSheets.has(sheetName);
-                                
+
                                 // Skip hidden sheets (they won't be processed, but we'll show them with indication)
                                 // Actually, let's show them but mark them as hidden
                                 // Try to get worksheet - might work even if Sheets object looks empty
@@ -220,14 +220,15 @@ export class RfqComponent {
                                 }
 
                                 const datatableInfo = this.findDatatableInfo(worksheet);
+                                const autoSelected = this.autoSelectColumns(datatableInfo.columnHeaders);
                                 tabInfos.push({
                                     tabName: sheetName,
                                     rowCount: datatableInfo.rowCount,
                                     topLeftCell: datatableInfo.topLeftCell,
-                                    product: datatableInfo.product,
-                                    qty: datatableInfo.qty,
-                                    unit: datatableInfo.unit,
-                                    remark: datatableInfo.remark,
+                                    product: autoSelected.product || datatableInfo.product,
+                                    qty: autoSelected.qty || datatableInfo.qty,
+                                    unit: autoSelected.unit || datatableInfo.unit,
+                                    remark: autoSelected.remark || datatableInfo.remark,
                                     isHidden: isHidden,
                                     columnHeaders: datatableInfo.columnHeaders
                                 });
@@ -251,7 +252,7 @@ export class RfqComponent {
                             new Error('Workbook has no Sheets object or sheets are empty'),
                             'workbook_no_sheets',
                             'RfqComponent',
-                            { 
+                            {
                                 hasSheets: !!workbook.Sheets,
                                 sheetNames: workbook.SheetNames || [],
                                 sheetsKeys: workbook.Sheets ? Object.keys(workbook.Sheets) : [],
@@ -271,7 +272,7 @@ export class RfqComponent {
 
                     // Get all sheet names from Sheets object (they should match SheetNames)
                     const availableSheets = Object.keys(workbook.Sheets);
-                    
+
                     availableSheets.forEach(sheetName => {
                         // Skip metadata sheets (sheets starting with '!')
                         if (sheetName.startsWith('!')) {
@@ -279,7 +280,7 @@ export class RfqComponent {
                         }
 
                         const isHidden = hiddenSheets.has(sheetName);
-                        
+
                         // Don't skip hidden sheets - we'll show them but mark them as hidden
                         const worksheet = workbook.Sheets[sheetName];
                         if (!worksheet) {
@@ -301,14 +302,15 @@ export class RfqComponent {
                         }
 
                         const datatableInfo = this.findDatatableInfo(worksheet);
+                        const autoSelected = this.autoSelectColumns(datatableInfo.columnHeaders);
                         tabInfos.push({
                             tabName: sheetName,
                             rowCount: datatableInfo.rowCount,
                             topLeftCell: datatableInfo.topLeftCell,
-                            product: datatableInfo.product,
-                            qty: datatableInfo.qty,
-                            unit: datatableInfo.unit,
-                            remark: datatableInfo.remark,
+                            product: autoSelected.product || datatableInfo.product,
+                            qty: autoSelected.qty || datatableInfo.qty,
+                            unit: autoSelected.unit || datatableInfo.unit,
+                            remark: autoSelected.remark || datatableInfo.remark,
                             isHidden: isHidden,
                             columnHeaders: datatableInfo.columnHeaders
                         });
@@ -459,8 +461,8 @@ export class RfqComponent {
 
         // If we didn't find a header row, return default values
         if (headerRow === -1 || descriptionColumn === -1 || priceColumn === -1) {
-            return { 
-                rowCount: 0, 
+            return {
+                rowCount: 0,
                 topLeftCell: 'NOT FOUND',
                 product: '',
                 qty: '',
@@ -474,14 +476,14 @@ export class RfqComponent {
         // A row is counted if it has description data. Price can be 0, empty, or any value.
         let rowCount = 0;
         let firstDataRow = -1;
-        
+
         for (let dataRow = headerRow + 1; dataRow <= range.e.r; dataRow++) {
             const descAddress = XLSX.utils.encode_cell({ r: dataRow, c: descriptionColumn });
             const descCell = worksheet[descAddress];
 
             // Count rows that have description data (non-empty)
             const hasDescription = descCell && descCell.v !== null && descCell.v !== undefined && String(descCell.v).trim() !== '';
-            
+
             if (hasDescription) {
                 if (firstDataRow === -1) {
                     firstDataRow = dataRow;
@@ -586,6 +588,58 @@ export class RfqComponent {
             columnType: columnType,
             selectedValue: tab[columnType]
         }, 'RfqComponent');
+    }
+
+    private autoSelectColumns(columnHeaders: string[]): { product: string; qty: string; unit: string; remark: string } {
+        const result = { product: '', qty: '', unit: '', remark: '' };
+
+        // Create a case-insensitive lookup map
+        const headerMap = new Map<string, string>();
+        columnHeaders.forEach(header => {
+            headerMap.set(header.toLowerCase().trim(), header);
+        });
+
+        // Product: 'Product Name', 'Description'
+        const productOptions = ['Product Name', 'Description', 'Equipment Description'];
+        for (const option of productOptions) {
+            const found = headerMap.get(option.toLowerCase());
+            if (found) {
+                result.product = found;
+                break;
+            }
+        }
+
+        // Qty: 'Requested Qty', 'Quantity', 'Qty'
+        const qtyOptions = ['Requested Qty', 'Quantity', 'Qty'];
+        for (const option of qtyOptions) {
+            const found = headerMap.get(option.toLowerCase());
+            if (found) {
+                result.qty = found;
+                break;
+            }
+        }
+
+        // Unit: 'Unit Type', 'Unit', 'UOM', 'UN'
+        const unitOptions = ['Unit Type', 'Unit', 'UOM', 'UN'];
+        for (const option of unitOptions) {
+            const found = headerMap.get(option.toLowerCase());
+            if (found) {
+                result.unit = found;
+                break;
+            }
+        }
+
+        // Remark: 'Product No', 'Product No.', 'Remark', 'Impa'
+        const remarkOptions = ['Product No', 'Product No.', 'Remark', 'Remarks', 'Impa'];
+        for (const option of remarkOptions) {
+            const found = headerMap.get(option.toLowerCase());
+            if (found) {
+                result.remark = found;
+                break;
+            }
+        }
+
+        return result;
     }
 }
 
