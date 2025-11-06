@@ -805,9 +805,6 @@ export class RfqComponent {
                 rowCount: tab.rowCount
             }, 'RfqComponent');
 
-            // Update excluded state based on rowCount and topLeftCell
-            this.updateExcludedState(tab);
-
             // Force change detection to update the UI
             this.cdr.detectChanges();
 
@@ -932,9 +929,6 @@ export class RfqComponent {
         input.value = value;
         tab.topLeftCell = value;
 
-        // Update excluded state
-        this.updateExcludedState(tab);
-
         // Remove datalist when there's a value
         if (value && value.trim() !== '') {
             input.removeAttribute('list');
@@ -968,8 +962,6 @@ export class RfqComponent {
             tab.unit = '';
             tab.remark = '';
             tab.rowCount = 0;
-            // Update excluded state after clearing
-            this.updateExcludedState(tab);
         }
     }
 
