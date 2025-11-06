@@ -14,6 +14,7 @@ interface TabInfo {
     remark: string;
     isHidden: boolean;
     columnHeaders: string[];
+    excluded: boolean;
 }
 
 interface FileAnalysis {
@@ -245,13 +246,16 @@ export class RfqComponent {
                                         unit: '',
                                         remark: '',
                                         isHidden: true,
-                                        columnHeaders: []
+                                        columnHeaders: [],
+                                        excluded: true // Auto-exclude hidden sheets with no data
                                     });
                                     return;
                                 }
 
                                 const datatableInfo = this.findDatatableInfo(worksheet);
                                 const autoSelected = this.autoSelectColumns(datatableInfo.columnHeaders);
+                                // Auto-exclude if rowCount is 0 or topLeftCell is blank
+                                const shouldExclude = datatableInfo.rowCount === 0 || !datatableInfo.topLeftCell || datatableInfo.topLeftCell.trim() === '';
                                 tabInfos.push({
                                     tabName: sheetName,
                                     rowCount: datatableInfo.rowCount,
@@ -261,7 +265,8 @@ export class RfqComponent {
                                     unit: autoSelected.unit || datatableInfo.unit,
                                     remark: autoSelected.remark || datatableInfo.remark,
                                     isHidden: isHidden,
-                                    columnHeaders: datatableInfo.columnHeaders
+                                    columnHeaders: datatableInfo.columnHeaders,
+                                    excluded: shouldExclude
                                 });
                             });
 
@@ -326,7 +331,8 @@ export class RfqComponent {
                                     unit: '',
                                     remark: '',
                                     isHidden: true,
-                                    columnHeaders: []
+                                    columnHeaders: [],
+                                    excluded: true // Auto-exclude hidden sheets with no data
                                 });
                             }
                             return;
@@ -334,6 +340,8 @@ export class RfqComponent {
 
                         const datatableInfo = this.findDatatableInfo(worksheet);
                         const autoSelected = this.autoSelectColumns(datatableInfo.columnHeaders);
+                        // Auto-exclude if rowCount is 0 or topLeftCell is blank
+                        const shouldExclude = datatableInfo.rowCount === 0 || !datatableInfo.topLeftCell || datatableInfo.topLeftCell.trim() === '';
                         tabInfos.push({
                             tabName: sheetName,
                             rowCount: datatableInfo.rowCount,
@@ -343,7 +351,8 @@ export class RfqComponent {
                             unit: autoSelected.unit || datatableInfo.unit,
                             remark: autoSelected.remark || datatableInfo.remark,
                             isHidden: isHidden,
-                            columnHeaders: datatableInfo.columnHeaders
+                            columnHeaders: datatableInfo.columnHeaders,
+                            excluded: shouldExclude
                         });
                     });
 
@@ -796,6 +805,9 @@ export class RfqComponent {
                 rowCount: tab.rowCount
             }, 'RfqComponent');
 
+            // Update excluded state based on rowCount and topLeftCell
+            this.updateExcludedState(tab);
+
             // Force change detection to update the UI
             this.cdr.detectChanges();
 
@@ -920,6 +932,9 @@ export class RfqComponent {
         input.value = value;
         tab.topLeftCell = value;
 
+        // Update excluded state
+        this.updateExcludedState(tab);
+
         // Remove datalist when there's a value
         if (value && value.trim() !== '') {
             input.removeAttribute('list');
@@ -953,7 +968,21 @@ export class RfqComponent {
             tab.unit = '';
             tab.remark = '';
             tab.rowCount = 0;
+            // Update excluded state after clearing
+            this.updateExcludedState(tab);
         }
+    }
+
+    onExcludeChange(tab: TabInfo): void {
+        this.loggingService.logUserAction('exclude_toggled', {
+            tabName: tab.tabName,
+            excluded: tab.excluded
+        }, 'RfqComponent');
+    }
+
+    private updateExcludedState(tab: TabInfo): void {
+        // Auto-exclude if rowCount is 0 or topLeftCell is blank
+        tab.excluded = tab.rowCount === 0 || !tab.topLeftCell || tab.topLeftCell.trim() === '';
     }
 
     onTopLeftCellFocus(event: Event, fileIndex: number, tabIndex: number): void {

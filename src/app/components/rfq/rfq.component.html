@@ -59,6 +59,7 @@
                     <thead>
                         <tr>
                             <th>File Name</th>
+                            <th>Exclude</th>
                             <th>Tab Name</th>
                             <th>Top Left</th>
                             <th>#Rows</th>
@@ -72,10 +73,18 @@
                         <ng-container *ngFor="let analysis of fileAnalyses; let fileIndex = index">
                             <tr *ngFor="let tab of analysis.tabs; let isFirst = first; let tabIndex = index"
                                 [class.file-first-row]="isFirst"
+                                [class.excluded-row]="tab.excluded"
                                 [attr.data-file-index]="fileIndex"
                                 [attr.data-tab-index]="tabIndex">
                                 <td *ngIf="isFirst" [attr.rowspan]="analysis.tabs.length" class="file-name-cell" (click)="openFile(analysis)">
                                     {{ analysis.fileName }}
+                                </td>
+                                <td class="exclude-cell">
+                                    <input 
+                                        type="checkbox" 
+                                        [(ngModel)]="tab.excluded" 
+                                        (change)="onExcludeChange(tab)"
+                                        class="exclude-checkbox">
                                 </td>
                                 <td class="tab-name-cell" [class.hidden-tab]="tab.isHidden">
                                     {{ tab.tabName }}
@@ -89,6 +98,7 @@
                                         (blur)="validateTopLeftCell(tab)"
                                         (focus)="onTopLeftCellFocus($event, fileIndex, tabIndex)"
                                         [attr.list]="(!tab.topLeftCell || tab.topLeftCell.trim() === '') ? ('topLeftList-' + fileIndex + '-' + tabIndex) : null"
+                                        [disabled]="tab.excluded"
                                         class="top-left-input"
                                         placeholder="e.g., A1"
                                         maxlength="3"
@@ -99,28 +109,28 @@
                                 </td>
                                 <td class="row-count">{{ tab.rowCount }}</td>
                                 <td class="product-cell">
-                                    <select *ngIf="tab.topLeftCell && tab.topLeftCell.trim() !== '' && tab.rowCount > 0" [(ngModel)]="tab.product" (change)="onColumnChange(analysis, tab, 'product')" class="column-select">
+                                    <select *ngIf="tab.topLeftCell && tab.topLeftCell.trim() !== '' && tab.rowCount > 0" [(ngModel)]="tab.product" (change)="onColumnChange(analysis, tab, 'product')" [disabled]="tab.excluded" class="column-select">
                                         <option value="">-- Select --</option>
                                         <option *ngFor="let header of tab.columnHeaders" [value]="header">{{ header }}</option>
                                     </select>
                                     <span *ngIf="!tab.topLeftCell || tab.topLeftCell.trim() === '' || tab.rowCount === 0" class="no-dropdown-text">—</span>
                                 </td>
                                 <td class="qty-cell">
-                                    <select *ngIf="tab.topLeftCell && tab.topLeftCell.trim() !== '' && tab.rowCount > 0" [(ngModel)]="tab.qty" (change)="onColumnChange(analysis, tab, 'qty')" class="column-select">
+                                    <select *ngIf="tab.topLeftCell && tab.topLeftCell.trim() !== '' && tab.rowCount > 0" [(ngModel)]="tab.qty" (change)="onColumnChange(analysis, tab, 'qty')" [disabled]="tab.excluded" class="column-select">
                                         <option value="">-- Select --</option>
                                         <option *ngFor="let header of tab.columnHeaders" [value]="header">{{ header }}</option>
                                     </select>
                                     <span *ngIf="!tab.topLeftCell || tab.topLeftCell.trim() === '' || tab.rowCount === 0" class="no-dropdown-text">—</span>
                                 </td>
                                 <td class="unit-cell">
-                                    <select *ngIf="tab.topLeftCell && tab.topLeftCell.trim() !== '' && tab.rowCount > 0" [(ngModel)]="tab.unit" (change)="onColumnChange(analysis, tab, 'unit')" class="column-select">
+                                    <select *ngIf="tab.topLeftCell && tab.topLeftCell.trim() !== '' && tab.rowCount > 0" [(ngModel)]="tab.unit" (change)="onColumnChange(analysis, tab, 'unit')" [disabled]="tab.excluded" class="column-select">
                                         <option value="">-- Select --</option>
                                         <option *ngFor="let header of tab.columnHeaders" [value]="header">{{ header }}</option>
                                     </select>
                                     <span *ngIf="!tab.topLeftCell || tab.topLeftCell.trim() === '' || tab.rowCount === 0" class="no-dropdown-text">—</span>
                                 </td>
                                 <td class="remark-cell">
-                                    <select *ngIf="tab.topLeftCell && tab.topLeftCell.trim() !== '' && tab.rowCount > 0" [(ngModel)]="tab.remark" (change)="onColumnChange(analysis, tab, 'remark')" class="column-select">
+                                    <select *ngIf="tab.topLeftCell && tab.topLeftCell.trim() !== '' && tab.rowCount > 0" [(ngModel)]="tab.remark" (change)="onColumnChange(analysis, tab, 'remark')" [disabled]="tab.excluded" class="column-select">
                                         <option value="">-- Select --</option>
                                         <option *ngFor="let header of tab.columnHeaders" [value]="header">{{ header }}</option>
                                     </select>
