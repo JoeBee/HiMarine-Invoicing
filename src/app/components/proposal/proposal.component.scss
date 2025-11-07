@@ -620,7 +620,7 @@
 
                                 option {
                                     padding: 4px 8px;
-                                    
+
                                     &:hover {
                                         background-color: #e8f5e9;
                                     }
@@ -658,7 +658,7 @@
                             datalist {
                                 max-height: 120px;
                                 overflow-y: auto;
-                                
+
                                 option {
                                     padding: 4px 8px;
                                     font-family: monospace;
@@ -774,4 +774,5 @@
         }
     }
 }
+
 

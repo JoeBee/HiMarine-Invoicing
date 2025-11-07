@@ -1,0 +1,32 @@
+<div class="rfq-container" [ngClass]="{ 'eos-theme': rfqState.selectedCompany === 'EOS' }">
+    <div class="content-wrapper">
+        <h1>Request for Quotation (RFQ)</h1>
+
+        <div class="dropzone-container">
+            <div class="dropzone" [class.drag-over]="isDragOver" (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="fileInput.click()">
+                <div class="dropzone-content">
+                    <span class="upload-icon" aria-hidden="true">📋</span>
+                    <p class="dropzone-text">Captains Quotation Request</p>
+                    <p class="dropzone-subtext">Drop Excel files here or click to browse</p>
+                    <p class="dropzone-subtext">Only .xlsx, .xls, and .xlsm files are accepted</p>
+                    <p class="dropzone-subtext">Uploaded files populate the Proposal tab automatically</p>
+                </div>
+            </div>
+            <input #fileInput type="file" accept=".xlsx,.xls,.xlsm" multiple (change)="onFileSelected($event)"
+                style="display: none;">
+        </div>
+
+        <div *ngIf="rfqState.isProcessing" class="processing-status">
+            <div class="spinner"></div>
+            <p>Processing Excel files...</p>
+        </div>
+
+        <div *ngIf="rfqState.errorMessage" class="error-message">
+            <p>{{ rfqState.errorMessage }}</p>
+        </div>
+    </div>
+</div>
+
+
+

@@ -1,21 +1,6 @@
 <div class="rfq-container" [ngClass]="{ 'eos-theme': selectedCompany === 'EOS' }">
     <div class="content-wrapper">
-        <h1>Request for Quotation (RFQ)</h1>
-
-        <!-- Dropzone for Excel file upload -->
-        <div class="dropzone-container">
-            <div class="dropzone" [class.drag-over]="isDragOver" (dragover)="onDragOver($event)"
-                (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="fileInput.click()">
-                <div class="dropzone-content">
-                    <span class="upload-icon" aria-hidden="true">📋</span>
-                    <p class="dropzone-text">Captains Quotation Request</p>
-                    <p class="dropzone-subtext">Drop Excel files here or click to browse</p>
-                    <p class="dropzone-subtext">Only .xlsx, .xls, and .xlsm files are accepted</p>
-                </div>
-            </div>
-            <input #fileInput type="file" accept=".xlsx,.xls,.xlsm" multiple (change)="onFileSelected($event)"
-                style="display: none;">
-        </div>
+        <h1>Proposal</h1>
 
         <!-- Company Selection -->
         <div class="company-selection">
@@ -259,9 +244,9 @@
                                     {{ analysis.fileName }}
                                 </td>
                                 <td class="exclude-cell">
-                                    <input 
-                                        type="checkbox" 
-                                        [(ngModel)]="tab.excluded" 
+                                    <input
+                                        type="checkbox"
+                                        [(ngModel)]="tab.excluded"
                                         (change)="onExcludeChange(tab)"
                                         class="exclude-checkbox">
                                 </td>
@@ -270,9 +255,9 @@
                                     <span *ngIf="tab.isHidden" class="hidden-label">(Hidden)</span>
                                 </td>
                                 <td class="top-left-cell">
-                                    <input 
-                                        type="text" 
-                                        [(ngModel)]="tab.topLeftCell" 
+                                    <input
+                                        type="text"
+                                        [(ngModel)]="tab.topLeftCell"
                                         (input)="onTopLeftCellChange($event, tab)"
                                         (blur)="validateTopLeftCell(tab)"
                                         (focus)="onTopLeftCellFocus($event, fileIndex, tabIndex)"
@@ -323,4 +308,5 @@
         </div>
     </div>
 </div>
+
 

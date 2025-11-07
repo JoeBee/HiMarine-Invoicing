@@ -8,6 +8,12 @@
             <a (click)="onMainTabClick('history')" [class.active]="activeMainTab === 'history'">&#x23F3; History</a>
         </nav>
 
+        <!-- Sub Navigation Row - RFQ -->
+        <nav class="nav-tabs sub-nav" *ngIf="activeMainTab === 'rfq'">
+            <a routerLink="/rfq/captains-request" routerLinkActive="active">Captains Request</a>
+            <a routerLink="/rfq/proposal" routerLinkActive="active">Proposal</a>
+        </nav>
+
         <!-- Sub Navigation Row - Suppliers -->
         <nav class="nav-tabs sub-nav" *ngIf="activeMainTab === 'suppliers'">
             <a routerLink="/suppliers/supplier-docs" routerLinkActive="active">Supplier Docs</a>

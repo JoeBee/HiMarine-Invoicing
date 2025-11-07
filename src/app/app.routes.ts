@@ -44,7 +44,16 @@ export const routes: Routes = [
     },
     {
         path: 'rfq',
-        loadComponent: () => import('./components/rfq/rfq.component').then(m => m.RfqComponent)
+        redirectTo: '/rfq/captains-request',
+        pathMatch: 'full'
+    },
+    {
+        path: 'rfq/captains-request',
+        loadComponent: () => import('./components/captains-request/captains-request.component').then(m => m.RfqCaptainsRequestComponent)
+    },
+    {
+        path: 'rfq/proposal',
+        loadComponent: () => import('./components/proposal/proposal.component').then(m => m.ProposalComponent)
     }
 ];
 

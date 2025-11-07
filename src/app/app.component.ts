@@ -51,7 +51,7 @@ export class AppComponent {
         } else if (tab === 'invoicing') {
             this.router.navigate(['/invoicing/captains-order']);
         } else if (tab === 'rfq') {
-            this.router.navigate(['/rfq']);
+            this.router.navigate(['/rfq/captains-request']);
         } else if (tab === 'history') {
             this.router.navigate(['/history']);
         }
