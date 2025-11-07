@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RfqStateService } from '../../services/rfq-state.service';
 
 @Component({
     selector: 'app-rfq-captains-request',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, FormsModule],
     templateUrl: './captains-request.component.html',
     styleUrls: ['../proposal/proposal.component.scss']
 })
