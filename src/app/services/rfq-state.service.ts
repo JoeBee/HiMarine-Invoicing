@@ -24,6 +24,18 @@ export interface FileAnalysis {
     file: File;
 }
 
+export interface ProposalItem {
+    pos: number;
+    fileName: string;
+    tabName: string;
+    description: string;
+    remark: string;
+    unit: string;
+    qty: string;
+    price?: string;
+    total?: string;
+}
+
 export interface RfqData {
     // Our Company Details
     ourCompanyName: string;
@@ -197,6 +209,9 @@ export class RfqStateService {
         'COLUMN G', 'COLUMN H', 'COLUMN I', 'COLUMN J', 'COLUMN K', 'COLUMN L'
     ];
 
+    proposalItems: ProposalItem[] = [];
+    private proposalRefreshToken = 0;
+
     constructor(private readonly loggingService: LoggingService) {
         this.onCompanySelectionChange();
     }
@@ -239,6 +254,7 @@ export class RfqStateService {
                 const analysis = await this.analyzeExcelFile(file);
                 this.fileAnalyses.push(analysis);
             }
+            await this.refreshProposalPreview();
         } catch (error) {
             this.errorMessage = 'Error processing Excel files. Please ensure they are valid Excel files.';
             this.loggingService.logError(
@@ -555,6 +571,8 @@ export class RfqStateService {
             this.updateExcludedState(tab);
             tab.excluded = previousExcludedState;
 
+            await this.refreshProposalPreview();
+
             this.loggingService.logUserAction('tab_reanalyzed', {
                 fileName: analysis.fileName,
                 tabName: tab.tabName,
@@ -609,6 +627,8 @@ export class RfqStateService {
 
         this.uploadedFiles = [];
         this.fileAnalyses = [];
+        this.proposalItems = [];
+        this.proposalRefreshToken++;
     }
 
     canCreateRFQs(): boolean {
@@ -662,6 +682,106 @@ export class RfqStateService {
             } else {
                 void this.createHIMarineWorkbook(analysis, tab);
             }
+        }
+    }
+
+    private isTabReadyForProposal(tab: TabInfo): boolean {
+        return !!tab.product && tab.product.trim() !== '' &&
+            !!tab.qty && tab.qty.trim() !== '' &&
+            !!tab.unit && tab.unit.trim() !== '' &&
+            !!tab.remark && tab.remark.trim() !== '';
+    }
+
+    private getCellString(worksheet: XLSX.WorkSheet, row: number, col: number): string {
+        const cell = worksheet[XLSX.utils.encode_cell({ r: row, c: col })];
+        if (!cell || cell.v === undefined || cell.v === null) {
+            return '';
+        }
+        return String(cell.v).trim();
+    }
+
+    private async refreshProposalPreview(): Promise<void> {
+        const refreshId = ++this.proposalRefreshToken;
+
+        if (!this.canCreateRFQs()) {
+            if (refreshId === this.proposalRefreshToken) {
+                this.proposalItems = [];
+            }
+            return;
+        }
+
+        const items: ProposalItem[] = [];
+        let position = 1;
+
+        for (const analysis of this.fileAnalyses) {
+            const eligibleTabs = analysis.tabs.filter(tab => !tab.excluded && this.isTabReadyForProposal(tab));
+            if (eligibleTabs.length === 0) {
+                continue;
+            }
+
+            const fileData = await this.readFileAsArrayBuffer(analysis.file);
+            const workbook = XLSX.read(fileData, {
+                type: 'array',
+                cellFormula: false,
+                cellHTML: false,
+                cellStyles: false,
+                sheetStubs: false,
+                cellText: true,
+                cellDates: true
+            });
+
+            for (const tab of eligibleTabs) {
+                const worksheet = workbook.Sheets[tab.tabName];
+                if (!worksheet) {
+                    continue;
+                }
+
+                const cellRef = XLSX.utils.decode_cell(tab.topLeftCell);
+                const headerRow = cellRef.r;
+                const startCol = cellRef.c;
+                const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
+
+                const productCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.product);
+                const qtyCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.qty);
+                const unitCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.unit);
+                const remarkCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.remark);
+
+                if ([productCol, qtyCol, unitCol, remarkCol].some(index => index === -1)) {
+                    continue;
+                }
+
+                for (let row = headerRow + 1; row <= range.e.r; row++) {
+                    const description = this.getCellString(worksheet, row, productCol);
+                    const qty = this.getCellString(worksheet, row, qtyCol);
+                    const unit = this.getCellString(worksheet, row, unitCol);
+                    const remark = this.getCellString(worksheet, row, remarkCol);
+
+                    const hasAnyValue = description !== '' || qty !== '' || unit !== '' || remark !== '';
+                    if (!hasAnyValue) {
+                        break;
+                    }
+
+                    if (description === '') {
+                        continue;
+                    }
+
+                    items.push({
+                        pos: position++,
+                        fileName: analysis.fileName,
+                        tabName: tab.tabName,
+                        description,
+                        remark,
+                        unit,
+                        qty,
+                        price: '',
+                        total: ''
+                    });
+                }
+            }
+        }
+
+        if (refreshId === this.proposalRefreshToken) {
+            this.proposalItems = items;
         }
     }
 
@@ -1303,6 +1423,8 @@ export class RfqStateService {
             columnType: columnType,
             selectedValue: tab[columnType]
         }, 'RfqStateService');
+
+        void this.refreshProposalPreview();
     }
 
     getTopLeftCellOptions(): string[] {
@@ -1371,6 +1493,8 @@ export class RfqStateService {
             tabName: tab.tabName,
             excluded: tab.excluded
         }, 'RfqStateService');
+
+        void this.refreshProposalPreview();
     }
 
     private updateExcludedState(tab: TabInfo): void {

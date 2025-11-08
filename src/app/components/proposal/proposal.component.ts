@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FileAnalysis, RfqData, RfqStateService, TabInfo } from '../../services/rfq-state.service';
+import { ProposalItem, RfqData, RfqStateService } from '../../services/rfq-state.service';
 
 @Component({
     selector: 'app-proposal',
@@ -47,10 +47,6 @@ export class ProposalComponent implements OnInit {
         return this.rfqState.availablePorts;
     }
 
-    get fileAnalyses(): FileAnalysis[] {
-        return this.rfqState.fileAnalyses;
-    }
-
     onExportFileNameChange(): void {
         // Allow manual override but keep value in sync for potential future use.
         this.exportFileName = (this.exportFileName || '').trim();
@@ -66,10 +62,6 @@ export class ProposalComponent implements OnInit {
         this.updateExportFileName();
     }
 
-    clearAllFiles(): void {
-        this.rfqState.clearAllFiles();
-    }
-
     canCreateRFQs(): boolean {
         return this.rfqState.canCreateRFQs();
     }
@@ -78,36 +70,12 @@ export class ProposalComponent implements OnInit {
         this.rfqState.createRFQs();
     }
 
-    openFile(analysis: FileAnalysis): void {
-        this.rfqState.openFile(analysis);
-    }
-
-    onExcludeChange(tab: TabInfo): void {
-        this.rfqState.onExcludeChange(tab);
-    }
-
-    onColumnChange(analysis: FileAnalysis, tab: TabInfo, columnType: 'product' | 'qty' | 'unit' | 'remark'): void {
-        this.rfqState.onColumnChange(analysis, tab, columnType);
-    }
-
-    getTopLeftCellOptionsLimited(): string[] {
-        return this.rfqState.getTopLeftCellOptionsLimited();
-    }
-
-    onTopLeftCellChange(event: Event, tab: TabInfo): void {
-        this.rfqState.onTopLeftCellChange(event, tab);
-    }
-
-    validateTopLeftCell(tab: TabInfo): void {
-        this.rfqState.validateTopLeftCell(tab);
-    }
-
-    onTopLeftCellFocus(event: Event, fileIndex: number, tabIndex: number): void {
-        this.rfqState.onTopLeftCellFocus(event, fileIndex, tabIndex);
-    }
-
     onProposalDetailChange(): void {
         this.updateExportFileName();
+    }
+
+    get proposalItems(): ProposalItem[] {
+        return this.rfqState.proposalItems;
     }
 
     private updateExportFileName(): void {

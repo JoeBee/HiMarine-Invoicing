@@ -276,6 +276,54 @@
         }
     }
 
+    .items-section {
+        margin-bottom: 30px;
+
+        &.eos-theme {
+            .items-table {
+                th {
+                    background-color: #0B2E66;
+                }
+            }
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+
+            th,
+            td {
+                border: 1px solid #000;
+                padding: 8px;
+                text-align: left;
+                font-size: 14px;
+            }
+
+            th {
+                background-color: #808080;
+                color: #ffffff;
+                font-weight: bold;
+                text-align: center;
+            }
+
+            td {
+                background-color: white;
+
+                &:first-child,
+                &:nth-child(2) {
+                    text-align: center;
+                }
+
+                &:nth-child(6),
+                &:nth-child(7),
+                &:nth-child(8) {
+                    text-align: right;
+                }
+            }
+        }
+    }
+
     .processing-status {
         text-align: center;
         margin: 30px 0;

@@ -262,6 +262,35 @@
             <p>{{ errorMessage }}</p>
         </div>
 
+        <div *ngIf="proposalItems.length > 0" class="items-section" [ngClass]="{ 'eos-theme': selectedCompany === 'EOS' }">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Pos</th>
+                        <th>Tab</th>
+                        <th>Description</th>
+                        <th>Remark</th>
+                        <th>Unit</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of proposalItems">
+                        <td>{{ item.pos }}</td>
+                        <td>{{ item.tabName }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.remark }}</td>
+                        <td>{{ item.unit }}</td>
+                        <td>{{ item.qty }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>{{ item.total }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
         <div class="bottom-section">
             <img
                 [src]="selectedCompany === 'EOS' ? 'assets/images/EosSupplyLtdBottomBorder.png' : 'assets/images/HIMarineBottomBorder.png'"
