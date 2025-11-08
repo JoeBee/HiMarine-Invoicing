@@ -496,6 +496,14 @@
                             border-right: none;
                         }
                     }
+
+                    th:nth-child(6),
+                    th:nth-child(7),
+                    th:nth-child(8),
+                    th:nth-child(9) {
+                        background: #d6ecff;
+                        color: #023a73;
+                    }
                 }
 
                 tbody {
@@ -517,6 +525,13 @@
                         td {
                             padding: 12px 18px;
                             vertical-align: middle;
+
+                            &.product-cell,
+                            &.qty-cell,
+                            &.unit-cell,
+                            &.remark-cell {
+                                background-color: #f1f7ff;
+                            }
 
                             &.file-name-cell {
                                 font-weight: 600;
@@ -549,6 +564,10 @@
                                     border-color: #0066cc;
                                     box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
                                 }
+                            }
+
+                            .column-select {
+                                background-color: #ffffff;
                             }
                         }
                     }

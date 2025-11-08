@@ -89,32 +89,28 @@
                                 </td>
                                 <td class="row-count">{{ tab.rowCount }}</td>
                                 <td class="product-cell">
-                                    <select *ngIf="tab.topLeftCell && tab.topLeftCell.trim() !== '' && tab.rowCount > 0" [(ngModel)]="tab.product" (change)="rfqState.onColumnChange(analysis, tab, 'product')" [disabled]="tab.excluded" class="column-select">
+                                    <select [(ngModel)]="tab.product" (change)="rfqState.onColumnChange(analysis, tab, 'product')" [disabled]="tab.excluded" class="column-select">
                                         <option value="">-- Select --</option>
-                                        <option *ngFor="let header of tab.columnHeaders" [value]="header">{{ header }}</option>
+                                        <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">{{ header }}</option>
                                     </select>
-                                    <span *ngIf="!tab.topLeftCell || tab.topLeftCell.trim() === '' || tab.rowCount === 0" class="no-dropdown-text">—</span>
                                 </td>
                                 <td class="qty-cell">
-                                    <select *ngIf="tab.topLeftCell && tab.topLeftCell.trim() !== '' && tab.rowCount > 0" [(ngModel)]="tab.qty" (change)="rfqState.onColumnChange(analysis, tab, 'qty')" [disabled]="tab.excluded" class="column-select">
+                                    <select [(ngModel)]="tab.qty" (change)="rfqState.onColumnChange(analysis, tab, 'qty')" [disabled]="tab.excluded" class="column-select">
                                         <option value="">-- Select --</option>
-                                        <option *ngFor="let header of tab.columnHeaders" [value]="header">{{ header }}</option>
+                                        <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">{{ header }}</option>
                                     </select>
-                                    <span *ngIf="!tab.topLeftCell || tab.topLeftCell.trim() === '' || tab.rowCount === 0" class="no-dropdown-text">—</span>
                                 </td>
                                 <td class="unit-cell">
-                                    <select *ngIf="tab.topLeftCell && tab.topLeftCell.trim() !== '' && tab.rowCount > 0" [(ngModel)]="tab.unit" (change)="rfqState.onColumnChange(analysis, tab, 'unit')" [disabled]="tab.excluded" class="column-select">
+                                    <select [(ngModel)]="tab.unit" (change)="rfqState.onColumnChange(analysis, tab, 'unit')" [disabled]="tab.excluded" class="column-select">
                                         <option value="">-- Select --</option>
-                                        <option *ngFor="let header of tab.columnHeaders" [value]="header">{{ header }}</option>
+                                        <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">{{ header }}</option>
                                     </select>
-                                    <span *ngIf="!tab.topLeftCell || tab.topLeftCell.trim() === '' || tab.rowCount === 0" class="no-dropdown-text">—</span>
                                 </td>
                                 <td class="remark-cell">
-                                    <select *ngIf="tab.topLeftCell && tab.topLeftCell.trim() !== '' && tab.rowCount > 0" [(ngModel)]="tab.remark" (change)="rfqState.onColumnChange(analysis, tab, 'remark')" [disabled]="tab.excluded" class="column-select">
+                                    <select [(ngModel)]="tab.remark" (change)="rfqState.onColumnChange(analysis, tab, 'remark')" [disabled]="tab.excluded" class="column-select">
                                         <option value="">-- Select --</option>
-                                        <option *ngFor="let header of tab.columnHeaders" [value]="header">{{ header }}</option>
+                                        <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">{{ header }}</option>
                                     </select>
-                                    <span *ngIf="!tab.topLeftCell || tab.topLeftCell.trim() === '' || tab.rowCount === 0" class="no-dropdown-text">—</span>
                                 </td>
                             </tr>
                         </ng-container>

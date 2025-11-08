@@ -192,6 +192,11 @@ export class RfqStateService {
         'Lebanon': ['Beirut', 'Tripoli']
     };
 
+    private readonly fallbackColumnOptions = [
+        'COLUMN A', 'COLUMN B', 'COLUMN C', 'COLUMN D', 'COLUMN E', 'COLUMN F',
+        'COLUMN G', 'COLUMN H', 'COLUMN I', 'COLUMN J', 'COLUMN K', 'COLUMN L'
+    ];
+
     constructor(private readonly loggingService: LoggingService) {
         this.onCompanySelectionChange();
     }
@@ -374,10 +379,12 @@ export class RfqStateService {
             for (let col = startCol; col <= range.e.c; col++) {
                 const cellAddress = XLSX.utils.encode_cell({ r: headerRow, c: col });
                 const cell = worksheet[cellAddress];
-                if (cell && cell.v !== undefined && cell.v !== null && cell.v !== '') {
-                    columnHeaders.push(String(cell.v).trim());
-                } else {
-                    break;
+
+                if (cell && cell.v !== undefined && cell.v !== null) {
+                    const value = String(cell.v).trim();
+                    if (value !== '') {
+                        columnHeaders.push(value);
+                    }
                 }
             }
         }
@@ -496,6 +503,8 @@ export class RfqStateService {
 
     async reanalyzeTabWithTopLeft(analysis: FileAnalysis, tab: TabInfo, topLeftCell: string): Promise<void> {
         try {
+            const previousExcludedState = tab.excluded;
+
             const fileData = await this.readFileAsArrayBuffer(analysis.file);
             const workbook = XLSX.read(fileData, {
                 type: 'array',
@@ -518,13 +527,15 @@ export class RfqStateService {
             const startCol = cellRef.c;
 
             const columnHeaders: string[] = [];
+
             for (let col = startCol; col <= range.e.c; col++) {
                 const cellAddress = XLSX.utils.encode_cell({ r: headerRow, c: col });
                 const cell = worksheet[cellAddress];
-                if (cell && cell.v !== undefined && cell.v !== null && cell.v !== '') {
-                    columnHeaders.push(String(cell.v).trim());
-                } else {
-                    break;
+                if (cell && cell.v !== undefined && cell.v !== null) {
+                    const value = String(cell.v).trim();
+                    if (value !== '') {
+                        columnHeaders.push(value);
+                    }
                 }
             }
 
@@ -542,6 +553,7 @@ export class RfqStateService {
             tab.rowCount = this.countDataRows(worksheet, tab, updatedRange);
 
             this.updateExcludedState(tab);
+            tab.excluded = previousExcludedState;
 
             this.loggingService.logUserAction('tab_reanalyzed', {
                 fileName: analysis.fileName,
@@ -1303,6 +1315,15 @@ export class RfqStateService {
 
     getTopLeftCellOptionsLimited(): string[] {
         return this.getTopLeftCellOptions().slice(0, 10);
+    }
+
+    getColumnOptions(tab: TabInfo): string[] {
+        const headers = (tab.columnHeaders ?? []).map(header => header.trim()).filter(Boolean);
+
+        const normalizedHeaders = new Set(headers.map(header => header.toLowerCase()));
+        const fallback = this.fallbackColumnOptions.filter(option => !normalizedHeaders.has(option.toLowerCase()));
+
+        return [...headers, ...fallback];
     }
 
     onTopLeftCellChange(event: Event, tab: TabInfo): void {
