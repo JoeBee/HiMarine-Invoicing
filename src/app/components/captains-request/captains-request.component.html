@@ -30,11 +30,7 @@
             <div class="results-header">
                 <h2>File Analysis Results</h2>
                 <div class="header-actions">
-                    <div class="header-buttons">
-                        <button class="clear-button" (click)="rfqState.clearAllFiles()">Clear All Files</button>
-                        <button class="create-rfq-button" (click)="rfqState.createRFQs()" [disabled]="!rfqState.canCreateRFQs()">Create RFQs</button>
-                    </div>
-                    <p class="help-text">Create RFQs is disabled if there is no data or all four relevant columns have not been identified and tab has not been excluded</p>
+                    <button class="clear-button" (click)="rfqState.clearAllFiles()">Clear All Files</button>
                 </div>
             </div>
 
