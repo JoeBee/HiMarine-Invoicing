@@ -47,6 +47,7 @@
                             <th>Qty</th>
                             <th>Unit</th>
                             <th>Remark</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -111,6 +112,14 @@
                                         <option value="">-- Select --</option>
                                         <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">{{ header }}</option>
                                     </select>
+                                </td>
+                                <td class="status-cell">
+                                    <ng-container *ngIf="rfqState.isTabReady(tab); else statusIncomplete">
+                                        <span class="status-icon ready" aria-label="Ready to generate table">✔</span>
+                                    </ng-container>
+                                    <ng-template #statusIncomplete>
+                                        <span class="status-icon not-ready" aria-label="Missing required selections">✖</span>
+                                    </ng-template>
                                 </td>
                             </tr>
                         </ng-container>

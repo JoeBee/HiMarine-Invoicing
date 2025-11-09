@@ -36,6 +36,13 @@ export interface ProposalItem {
     total?: string;
 }
 
+export interface ProposalTable {
+    fileName: string;
+    tabName: string;
+    rowCount: number;
+    items: ProposalItem[];
+}
+
 export interface RfqData {
     // Our Company Details
     ourCompanyName: string;
@@ -210,6 +217,7 @@ export class RfqStateService {
     ];
 
     proposalItems: ProposalItem[] = [];
+    proposalTables: ProposalTable[] = [];
     private proposalRefreshToken = 0;
 
     constructor(private readonly loggingService: LoggingService) {
@@ -628,7 +636,23 @@ export class RfqStateService {
         this.uploadedFiles = [];
         this.fileAnalyses = [];
         this.proposalItems = [];
+        this.proposalTables = [];
         this.proposalRefreshToken++;
+    }
+
+    isTabReady(tab: TabInfo): boolean {
+        if (tab.excluded) {
+            return false;
+        }
+
+        const hasTopLeft = !!tab.topLeftCell && tab.topLeftCell.trim() !== '';
+        const hasRows = tab.rowCount > 0;
+        const hasProduct = !!tab.product && tab.product.trim() !== '';
+        const hasQty = !!tab.qty && tab.qty.trim() !== '';
+        const hasUnit = !!tab.unit && tab.unit.trim() !== '';
+        const hasRemark = !!tab.remark && tab.remark.trim() !== '';
+
+        return hasTopLeft && hasRows && hasProduct && hasQty && hasUnit && hasRemark;
     }
 
     canCreateRFQs(): boolean {
@@ -650,10 +674,7 @@ export class RfqStateService {
         }
 
         for (const { tab } of nonExcludedTabs) {
-            if (!tab.product || tab.product.trim() === '' ||
-                !tab.qty || tab.qty.trim() === '' ||
-                !tab.unit || tab.unit.trim() === '' ||
-                !tab.remark || tab.remark.trim() === '') {
+            if (!this.isTabReady(tab)) {
                 return false;
             }
         }
@@ -685,13 +706,6 @@ export class RfqStateService {
         }
     }
 
-    private isTabReadyForProposal(tab: TabInfo): boolean {
-        return !!tab.product && tab.product.trim() !== '' &&
-            !!tab.qty && tab.qty.trim() !== '' &&
-            !!tab.unit && tab.unit.trim() !== '' &&
-            !!tab.remark && tab.remark.trim() !== '';
-    }
-
     private getCellString(worksheet: XLSX.WorkSheet, row: number, col: number): string {
         const cell = worksheet[XLSX.utils.encode_cell({ r: row, c: col })];
         if (!cell || cell.v === undefined || cell.v === null) {
@@ -703,19 +717,12 @@ export class RfqStateService {
     private async refreshProposalPreview(): Promise<void> {
         const refreshId = ++this.proposalRefreshToken;
 
-        if (!this.canCreateRFQs()) {
-            if (refreshId === this.proposalRefreshToken) {
-                this.proposalItems = [];
-            }
-            return;
-        }
-
-        const items: ProposalItem[] = [];
-        let position = 1;
+        const tables: ProposalTable[] = [];
+        const flatItems: ProposalItem[] = [];
 
         for (const analysis of this.fileAnalyses) {
-            const eligibleTabs = analysis.tabs.filter(tab => !tab.excluded && this.isTabReadyForProposal(tab));
-            if (eligibleTabs.length === 0) {
+            const readyTabs = analysis.tabs.filter(tab => this.isTabReady(tab));
+            if (readyTabs.length === 0) {
                 continue;
             }
 
@@ -730,7 +737,7 @@ export class RfqStateService {
                 cellDates: true
             });
 
-            for (const tab of eligibleTabs) {
+            for (const tab of readyTabs) {
                 const worksheet = workbook.Sheets[tab.tabName];
                 if (!worksheet) {
                     continue;
@@ -750,6 +757,9 @@ export class RfqStateService {
                     continue;
                 }
 
+                const tableItems: ProposalItem[] = [];
+                let position = 1;
+
                 for (let row = headerRow + 1; row <= range.e.r; row++) {
                     const description = this.getCellString(worksheet, row, productCol);
                     const qty = this.getCellString(worksheet, row, qtyCol);
@@ -765,7 +775,7 @@ export class RfqStateService {
                         continue;
                     }
 
-                    items.push({
+                    const item: ProposalItem = {
                         pos: position++,
                         fileName: analysis.fileName,
                         tabName: tab.tabName,
@@ -775,13 +785,31 @@ export class RfqStateService {
                         qty,
                         price: '',
                         total: ''
+                    };
+
+                    tableItems.push(item);
+                    flatItems.push({ ...item });
+                }
+
+                if (tableItems.length > 0) {
+                    tables.push({
+                        fileName: analysis.fileName,
+                        tabName: tab.tabName,
+                        rowCount: tableItems.length,
+                        items: tableItems
                     });
                 }
             }
         }
 
         if (refreshId === this.proposalRefreshToken) {
-            this.proposalItems = items;
+            if (tables.length === 0) {
+                this.proposalItems = [];
+                this.proposalTables = [];
+            } else {
+                this.proposalItems = flatItems;
+                this.proposalTables = tables;
+            }
         }
     }
 
@@ -812,7 +840,19 @@ export class RfqStateService {
             const productCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.product);
             const qtyCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.qty);
             const unitCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.unit);
-            const remarkCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.remark);
+            const remarkCol = tab.remark && tab.remark.trim() !== ''
+                ? this.findColumnIndex(worksheet, headerRow, startCol, tab.remark)
+                : -1;
+
+            if ([productCol, qtyCol, unitCol].some(index => index === -1)) {
+                console.error('Missing required column mapping for EOS workbook export', {
+                    productCol,
+                    qtyCol,
+                    unitCol,
+                    remarkCol
+                });
+                return;
+            }
 
             const dataRows: any[] = [];
             for (let row = headerRow + 1; row <= range.e.r; row++) {
@@ -821,7 +861,9 @@ export class RfqStateService {
                 if (productValue && String(productValue).trim() !== '') {
                     const qtyValue = worksheet[XLSX.utils.encode_cell({ r: row, c: qtyCol })]?.v || '';
                     const unitValue = worksheet[XLSX.utils.encode_cell({ r: row, c: unitCol })]?.v || '';
-                    const remarkValue = worksheet[XLSX.utils.encode_cell({ r: row, c: remarkCol })]?.v || '';
+                    const remarkValue = remarkCol !== -1
+                        ? worksheet[XLSX.utils.encode_cell({ r: row, c: remarkCol })]?.v || ''
+                        : '';
 
                     dataRows.push({
                         description: String(productValue).trim(),
@@ -1032,7 +1074,19 @@ export class RfqStateService {
             const productCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.product);
             const qtyCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.qty);
             const unitCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.unit);
-            const remarkCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.remark);
+            const remarkCol = tab.remark && tab.remark.trim() !== ''
+                ? this.findColumnIndex(worksheet, headerRow, startCol, tab.remark)
+                : -1;
+
+            if ([productCol, qtyCol, unitCol].some(index => index === -1)) {
+                console.error('Missing required column mapping for HI Marine workbook export', {
+                    productCol,
+                    qtyCol,
+                    unitCol,
+                    remarkCol
+                });
+                return;
+            }
 
             const dataRows: any[] = [];
             for (let row = headerRow + 1; row <= range.e.r; row++) {
@@ -1041,7 +1095,9 @@ export class RfqStateService {
                 if (productValue && String(productValue).trim() !== '') {
                     const qtyValue = worksheet[XLSX.utils.encode_cell({ r: row, c: qtyCol })]?.v || '';
                     const unitValue = worksheet[XLSX.utils.encode_cell({ r: row, c: unitCol })]?.v || '';
-                    const remarkValue = worksheet[XLSX.utils.encode_cell({ r: row, c: remarkCol })]?.v || '';
+                    const remarkValue = remarkCol !== -1
+                        ? worksheet[XLSX.utils.encode_cell({ r: row, c: remarkCol })]?.v || ''
+                        : '';
 
                     dataRows.push({
                         description: String(productValue).trim(),

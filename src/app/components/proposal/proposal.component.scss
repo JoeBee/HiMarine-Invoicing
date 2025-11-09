@@ -285,6 +285,10 @@
                     background-color: #0B2E66;
                 }
             }
+
+            .proposal-table .proposal-details summary {
+                background: linear-gradient(90deg, #0B2E66, #0A2550);
+            }
         }
 
         .items-table {
@@ -320,6 +324,74 @@
                 &:nth-child(8) {
                     text-align: right;
                 }
+            }
+        }
+
+        .proposal-table {
+            margin-bottom: 24px;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+
+            .proposal-details {
+                border: 1px solid #dee2e6;
+                border-radius: 10px;
+                background-color: #ffffff;
+                overflow: hidden;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+
+                summary {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 12px;
+                    align-items: center;
+                    margin: 0;
+                    padding: 14px 20px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    background: linear-gradient(90deg, #0066cc, #0052a3);
+                    color: #ffffff;
+                    cursor: pointer;
+                    list-style: none;
+                    position: relative;
+
+                    &::-webkit-details-marker {
+                        display: none;
+                    }
+
+                    &::after {
+                        content: '▾';
+                        margin-left: auto;
+                        font-size: 18px;
+                        line-height: 1;
+                        transition: transform 0.2s ease;
+                    }
+                }
+
+                .summary-file {
+                    flex: 1 1 auto;
+                    min-width: 220px;
+                    font-weight: 700;
+                }
+
+                .summary-tab,
+                .summary-rows {
+                    font-weight: 500;
+                }
+
+                .summary-divider {
+                    opacity: 0.7;
+                }
+
+                .table-wrapper {
+                    padding: 0 20px 20px;
+                    background-color: #f8f9fb;
+                }
+            }
+
+            .proposal-details[open] summary::after {
+                transform: rotate(180deg);
             }
         }
     }
@@ -598,6 +670,11 @@
                                 color: #0066cc;
                             }
 
+                            &.status-cell {
+                                text-align: center;
+                                width: 90px;
+                            }
+
                             .top-left-input,
                             .column-select {
                                 width: 100%;
@@ -616,6 +693,19 @@
 
                             .column-select {
                                 background-color: #ffffff;
+                            }
+
+                            .status-icon {
+                                font-size: 18px;
+                                font-weight: 700;
+
+                                &.ready {
+                                    color: #2e7d32;
+                                }
+
+                                &.not-ready {
+                                    color: #c62828;
+                                }
                             }
                         }
                     }

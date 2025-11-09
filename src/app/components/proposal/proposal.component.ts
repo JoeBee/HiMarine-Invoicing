@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProposalItem, RfqData, RfqStateService } from '../../services/rfq-state.service';
+import { ProposalItem, ProposalTable, RfqData, RfqStateService } from '../../services/rfq-state.service';
 
 @Component({
     selector: 'app-proposal',
@@ -76,6 +76,10 @@ export class ProposalComponent implements OnInit {
 
     get proposalItems(): ProposalItem[] {
         return this.rfqState.proposalItems;
+    }
+
+    get proposalTables(): ProposalTable[] {
+        return this.rfqState.proposalTables;
     }
 
     private updateExportFileName(): void {

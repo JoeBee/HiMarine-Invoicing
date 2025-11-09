@@ -262,33 +262,46 @@
             <p>{{ errorMessage }}</p>
         </div>
 
-        <div *ngIf="proposalItems.length > 0" class="items-section" [ngClass]="{ 'eos-theme': selectedCompany === 'EOS' }">
-            <table class="items-table">
-                <thead>
-                    <tr>
-                        <th>Pos</th>
-                        <th>Tab</th>
-                        <th>Description</th>
-                        <th>Remark</th>
-                        <th>Unit</th>
-                        <th>Qty</th>
-                        <th>Price</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let item of proposalItems">
-                        <td>{{ item.pos }}</td>
-                        <td>{{ item.tabName }}</td>
-                        <td>{{ item.description }}</td>
-                        <td>{{ item.remark }}</td>
-                        <td>{{ item.unit }}</td>
-                        <td>{{ item.qty }}</td>
-                        <td>{{ item.price }}</td>
-                        <td>{{ item.total }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div *ngIf="proposalTables.length > 0" class="items-section" [ngClass]="{ 'eos-theme': selectedCompany === 'EOS' }">
+            <div *ngFor="let table of proposalTables" class="proposal-table">
+                <details class="proposal-details" open>
+                    <summary class="table-summary">
+                        <span class="summary-file" title="{{ table.fileName }}">{{ table.fileName }}</span>
+                        <span class="summary-divider">•</span>
+                        <span class="summary-tab">Tab: {{ table.tabName }}</span>
+                        <span class="summary-divider">•</span>
+                        <span class="summary-rows">Rows: {{ table.rowCount }}</span>
+                    </summary>
+                    <div class="table-wrapper">
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>Pos</th>
+                                    <th>Tab</th>
+                                    <th>Description</th>
+                                    <th>Remark</th>
+                                    <th>Unit</th>
+                                    <th>Qty</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of table.items">
+                                    <td>{{ item.pos }}</td>
+                                    <td>{{ item.tabName }}</td>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.remark }}</td>
+                                    <td>{{ item.unit }}</td>
+                                    <td>{{ item.qty }}</td>
+                                    <td>{{ item.price }}</td>
+                                    <td>{{ item.total }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </div>
         </div>
 
         <div class="bottom-section">
