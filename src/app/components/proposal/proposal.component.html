@@ -42,9 +42,10 @@
                     </div>
                     <div class="company-buttons">
                         <button class="create-rfq-button" (click)="createRFQs()" [disabled]="proposalTableCount === 0">
-                            Create {{ proposalTableCount }} RFQs
+                            Create {{ proposalTableCount }} RFQ(s)
                         </button>
-                        <p class="help-text">Disabled until all required columns are identified or tabs are excluded.</p>
+                        <p class="help-text">Disabled until all required columns are identified or tabs are excluded.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -102,8 +103,8 @@
                     <div class="bank-details">
                         <div class="bank-field">
                             <label>Bank Name:</label>
-                            <input type="text" [(ngModel)]="rfqData.bankName"
-                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                            <input type="text" [(ngModel)]="rfqData.bankName" (ngModelChange)="onProposalDetailChange()"
+                                class="editable-field">
                         </div>
                         <div class="bank-field">
                             <label>Bank Address:</label>
@@ -146,8 +147,8 @@
                         </div>
                         <div class="bank-field">
                             <label>Sort code:</label>
-                            <input type="text" [(ngModel)]="rfqData.sortCode"
-                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                            <input type="text" [(ngModel)]="rfqData.sortCode" (ngModelChange)="onProposalDetailChange()"
+                                class="editable-field">
                         </div>
                     </div>
                 </div>
@@ -233,8 +234,8 @@
                         </div>
                         <div class="invoice-field">
                             <label>Category</label>
-                            <input type="text" [(ngModel)]="rfqData.category"
-                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                            <input type="text" [(ngModel)]="rfqData.category" (ngModelChange)="onProposalDetailChange()"
+                                class="editable-field">
                         </div>
                         <div class="invoice-field">
                             <label>Invoice Due</label>
@@ -262,7 +263,8 @@
             <p>{{ errorMessage }}</p>
         </div>
 
-        <div *ngIf="proposalTables.length > 0" class="items-section" [ngClass]="{ 'eos-theme': selectedCompany === 'EOS' }">
+        <div *ngIf="proposalTables.length > 0" class="items-section"
+            [ngClass]="{ 'eos-theme': selectedCompany === 'EOS' }">
             <div *ngFor="let table of proposalTables" class="proposal-table">
                 <details class="proposal-details">
                     <summary class="table-summary">
@@ -305,8 +307,7 @@
         </div>
 
         <div class="bottom-section">
-            <img
-                [src]="selectedCompany === 'EOS' ? 'assets/images/EosSupplyLtdBottomBorder.png' : 'assets/images/HIMarineBottomBorder.png'"
+            <img [src]="selectedCompany === 'EOS' ? 'assets/images/EosSupplyLtdBottomBorder.png' : 'assets/images/HIMarineBottomBorder.png'"
                 alt="Company Bottom Border" class="bottom-logo-image">
         </div>
     </div>

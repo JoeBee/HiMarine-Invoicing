@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import * as XLSX from 'xlsx';
-import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { LoggingService } from './logging.service';
+import { buildInvoiceStyleWorkbook, InvoiceWorkbookBank, InvoiceWorkbookData, InvoiceWorkbookItem } from '../utils/invoice-workbook-builder';
 
 export interface TabInfo {
     tabName: string;
@@ -682,26 +682,58 @@ export class RfqStateService {
         return true;
     }
 
-    createRFQs(): void {
+    async createRFQs(): Promise<void> {
         this.loggingService.logUserAction('create_rfqs_clicked', {
             company: this.selectedCompany,
-            fileCount: this.fileAnalyses.length
+            tableCount: this.proposalTables.length
         }, 'RfqStateService');
 
-        const nonExcludedTabs: { analysis: FileAnalysis; tab: TabInfo }[] = [];
-        for (const analysis of this.fileAnalyses) {
-            for (const tab of analysis.tabs) {
-                if (!tab.excluded) {
-                    nonExcludedTabs.push({ analysis, tab });
-                }
-            }
+        const tablesToExport = this.proposalTables.filter(table => table.items.length > 0);
+        if (tablesToExport.length === 0) {
+            this.loggingService.logUserAction('create_rfqs_no_tables', {
+                reason: 'no_tables_ready'
+            }, 'RfqStateService');
+            return;
         }
 
-        for (const { analysis, tab } of nonExcludedTabs) {
-            if (this.selectedCompany === 'EOS') {
-                void this.createEOSWorkbook(analysis, tab);
-            } else {
-                void this.createHIMarineWorkbook(analysis, tab);
+        const selectedBank = this.mapSelectedCompanyToBank();
+
+        for (const table of tablesToExport) {
+            try {
+                const tableCurrency = this.determineProposalPrimaryCurrency(table.items);
+                const fileNameBase = this.buildProposalFileName(table);
+                const workbookData = this.buildProposalWorkbookData(table, tableCurrency, fileNameBase);
+
+                const { blob, fileName } = await buildInvoiceStyleWorkbook({
+                    data: workbookData,
+                    selectedBank,
+                    primaryCurrency: tableCurrency,
+                    categoryOverride: table.tabName,
+                    appendAtoInvoiceNumber: false,
+                    includeFees: false,
+                    fileNameOverride: fileNameBase
+                });
+
+                saveAs(blob, fileName);
+
+                this.loggingService.logExport('proposal_rfq_created', {
+                    fileName,
+                    fileSize: blob.size,
+                    tabName: table.tabName,
+                    rowCount: table.rowCount,
+                    company: this.selectedCompany
+                }, 'RfqStateService');
+            } catch (error) {
+                this.loggingService.logError(
+                    error as Error,
+                    'proposal_rfq_export',
+                    'RfqStateService',
+                    {
+                        tabName: table.tabName,
+                        fileName: table.fileName,
+                        company: this.selectedCompany
+                    }
+                );
             }
         }
     }
@@ -712,6 +744,184 @@ export class RfqStateService {
             return '';
         }
         return String(cell.v).trim();
+    }
+
+    private mapSelectedCompanyToBank(): InvoiceWorkbookBank {
+        switch (this.selectedCompany) {
+            case 'HI US':
+                return 'US';
+            case 'HI UK':
+                return 'UK';
+            case 'EOS':
+                return 'EOS';
+            default:
+                return 'US';
+        }
+    }
+
+    private determineProposalPrimaryCurrency(items: ProposalItem[]): string {
+        for (const item of items) {
+            const currency = this.detectCurrencyFromString(item.price) || this.detectCurrencyFromString(item.total);
+            if (currency) {
+                return currency;
+            }
+        }
+        return '£';
+    }
+
+    private detectCurrencyFromString(value: unknown): string | null {
+        if (value === undefined || value === null) {
+            return null;
+        }
+
+        const str = String(value).trim();
+        if (!str) {
+            return null;
+        }
+
+        const upper = str.toUpperCase();
+        if (upper.includes('NZ$') || upper.includes('NZD')) return 'NZ$';
+        if (upper.includes('A$') || upper.includes('AUD')) return 'A$';
+        if (upper.includes('C$') || upper.includes('CAD')) return 'C$';
+        if (str.includes('€') || upper.includes('EUR')) return '€';
+        if (str.includes('£') || upper.includes('GBP')) return '£';
+        if (str.includes('$')) {
+            if (!upper.includes('NZ$') && !upper.includes('A$') && !upper.includes('C$')) {
+                return '$';
+            }
+        }
+        if (upper.includes('USD')) return '$';
+        return null;
+    }
+
+    private parseNumericFromMixed(value: unknown): number | null {
+        if (value === undefined || value === null) {
+            return null;
+        }
+
+        if (typeof value === 'number') {
+            return Number.isNaN(value) ? null : value;
+        }
+
+        if (typeof value === 'string') {
+            let cleaned = value.trim();
+            if (!cleaned) {
+                return null;
+            }
+            cleaned = cleaned.replace(/NZ\$/gi, '');
+            cleaned = cleaned.replace(/A\$/gi, '');
+            cleaned = cleaned.replace(/C\$/gi, '');
+            cleaned = cleaned.replace(/[€£$,]/g, '');
+            cleaned = cleaned.replace(/USD/gi, '');
+            cleaned = cleaned.replace(/NZD/gi, '');
+            cleaned = cleaned.replace(/AUD/gi, '');
+            cleaned = cleaned.replace(/CAD/gi, '');
+            cleaned = cleaned.trim();
+            if (!cleaned) {
+                return null;
+            }
+            const parsed = parseFloat(cleaned);
+            return Number.isNaN(parsed) ? null : parsed;
+        }
+
+        return null;
+    }
+
+    private mapProposalItemToWorkbookItem(item: ProposalItem, fallbackCurrency: string): InvoiceWorkbookItem {
+        const detectedCurrency = this.detectCurrencyFromString(item.price) || this.detectCurrencyFromString(item.total);
+        const currency = detectedCurrency || fallbackCurrency || '£';
+
+        const qtyParsed = this.parseNumericFromMixed(item.qty);
+        let qtyValue: number | string;
+        if (qtyParsed !== null) {
+            qtyValue = qtyParsed;
+        } else if (typeof item.qty === 'string') {
+            qtyValue = item.qty.trim();
+        } else {
+            qtyValue = '';
+        }
+
+        const priceParsed = this.parseNumericFromMixed(item.price) ?? 0;
+        const totalParsed = this.parseNumericFromMixed(item.total) ?? 0;
+
+        return {
+            pos: item.pos,
+            description: item.description,
+            remark: item.remark,
+            unit: item.unit,
+            qty: qtyValue,
+            price: priceParsed,
+            total: totalParsed,
+            currency
+        };
+    }
+
+    private sanitizeFileNameSegment(segment: string): string {
+        return segment.replace(/[<>:"/\\|?*]/g, '_');
+    }
+
+    private buildProposalFileName(table: ProposalTable): string {
+        const parts: string[] = ['Proposal'];
+
+        if (this.rfqData.invoiceNumber?.trim()) {
+            parts.push(this.rfqData.invoiceNumber.trim());
+        }
+        if (this.rfqData.vessel?.trim()) {
+            parts.push(this.rfqData.vessel.trim());
+        }
+        if (table.fileName?.trim()) {
+            parts.push(table.fileName.trim());
+        }
+        if (table.tabName?.trim()) {
+            parts.push(table.tabName.trim());
+        }
+        parts.push(this.selectedCompany.replace(/\s+/g, ''));
+
+        return this.sanitizeFileNameSegment(parts.filter(Boolean).join('_'));
+    }
+
+    private buildProposalWorkbookData(table: ProposalTable, primaryCurrency: string, fileNameBase: string): InvoiceWorkbookData {
+        const workbookItems: InvoiceWorkbookItem[] = table.items.map(item => this.mapProposalItemToWorkbookItem(item, primaryCurrency));
+
+        return {
+            items: workbookItems,
+            discountPercent: 0,
+            deliveryFee: 0,
+            portFee: 0,
+            agencyFee: 0,
+            transportCustomsLaunchFees: 0,
+            launchFee: 0,
+            ourCompanyName: this.rfqData.ourCompanyName,
+            ourCompanyAddress: this.rfqData.ourCompanyAddress,
+            ourCompanyAddress2: this.rfqData.ourCompanyAddress2,
+            ourCompanyCity: this.rfqData.ourCompanyCity,
+            ourCompanyCountry: this.rfqData.ourCompanyCountry,
+            ourCompanyPhone: this.rfqData.ourCompanyPhone,
+            ourCompanyEmail: this.rfqData.ourCompanyEmail,
+            vesselName: this.rfqData.vesselName,
+            vesselName2: this.rfqData.vesselName2,
+            vesselAddress: this.rfqData.vesselAddress,
+            vesselAddress2: this.rfqData.vesselAddress2,
+            vesselCity: this.rfqData.vesselCity,
+            vesselCountry: this.rfqData.vesselCountry,
+            bankName: this.rfqData.bankName,
+            bankAddress: this.rfqData.bankAddress,
+            iban: this.rfqData.iban,
+            swiftCode: this.rfqData.swiftCode,
+            accountTitle: this.rfqData.accountTitle,
+            accountNumber: this.rfqData.accountNumber,
+            sortCode: this.rfqData.sortCode,
+            achRouting: this.rfqData.achRouting,
+            intermediaryBic: this.rfqData.intermediaryBic,
+            invoiceNumber: this.rfqData.invoiceNumber,
+            invoiceDate: this.rfqData.invoiceDate,
+            vessel: this.rfqData.vessel,
+            country: this.rfqData.country,
+            port: this.rfqData.port,
+            category: table.tabName || this.rfqData.category,
+            invoiceDue: this.rfqData.invoiceDue,
+            exportFileName: fileNameBase
+        };
     }
 
     private async refreshProposalPreview(): Promise<void> {
@@ -817,511 +1027,35 @@ export class RfqStateService {
         }
     }
 
-    private async createEOSWorkbook(analysis: FileAnalysis, tab: TabInfo): Promise<void> {
-        try {
-            const fileData = await this.readFileAsArrayBuffer(analysis.file);
-            const workbook = XLSX.read(fileData, {
-                type: 'array',
-                cellFormula: false,
-                cellHTML: false,
-                cellStyles: false,
-                sheetStubs: false,
-                cellText: true,
-                cellDates: true
-            });
-
-            const worksheet = workbook.Sheets[tab.tabName];
-            if (!worksheet) {
-                console.error(`Worksheet "${tab.tabName}" not found`);
-                return;
-            }
-
-            const cellRef = XLSX.utils.decode_cell(tab.topLeftCell);
-            const headerRow = cellRef.r;
-            const startCol = cellRef.c;
-            const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
-
-            const productCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.product);
-            const qtyCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.qty);
-            const unitCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.unit);
-            const remarkCol = tab.remark && tab.remark.trim() !== ''
-                ? this.findColumnIndex(worksheet, headerRow, startCol, tab.remark)
-                : -1;
-
-            if ([productCol, qtyCol, unitCol].some(index => index === -1)) {
-                console.error('Missing required column mapping for EOS workbook export', {
-                    productCol,
-                    qtyCol,
-                    unitCol,
-                    remarkCol
-                });
-                return;
-            }
-
-            const dataRows: any[] = [];
-            for (let row = headerRow + 1; row <= range.e.r; row++) {
-                const productCell = XLSX.utils.encode_cell({ r: row, c: productCol });
-                const productValue = worksheet[productCell]?.v;
-                if (productValue && String(productValue).trim() !== '') {
-                    const qtyValue = worksheet[XLSX.utils.encode_cell({ r: row, c: qtyCol })]?.v || '';
-                    const unitValue = worksheet[XLSX.utils.encode_cell({ r: row, c: unitCol })]?.v || '';
-                    const remarkValue = remarkCol !== -1
-                        ? worksheet[XLSX.utils.encode_cell({ r: row, c: remarkCol })]?.v || ''
-                        : '';
-
-                    dataRows.push({
-                        description: String(productValue).trim(),
-                        remark: String(remarkValue).trim(),
-                        unit: String(unitValue).trim(),
-                        qty: String(qtyValue).trim()
-                    });
-                } else {
-                    break;
-                }
-            }
-
-            const newWorkbook = new ExcelJS.Workbook();
-            const newWorksheet = newWorkbook.addWorksheet('Sheet1');
-            newWorksheet.properties.showGridLines = false;
-            newWorksheet.views = [{ showGridLines: false }];
-
-            const formatDateAsText = (dateString: string): string => {
-                if (!dateString) return '';
-                const date = new Date(dateString);
-                const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-                const month = months[date.getMonth()];
-                const day = date.getDate().toString().padStart(2, '0');
-                const year = date.getFullYear();
-                return `${month} ${day}, ${year}`;
-            };
-
-            newWorksheet.getCell('E2').value = this.rfqData.ourCompanyName || 'EOS SUPPLY LTD';
-            if (this.rfqData.ourCompanyPhone) {
-                newWorksheet.getCell('E4').value = `Phone: ${this.rfqData.ourCompanyPhone}`;
-            }
-            newWorksheet.getCell('E6').value = this.rfqData.ourCompanyEmail || 'office@eos-supply.co.uk';
-
-            let companyRow = 8;
-            if (this.rfqData.ourCompanyName) {
-                newWorksheet.getCell(`A${companyRow}`).value = this.rfqData.ourCompanyName;
-                companyRow++;
-            }
-            if (this.rfqData.ourCompanyEmail) {
-                newWorksheet.getCell(`A${companyRow}`).value = this.rfqData.ourCompanyEmail;
-                companyRow++;
-            }
-            if (this.rfqData.ourCompanyAddress) {
-                newWorksheet.getCell(`A${companyRow}`).value = this.rfqData.ourCompanyAddress;
-                companyRow++;
-            }
-            if (this.rfqData.ourCompanyAddress2) {
-                newWorksheet.getCell(`A${companyRow}`).value = this.rfqData.ourCompanyAddress2;
-                companyRow++;
-            }
-            const cityCountry = [this.rfqData.ourCompanyCity, this.rfqData.ourCompanyCountry].filter(Boolean).join(', ');
-            if (cityCountry) {
-                newWorksheet.getCell(`A${companyRow}`).value = cityCountry;
-                companyRow++;
-            }
-
-            let bankRow = 15;
-            if (this.rfqData.bankName) {
-                newWorksheet.getCell(`A${bankRow}`).value = `Bank Name: ${this.rfqData.bankName}`;
-                bankRow++;
-            }
-            if (this.rfqData.bankAddress) {
-                newWorksheet.getCell(`A${bankRow}`).value = `Bank Address: ${this.rfqData.bankAddress}`;
-                bankRow++;
-            }
-            if (this.rfqData.iban) {
-                newWorksheet.getCell(`A${bankRow}`).value = `IBAN: ${this.rfqData.iban}`;
-                bankRow++;
-            }
-            if (this.rfqData.swiftCode) {
-                newWorksheet.getCell(`A${bankRow}`).value = `SWIFTBIC: ${this.rfqData.swiftCode}`;
-                bankRow++;
-            }
-            if (this.rfqData.intermediaryBic) {
-                newWorksheet.getCell(`A${bankRow}`).value = `Intermediary BIC: ${this.rfqData.intermediaryBic}`;
-                bankRow++;
-            }
-            if (this.rfqData.accountTitle) {
-                newWorksheet.getCell(`A${bankRow}`).value = `Title on Account: ${this.rfqData.accountTitle}`;
-                bankRow++;
-            }
-
-            if (this.rfqData.accountNumber || this.rfqData.sortCode) {
-                newWorksheet.getCell(`A${bankRow}`).value = 'UK DOMESTIC WIRES:';
-                bankRow++;
-                if (this.rfqData.accountNumber) {
-                    newWorksheet.getCell(`A${bankRow}`).value = `Account number: ${this.rfqData.accountNumber}`;
-                    bankRow++;
-                }
-                if (this.rfqData.sortCode) {
-                    newWorksheet.getCell(`A${bankRow}`).value = `Sort code: ${this.rfqData.sortCode}`;
-                    bankRow++;
-                }
-            }
-
-            let invoiceRow = 15;
-            newWorksheet.getCell(`E${invoiceRow}`).value = '№';
-            invoiceRow++;
-            newWorksheet.getCell(`E${invoiceRow}`).value = 'Invoice Date';
-            if (this.rfqData.invoiceDate) {
-                newWorksheet.getCell(`F${invoiceRow}`).value = formatDateAsText(this.rfqData.invoiceDate);
-            }
-            invoiceRow++;
-            newWorksheet.getCell(`E${invoiceRow}`).value = 'Vessel';
-            if (this.rfqData.vessel) {
-                newWorksheet.getCell(`F${invoiceRow}`).value = this.rfqData.vessel;
-            }
-            invoiceRow++;
-            newWorksheet.getCell(`E${invoiceRow}`).value = 'Country';
-            if (this.rfqData.country) {
-                newWorksheet.getCell(`F${invoiceRow}`).value = this.rfqData.country;
-            }
-            invoiceRow++;
-            newWorksheet.getCell(`E${invoiceRow}`).value = 'Port';
-            if (this.rfqData.port) {
-                newWorksheet.getCell(`F${invoiceRow}`).value = this.rfqData.port;
-            }
-            invoiceRow++;
-            newWorksheet.getCell(`E${invoiceRow}`).value = 'Category';
-            if (this.rfqData.category) {
-                newWorksheet.getCell(`F${invoiceRow}`).value = this.rfqData.category;
-            }
-            invoiceRow++;
-            newWorksheet.getCell(`E${invoiceRow}`).value = 'Invoice Due';
-            if (this.rfqData.invoiceDue) {
-                newWorksheet.getCell(`F${invoiceRow}`).value = this.rfqData.invoiceDue;
-            }
-
-            newWorksheet.getCell('A27').value = 'Pos.';
-            newWorksheet.getCell('B27').value = 'Description';
-            newWorksheet.getCell('C27').value = 'Remark';
-            newWorksheet.getCell('D27').value = 'Unit';
-            newWorksheet.getCell('E27').value = 'Qty';
-            newWorksheet.getCell('F27').value = 'Price';
-            newWorksheet.getCell('G27').value = 'Total';
-
-            dataRows.forEach((row, index) => {
-                const rowNum = 28 + index;
-                newWorksheet.getCell(`A${rowNum}`).value = index + 1;
-                newWorksheet.getCell(`B${rowNum}`).value = row.description;
-                newWorksheet.getCell(`C${rowNum}`).value = row.remark;
-                newWorksheet.getCell(`D${rowNum}`).value = row.unit;
-                newWorksheet.getCell(`E${rowNum}`).value = row.qty;
-                newWorksheet.getCell(`F${rowNum}`).value = '';
-                newWorksheet.getCell(`G${rowNum}`).value = '$';
-            });
-
-            const maxRow = 27 + dataRows.length;
-            newWorksheet.pageSetup.printArea = `A1:G${maxRow}`;
-            newWorksheet.views = [{
-                showGridLines: false
-            }];
-
-            newWorksheet.getColumn('A').width = 30 / 7.59;
-            newWorksheet.getColumn('B').width = 381 / 7.59;
-            newWorksheet.getColumn('C').width = 174 / 7.59;
-            newWorksheet.getColumn('D').width = 72 / 7.59;
-            newWorksheet.getColumn('E').width = 138 / 7.59;
-            newWorksheet.getColumn('F').width = 115 / 7.59;
-            newWorksheet.getColumn('G').width = 119 / 7.59;
-
-            const fileName = `${analysis.fileName}_${tab.tabName}_EOS_RFQ.xlsx`;
-            const buffer = await newWorkbook.xlsx.writeBuffer();
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            saveAs(blob, fileName);
-
-            this.loggingService.logUserAction('eos_workbook_created', {
-                fileName: fileName,
-                tabName: tab.tabName,
-                rowCount: dataRows.length
-            }, 'RfqStateService');
-
-        } catch (error) {
-            console.error('Error creating EOS workbook:', error);
-            this.loggingService.logError(
-                error as Error,
-                'eos_workbook_creation_error',
-                'RfqStateService',
-                { fileName: analysis.fileName, tabName: tab.tabName }
-            );
-        }
-    }
-
-    private async createHIMarineWorkbook(analysis: FileAnalysis, tab: TabInfo): Promise<void> {
-        try {
-            const fileData = await this.readFileAsArrayBuffer(analysis.file);
-            const workbook = XLSX.read(fileData, {
-                type: 'array',
-                cellFormula: false,
-                cellHTML: false,
-                cellStyles: false,
-                sheetStubs: false,
-                cellText: true,
-                cellDates: true
-            });
-
-            const worksheet = workbook.Sheets[tab.tabName];
-            if (!worksheet) {
-                console.error(`Worksheet "${tab.tabName}" not found`);
-                return;
-            }
-
-            const cellRef = XLSX.utils.decode_cell(tab.topLeftCell);
-            const headerRow = cellRef.r;
-            const startCol = cellRef.c;
-            const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
-
-            const productCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.product);
-            const qtyCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.qty);
-            const unitCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.unit);
-            const remarkCol = tab.remark && tab.remark.trim() !== ''
-                ? this.findColumnIndex(worksheet, headerRow, startCol, tab.remark)
-                : -1;
-
-            if ([productCol, qtyCol, unitCol].some(index => index === -1)) {
-                console.error('Missing required column mapping for HI Marine workbook export', {
-                    productCol,
-                    qtyCol,
-                    unitCol,
-                    remarkCol
-                });
-                return;
-            }
-
-            const dataRows: any[] = [];
-            for (let row = headerRow + 1; row <= range.e.r; row++) {
-                const productCell = XLSX.utils.encode_cell({ r: row, c: productCol });
-                const productValue = worksheet[productCell]?.v;
-                if (productValue && String(productValue).trim() !== '') {
-                    const qtyValue = worksheet[XLSX.utils.encode_cell({ r: row, c: qtyCol })]?.v || '';
-                    const unitValue = worksheet[XLSX.utils.encode_cell({ r: row, c: unitCol })]?.v || '';
-                    const remarkValue = remarkCol !== -1
-                        ? worksheet[XLSX.utils.encode_cell({ r: row, c: remarkCol })]?.v || ''
-                        : '';
-
-                    dataRows.push({
-                        description: String(productValue).trim(),
-                        remark: String(remarkValue).trim(),
-                        unit: String(unitValue).trim(),
-                        qty: String(qtyValue).trim()
-                    });
-                } else {
-                    break;
-                }
-            }
-
-            const newWorkbook = new ExcelJS.Workbook();
-            const newWorksheet = newWorkbook.addWorksheet('Sheet1');
-            newWorksheet.properties.showGridLines = false;
-            newWorksheet.views = [{ showGridLines: false }];
-
-            const formatDateAsText = (dateString: string): string => {
-                if (!dateString) return '';
-                const date = new Date(dateString);
-                const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-                const month = months[date.getMonth()];
-                const day = date.getDate().toString().padStart(2, '0');
-                const year = date.getFullYear();
-                return `${month} ${day}, ${year}`;
-            };
-
-            newWorksheet.getCell('A2').value = 'hi marine co';
-
-            let companyRow = 9;
-            if (this.rfqData.ourCompanyName) {
-                newWorksheet.getCell(`A${companyRow}`).value = this.rfqData.ourCompanyName;
-                companyRow++;
-            }
-            if (this.rfqData.ourCompanyAddress) {
-                newWorksheet.getCell(`A${companyRow}`).value = this.rfqData.ourCompanyAddress;
-                companyRow++;
-            }
-            if (this.rfqData.ourCompanyAddress2) {
-                newWorksheet.getCell(`A${companyRow}`).value = this.rfqData.ourCompanyAddress2;
-                companyRow++;
-            }
-            const cityCountry = [this.rfqData.ourCompanyCity, this.rfqData.ourCompanyCountry].filter(Boolean).join(', ');
-            if (cityCountry) {
-                newWorksheet.getCell(`A${companyRow}`).value = cityCountry;
-                companyRow++;
-            }
-            if (this.rfqData.ourCompanyPhone) {
-                newWorksheet.getCell(`A${companyRow}`).value = `Phone: ${this.rfqData.ourCompanyPhone}`;
-                companyRow++;
-            }
-            if (this.rfqData.ourCompanyEmail) {
-                newWorksheet.getCell(`A${companyRow}`).value = `Email: ${this.rfqData.ourCompanyEmail}`;
-                companyRow++;
-            }
-
-            let vesselRow = 9;
-            if (this.rfqData.vesselName) {
-                newWorksheet.getCell(`E${vesselRow}`).value = this.rfqData.vesselName;
-                vesselRow++;
-            }
-            if (this.rfqData.vesselName2) {
-                newWorksheet.getCell(`E${vesselRow}`).value = this.rfqData.vesselName2;
-                vesselRow++;
-            }
-            if (this.rfqData.vesselAddress) {
-                newWorksheet.getCell(`E${vesselRow}`).value = this.rfqData.vesselAddress;
-                vesselRow++;
-            }
-            if (this.rfqData.vesselAddress2) {
-                newWorksheet.getCell(`E${vesselRow}`).value = this.rfqData.vesselAddress2;
-                vesselRow++;
-            }
-            const vesselCityCountry = [this.rfqData.vesselCity, this.rfqData.vesselCountry].filter(Boolean).join(', ');
-            if (vesselCityCountry) {
-                newWorksheet.getCell(`E${vesselRow}`).value = vesselCityCountry;
-                vesselRow++;
-            }
-
-            let bankRow = 16;
-            if (this.rfqData.bankName) {
-                newWorksheet.getCell(`A${bankRow}`).value = 'Bank Name:';
-                newWorksheet.getCell(`B${bankRow}`).value = this.rfqData.bankName;
-                bankRow++;
-            }
-            if (this.rfqData.bankAddress) {
-                newWorksheet.getCell(`A${bankRow}`).value = 'Bank Address:';
-                newWorksheet.getCell(`B${bankRow}`).value = this.rfqData.bankAddress;
-                bankRow++;
-            }
-            if (this.rfqData.accountNumber) {
-                newWorksheet.getCell(`A${bankRow}`).value = 'Account No:';
-                newWorksheet.getCell(`B${bankRow}`).value = this.rfqData.accountNumber;
-                bankRow++;
-            }
-            if (this.rfqData.swiftCode) {
-                newWorksheet.getCell(`A${bankRow}`).value = 'SWIFT CODE:';
-                newWorksheet.getCell(`B${bankRow}`).value = this.rfqData.swiftCode;
-                bankRow++;
-            }
-            if (this.selectedCompany === 'HI US' && this.rfqData.achRouting) {
-                newWorksheet.getCell(`A${bankRow}`).value = 'ACH Routing:';
-                newWorksheet.getCell(`B${bankRow}`).value = this.rfqData.achRouting;
-                bankRow++;
-            } else if (this.selectedCompany === 'HI UK' && this.rfqData.sortCode) {
-                newWorksheet.getCell(`A${bankRow}`).value = 'Sort Code:';
-                newWorksheet.getCell(`B${bankRow}`).value = this.rfqData.sortCode;
-                bankRow++;
-            }
-            if (this.rfqData.accountTitle) {
-                newWorksheet.getCell(`A${bankRow}`).value = 'Title on Account:';
-                newWorksheet.getCell(`B${bankRow}`).value = this.rfqData.accountTitle;
-                bankRow++;
-            }
-
-            let invoiceRow = 15;
-            newWorksheet.getCell(`D${invoiceRow}`).value = '№';
-            if (this.rfqData.invoiceNumber) {
-                newWorksheet.getCell(`F${invoiceRow}`).value = this.rfqData.invoiceNumber;
-            }
-            invoiceRow++;
-            newWorksheet.getCell(`D${invoiceRow}`).value = 'Invoice Date';
-            if (this.rfqData.invoiceDate) {
-                newWorksheet.getCell(`F${invoiceRow}`).value = formatDateAsText(this.rfqData.invoiceDate);
-            }
-            invoiceRow++;
-            newWorksheet.getCell(`D${invoiceRow}`).value = 'Vessel';
-            if (this.rfqData.vessel) {
-                newWorksheet.getCell(`F${invoiceRow}`).value = this.rfqData.vessel;
-            }
-            invoiceRow++;
-            newWorksheet.getCell(`D${invoiceRow}`).value = 'Country';
-            if (this.rfqData.country) {
-                newWorksheet.getCell(`F${invoiceRow}`).value = this.rfqData.country;
-            }
-            invoiceRow++;
-            newWorksheet.getCell(`D${invoiceRow}`).value = 'Port';
-            if (this.rfqData.port) {
-                newWorksheet.getCell(`F${invoiceRow}`).value = this.rfqData.port;
-            }
-            invoiceRow++;
-            newWorksheet.getCell(`D${invoiceRow}`).value = 'Category';
-            if (this.rfqData.category) {
-                newWorksheet.getCell(`F${invoiceRow}`).value = this.rfqData.category;
-            }
-            invoiceRow++;
-            newWorksheet.getCell(`D${invoiceRow}`).value = 'Invoice Due';
-            if (this.rfqData.invoiceDue) {
-                newWorksheet.getCell(`F${invoiceRow}`).value = this.rfqData.invoiceDue;
-            }
-
-            newWorksheet.getCell('A26').value = 'Pos.';
-            newWorksheet.getCell('B26').value = 'Description';
-            newWorksheet.getCell('C26').value = 'Remark';
-            newWorksheet.getCell('D26').value = 'Unit';
-            newWorksheet.getCell('E26').value = 'Qty';
-            newWorksheet.getCell('F26').value = 'Price';
-            newWorksheet.getCell('G26').value = 'Total';
-
-            dataRows.forEach((row, index) => {
-                const rowNum = 27 + index;
-                newWorksheet.getCell(`A${rowNum}`).value = index + 1;
-                newWorksheet.getCell(`B${rowNum}`).value = row.description;
-                newWorksheet.getCell(`C${rowNum}`).value = row.remark;
-                newWorksheet.getCell(`D${rowNum}`).value = row.unit;
-                newWorksheet.getCell(`E${rowNum}`).value = row.qty;
-                newWorksheet.getCell(`F${rowNum}`).value = '';
-                newWorksheet.getCell(`G${rowNum}`).value = '$ -';
-            });
-
-            const maxRow = 26 + dataRows.length;
-            newWorksheet.pageSetup.printArea = `A1:G${maxRow}`;
-            newWorksheet.views = [{
-                showGridLines: false
-            }];
-
-            newWorksheet.getColumn('A').width = 56 / 7.59;
-            newWorksheet.getColumn('B').width = 295 / 7.59;
-            newWorksheet.getColumn('C').width = 56 / 7.59;
-            newWorksheet.getColumn('D').width = 80 / 7.59;
-            newWorksheet.getColumn('E').width = 82 / 7.59;
-            newWorksheet.getColumn('F').width = 131 / 7.59;
-            newWorksheet.getColumn('G').width = 121 / 7.59;
-
-            const fileName = `${analysis.fileName}_${tab.tabName}_${this.selectedCompany}_RFQ.xlsx`;
-            const buffer = await newWorkbook.xlsx.writeBuffer();
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            saveAs(blob, fileName);
-
-            this.loggingService.logUserAction('himarine_workbook_created', {
-                fileName: fileName,
-                tabName: tab.tabName,
-                company: this.selectedCompany,
-                rowCount: dataRows.length
-            }, 'RfqStateService');
-
-        } catch (error) {
-            console.error('Error creating HI Marine workbook:', error);
-            this.loggingService.logError(
-                error as Error,
-                'himarine_workbook_creation_error',
-                'RfqStateService',
-                { fileName: analysis.fileName, tabName: tab.tabName, company: this.selectedCompany }
-            );
-        }
-    }
-
     private findColumnIndex(worksheet: XLSX.WorkSheet, headerRow: number, startCol: number, headerName: string): number {
+        if (!headerName || headerName.trim() === '') {
+            return -1;
+        }
+
+        const trimmedHeader = headerName.trim();
+        const columnMatch = trimmedHeader.match(/^column\s+([A-Z]{1,2})$/i);
+        if (columnMatch) {
+            const columnLetter = columnMatch[1].toUpperCase();
+            try {
+                return XLSX.utils.decode_col(columnLetter);
+            } catch {
+                return -1;
+            }
+        }
+
         const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
         for (let col = startCol; col <= range.e.c; col++) {
             const headerAddress = XLSX.utils.encode_cell({ r: headerRow, c: col });
             const headerCell = worksheet[headerAddress];
-            if (headerCell && headerCell.v) {
+            if (headerCell && headerCell.v !== undefined && headerCell.v !== null) {
                 const cellValue = String(headerCell.v).trim();
-                if (cellValue === headerName) {
+                if (cellValue.toLowerCase() === trimmedHeader.toLowerCase()) {
                     return col;
                 }
             }
         }
-        return startCol;
+
+        return -1;
     }
 
     onCompanyChange(company: 'HI US' | 'HI UK' | 'EOS'): void {
