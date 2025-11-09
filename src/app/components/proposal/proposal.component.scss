@@ -284,6 +284,14 @@
                 th {
                     background-color: #0B2E66;
                 }
+
+                th.mapped-column {
+                    background-color: #0f3472;
+                }
+
+                td.mapped-column {
+                    background-color: #cddcff;
+                }
             }
 
             .proposal-table .proposal-details summary {
@@ -319,11 +327,21 @@
                     text-align: center;
                 }
 
-                &:nth-child(6),
+                &:nth-child(4),
                 &:nth-child(7),
                 &:nth-child(8) {
                     text-align: right;
                 }
+
+                &.mapped-column {
+                    background-color: #dbe8ff;
+                    font-weight: 500;
+                }
+            }
+
+            th.mapped-column {
+                background-color: #3c7ed6;
+                color: #fff;
             }
         }
 

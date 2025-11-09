@@ -82,6 +82,10 @@ export class ProposalComponent implements OnInit {
         return this.rfqState.proposalTables;
     }
 
+    get proposalTableCount(): number {
+        return this.proposalTables.length;
+    }
+
     private updateExportFileName(): void {
         const parts: string[] = [];
         parts.push('Proposal');

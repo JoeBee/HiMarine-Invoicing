@@ -41,8 +41,8 @@
                         </label>
                     </div>
                     <div class="company-buttons">
-                        <button class="create-rfq-button" (click)="createRFQs()" [disabled]="!canCreateRFQs()">
-                            Create RFQs
+                        <button class="create-rfq-button" (click)="createRFQs()" [disabled]="proposalTableCount === 0">
+                            Create {{ proposalTableCount }} RFQs
                         </button>
                         <p class="help-text">Disabled until all required columns are identified or tabs are excluded.</p>
                     </div>
@@ -278,10 +278,10 @@
                                 <tr>
                                     <th>Pos</th>
                                     <th>Tab</th>
-                                    <th>Description</th>
-                                    <th>Remark</th>
-                                    <th>Unit</th>
-                                    <th>Qty</th>
+                                    <th class="mapped-column">Product</th>
+                                    <th class="mapped-column">Qty</th>
+                                    <th class="mapped-column">Unit</th>
+                                    <th class="mapped-column">Remark</th>
                                     <th>Price</th>
                                     <th>Total</th>
                                 </tr>
@@ -290,10 +290,10 @@
                                 <tr *ngFor="let item of table.items">
                                     <td>{{ item.pos }}</td>
                                     <td>{{ item.tabName }}</td>
-                                    <td>{{ item.description }}</td>
-                                    <td>{{ item.remark }}</td>
-                                    <td>{{ item.unit }}</td>
-                                    <td>{{ item.qty }}</td>
+                                    <td class="mapped-column">{{ item.description }}</td>
+                                    <td class="mapped-column">{{ item.qty }}</td>
+                                    <td class="mapped-column">{{ item.unit }}</td>
+                                    <td class="mapped-column">{{ item.remark }}</td>
                                     <td>{{ item.price }}</td>
                                     <td>{{ item.total }}</td>
                                 </tr>
