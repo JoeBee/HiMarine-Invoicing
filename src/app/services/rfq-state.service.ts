@@ -669,9 +669,8 @@ export class RfqStateService {
         const hasProduct = !!tab.product && tab.product.trim() !== '';
         const hasQty = !!tab.qty && tab.qty.trim() !== '';
         const hasUnit = !!tab.unit && tab.unit.trim() !== '';
-        const hasRemark = !!tab.remark && tab.remark.trim() !== '';
 
-        return hasTopLeft && hasRows && hasProduct && hasQty && hasUnit && hasRemark;
+        return hasTopLeft && hasRows && hasProduct && hasQty && hasUnit;
     }
 
     canCreateRFQs(): boolean {
