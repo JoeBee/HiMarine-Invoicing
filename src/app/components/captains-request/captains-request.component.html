@@ -48,6 +48,7 @@
                             <th>Unit</th>
                             <th>Remark</th>
                             <th>Status</th>
+                            <th class="remove-column-header">Remove</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -120,6 +121,14 @@
                                     <ng-template #statusIncomplete>
                                         <span class="status-icon not-ready" aria-label="Missing required selections">✖</span>
                                     </ng-template>
+                                </td>
+                                <td class="actions-cell" *ngIf="isFirst" [attr.rowspan]="analysis.tabs.length">
+                                    <button
+                                        type="button"
+                                        class="remove-file-button"
+                                        (click)="rfqState.removeFile(fileIndex)">
+                                        Remove
+                                    </button>
                                 </td>
                             </tr>
                         </ng-container>

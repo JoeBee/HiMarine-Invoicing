@@ -626,6 +626,7 @@ export class RfqStateService {
 
         this.uploadedFiles = this.uploadedFiles.filter((_, i) => i !== index);
         this.fileAnalyses.splice(index, 1);
+        void this.refreshProposalPreview();
     }
 
     clearAllFiles(): void {
