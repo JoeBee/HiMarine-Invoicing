@@ -15,6 +15,8 @@ export interface TabInfo {
     isHidden: boolean;
     columnHeaders: string[];
     included: boolean;
+    previewHeaders: string[];
+    previewRows: string[][];
 }
 
 export interface FileAnalysis {
@@ -220,6 +222,13 @@ export class RfqStateService {
     proposalTables: ProposalTable[] = [];
     private proposalRefreshToken = 0;
 
+    previewDialogVisible = false;
+    previewDialogHeaders: string[] = [];
+    previewDialogRows: string[][] = [];
+    previewDialogFileName = '';
+    previewDialogTabName = '';
+    private previewDialogHighlightIndexes: number[] = [];
+
     constructor(private readonly loggingService: LoggingService) {
         this.onCompanySelectionChange();
     }
@@ -423,7 +432,9 @@ export class RfqStateService {
             remark: '',
             isHidden,
             columnHeaders,
-            included: true
+            included: true,
+            previewHeaders: [],
+            previewRows: []
         };
 
         if (columnHeaders.length > 0) {
@@ -435,6 +446,9 @@ export class RfqStateService {
         }
 
         tabInfo.rowCount = this.countDataRows(worksheet, tabInfo, range);
+        const preview = this.buildPreviewData(worksheet, tabInfo, range);
+        tabInfo.previewHeaders = preview.headers;
+        tabInfo.previewRows = preview.rows;
         this.updateInclusionState(tabInfo);
 
         this.loggingService.logUserAction('sheet_analyzed', {
@@ -575,6 +589,10 @@ export class RfqStateService {
 
             const updatedRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
             tab.rowCount = this.countDataRows(worksheet, tab, updatedRange);
+
+            const preview = this.buildPreviewData(worksheet, tab, updatedRange);
+            tab.previewHeaders = preview.headers;
+            tab.previewRows = preview.rows;
 
             this.updateInclusionState(tab);
             tab.included = previousIncludedState;
@@ -1280,6 +1298,8 @@ export class RfqStateService {
             tab.unit = '';
             tab.remark = '';
             tab.rowCount = 0;
+            tab.previewHeaders = [];
+            tab.previewRows = [];
         }
     }
 
@@ -1294,6 +1314,87 @@ export class RfqStateService {
 
     private updateInclusionState(tab: TabInfo): void {
         tab.included = !(tab.rowCount === 0 || !tab.topLeftCell || tab.topLeftCell.trim() === '');
+    }
+
+    private buildPreviewData(worksheet: XLSX.WorkSheet, tab: TabInfo, range: XLSX.Range): { headers: string[]; rows: string[][] } {
+        if (!tab.topLeftCell) {
+            return { headers: [], rows: [] };
+        }
+
+        const headers = [...(tab.columnHeaders ?? [])];
+        if (headers.length === 0) {
+            return { headers, rows: [] };
+        }
+
+        const cellRef = XLSX.utils.decode_cell(tab.topLeftCell);
+        const headerRow = cellRef.r;
+        const startCol = cellRef.c;
+        const maxRows = Math.min(tab.rowCount, 4);
+        const rows: string[][] = [];
+
+        for (let offset = 1; offset <= range.e.r - headerRow && rows.length < maxRows; offset++) {
+            const currentRow = headerRow + offset;
+            const rowData: string[] = [];
+            let hasData = false;
+
+            for (let colIndex = 0; colIndex < headers.length; colIndex++) {
+                const column = startCol + colIndex;
+                if (column > range.e.c) {
+                    rowData.push('');
+                    continue;
+                }
+
+                const cellAddress = XLSX.utils.encode_cell({ r: currentRow, c: column });
+                const cell = worksheet[cellAddress];
+                const value = cell?.v != null ? String(cell.v) : '';
+                if (value.trim() !== '') {
+                    hasData = true;
+                }
+                rowData.push(value);
+            }
+
+            if (!hasData && rowData.every(value => value.trim() === '')) {
+                break;
+            }
+
+            rows.push(rowData);
+        }
+
+        return { headers, rows };
+    }
+
+    openPreviewDialog(analysis: FileAnalysis, tab: TabInfo): void {
+        if (!tab.previewRows || tab.previewRows.length === 0) {
+            return;
+        }
+
+        this.previewDialogHeaders = [...tab.previewHeaders];
+        this.previewDialogRows = tab.previewRows.map(row => [...row]);
+        this.previewDialogFileName = analysis.fileName;
+        this.previewDialogTabName = tab.tabName;
+
+        const highlightTargets = new Set<string>();
+        [tab.product, tab.qty, tab.unit, tab.remark]
+            .filter((value): value is string => !!value && value.trim() !== '')
+            .forEach(value => highlightTargets.add(value.trim().toLowerCase()));
+
+        this.previewDialogHighlightIndexes = [];
+        this.previewDialogHeaders.forEach((header, index) => {
+            if (highlightTargets.has(header.trim().toLowerCase())) {
+                this.previewDialogHighlightIndexes.push(index);
+            }
+        });
+
+        this.previewDialogVisible = true;
+    }
+
+    isPreviewColumnHighlighted(index: number): boolean {
+        return this.previewDialogHighlightIndexes.includes(index);
+    }
+
+    closePreviewDialog(): void {
+        this.previewDialogVisible = false;
+        this.previewDialogHighlightIndexes = [];
     }
 
     onTopLeftCellFocus(event: Event, fileIndex: number, tabIndex: number): void {

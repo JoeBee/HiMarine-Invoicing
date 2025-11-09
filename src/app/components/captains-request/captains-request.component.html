@@ -69,8 +69,17 @@
                                         class="exclude-checkbox">
                                 </td>
                                 <td class="tab-name-cell" [class.hidden-tab]="tab.isHidden">
-                                    {{ tab.tabName }}
-                                    <span *ngIf="tab.isHidden" class="hidden-label">(Hidden)</span>
+                                    <div class="tab-name-text">
+                                        {{ tab.tabName }}
+                                        <span *ngIf="tab.isHidden" class="hidden-label">(Hidden)</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        class="preview-toggle"
+                                        (click)="rfqState.openPreviewDialog(analysis, tab)"
+                                        [disabled]="tab.previewRows.length === 0">
+                                        View
+                                    </button>
                                 </td>
                                 <td class="top-left-cell">
                                     <input
@@ -132,6 +141,36 @@
                                 </td>
                             </tr>
                         </ng-container>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="rfqState.previewDialogVisible" class="preview-dialog-container">
+        <div class="preview-dialog-backdrop" (click)="rfqState.closePreviewDialog()"></div>
+        <div class="preview-dialog-content" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+            <div class="preview-dialog-header">
+                <h3>Preview: {{ rfqState.previewDialogFileName }} / {{ rfqState.previewDialogTabName }}</h3>
+                <button type="button" class="preview-close-button" (click)="rfqState.closePreviewDialog()" aria-label="Close preview">×</button>
+            </div>
+            <div class="preview-dialog-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th *ngFor="let header of rfqState.previewDialogHeaders; let i = index"
+                                [class.highlight-column]="rfqState.isPreviewColumnHighlighted(i)">
+                                {{ header }}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let row of rfqState.previewDialogRows">
+                            <td *ngFor="let cell of row; let i = index"
+                                [class.highlight-column]="rfqState.isPreviewColumnHighlighted(i)">
+                                {{ cell }}
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
