@@ -754,6 +754,12 @@ export class RfqStateService {
                 const remarkCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.remark);
 
                 if ([productCol, qtyCol, unitCol, remarkCol].some(index => index === -1)) {
+                    tables.push({
+                        fileName: analysis.fileName,
+                        tabName: tab.tabName,
+                        rowCount: 0,
+                        items: []
+                    });
                     continue;
                 }
 
@@ -791,14 +797,12 @@ export class RfqStateService {
                     flatItems.push({ ...item });
                 }
 
-                if (tableItems.length > 0) {
-                    tables.push({
-                        fileName: analysis.fileName,
-                        tabName: tab.tabName,
-                        rowCount: tableItems.length,
-                        items: tableItems
-                    });
-                }
+                tables.push({
+                    fileName: analysis.fileName,
+                    tabName: tab.tabName,
+                    rowCount: tableItems.length,
+                    items: tableItems
+                });
             }
         }
 
