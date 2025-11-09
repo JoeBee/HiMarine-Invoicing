@@ -14,7 +14,7 @@ export interface TabInfo {
     remark: string;
     isHidden: boolean;
     columnHeaders: string[];
-    excluded: boolean;
+    included: boolean;
 }
 
 export interface FileAnalysis {
@@ -423,7 +423,7 @@ export class RfqStateService {
             remark: '',
             isHidden,
             columnHeaders,
-            excluded: false
+            included: true
         };
 
         if (columnHeaders.length > 0) {
@@ -435,7 +435,7 @@ export class RfqStateService {
         }
 
         tabInfo.rowCount = this.countDataRows(worksheet, tabInfo, range);
-        this.updateExcludedState(tabInfo);
+        this.updateInclusionState(tabInfo);
 
         this.loggingService.logUserAction('sheet_analyzed', {
             fileName: file.name,
@@ -527,7 +527,7 @@ export class RfqStateService {
 
     async reanalyzeTabWithTopLeft(analysis: FileAnalysis, tab: TabInfo, topLeftCell: string): Promise<void> {
         try {
-            const previousExcludedState = tab.excluded;
+            const previousIncludedState = tab.included;
 
             const fileData = await this.readFileAsArrayBuffer(analysis.file);
             const workbook = XLSX.read(fileData, {
@@ -576,8 +576,8 @@ export class RfqStateService {
             const updatedRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
             tab.rowCount = this.countDataRows(worksheet, tab, updatedRange);
 
-            this.updateExcludedState(tab);
-            tab.excluded = previousExcludedState;
+            this.updateInclusionState(tab);
+            tab.included = previousIncludedState;
 
             await this.refreshProposalPreview();
 
@@ -641,7 +641,7 @@ export class RfqStateService {
     }
 
     isTabReady(tab: TabInfo): boolean {
-        if (tab.excluded) {
+        if (!tab.included) {
             return false;
         }
 
@@ -660,20 +660,20 @@ export class RfqStateService {
             return false;
         }
 
-        const nonExcludedTabs: { analysis: FileAnalysis; tab: TabInfo }[] = [];
+        const includedTabs: { analysis: FileAnalysis; tab: TabInfo }[] = [];
         for (const analysis of this.fileAnalyses) {
             for (const tab of analysis.tabs) {
-                if (!tab.excluded) {
-                    nonExcludedTabs.push({ analysis, tab });
+                if (tab.included) {
+                    includedTabs.push({ analysis, tab });
                 }
             }
         }
 
-        if (nonExcludedTabs.length === 0) {
+        if (includedTabs.length === 0) {
             return false;
         }
 
-        for (const { tab } of nonExcludedTabs) {
+        for (const { tab } of includedTabs) {
             if (!this.isTabReady(tab)) {
                 return false;
             }
@@ -1282,17 +1282,17 @@ export class RfqStateService {
         }
     }
 
-    onExcludeChange(tab: TabInfo): void {
-        this.loggingService.logUserAction('exclude_toggled', {
+    onIncludeChange(tab: TabInfo): void {
+        this.loggingService.logUserAction('include_toggled', {
             tabName: tab.tabName,
-            excluded: tab.excluded
+            included: tab.included
         }, 'RfqStateService');
 
         void this.refreshProposalPreview();
     }
 
-    private updateExcludedState(tab: TabInfo): void {
-        tab.excluded = tab.rowCount === 0 || !tab.topLeftCell || tab.topLeftCell.trim() === '';
+    private updateInclusionState(tab: TabInfo): void {
+        tab.included = !(tab.rowCount === 0 || !tab.topLeftCell || tab.topLeftCell.trim() === '');
     }
 
     onTopLeftCellFocus(event: Event, fileIndex: number, tabIndex: number): void {
