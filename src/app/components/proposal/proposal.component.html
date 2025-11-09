@@ -264,7 +264,7 @@
 
         <div *ngIf="proposalTables.length > 0" class="items-section" [ngClass]="{ 'eos-theme': selectedCompany === 'EOS' }">
             <div *ngFor="let table of proposalTables" class="proposal-table">
-                <details class="proposal-details" open>
+                <details class="proposal-details">
                     <summary class="table-summary">
                         <span class="summary-file" title="{{ table.fileName }}">{{ table.fileName }}</span>
                         <span class="summary-divider">•</span>
