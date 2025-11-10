@@ -69,17 +69,17 @@
                     <th class="sortable-header" (click)="sortData('topLeftCell')">
                         Top Left Cell {{ getSortIcon('topLeftCell') }}
                     </th>
-                    <th class="sortable-header" (click)="sortData('descriptionColumn')">
-                        Description Column {{ getSortIcon('descriptionColumn') }}
+                    <th class="sortable-header column-header-description" (click)="sortData('descriptionColumn')">
+                        Description {{ getSortIcon('descriptionColumn') }}
                     </th>
-                    <th class="sortable-header" (click)="sortData('priceColumn')">
-                        Price Column {{ getSortIcon('priceColumn') }}
+                    <th class="sortable-header column-header-price" (click)="sortData('priceColumn')">
+                        Price {{ getSortIcon('priceColumn') }}
                     </th>
-                    <th class="sortable-header" (click)="sortData('unitColumn')">
-                        Unit Column {{ getSortIcon('unitColumn') }}
+                    <th class="sortable-header column-header-unit" (click)="sortData('unitColumn')">
+                        Unit {{ getSortIcon('unitColumn') }}
                     </th>
-                    <th class="sortable-header" (click)="sortData('remarksColumn')">
-                        Remarks Column {{ getSortIcon('remarksColumn') }}
+                    <th class="sortable-header column-header-remarks" (click)="sortData('remarksColumn')">
+                        Remarks {{ getSortIcon('remarksColumn') }}
                     </th>
                     <th class="sortable-header" (click)="sortData('rowCount')">
                         Row Count {{ getSortIcon('rowCount') }}
@@ -91,16 +91,21 @@
             </thead>
             <tbody>
                 <tr *ngFor="let file of supplierFiles">
-                    <td class="clickable-filename" (click)="openFile(file)">{{ file.fileName }}</td>
+                    <td class="file-name-cell">
+                        <span class="clickable-filename" (click)="openFile(file)">{{ file.fileName }}</span>
+                        <button type="button" class="view-button" (click)="viewFilePreview(file)" [disabled]="!canPreviewFile(file)">
+                            View
+                        </button>
+                    </td>
                     <td>{{ file.category || 'N/A' }}</td>
                     <td [class.not-found]="file.topLeftCell === 'NOT FOUND'">{{ file.topLeftCell }}</td>
-                    <td [class.not-found]="file.descriptionColumn === 'NOT FOUND'">{{
+                    <td class="column-description" [class.not-found]="file.descriptionColumn === 'NOT FOUND'">{{
                         file.descriptionHeader || file.descriptionColumn }}</td>
-                    <td [class.not-found]="file.priceColumn === 'NOT FOUND'">{{ file.priceHeader
+                    <td class="column-price" [class.not-found]="file.priceColumn === 'NOT FOUND'">{{ file.priceHeader
                         || file.priceColumn }}</td>
-                    <td [class.not-found]="file.unitColumn === 'NOT FOUND'">{{ file.unitHeader
+                    <td class="column-unit" [class.not-found]="file.unitColumn === 'NOT FOUND'">{{ file.unitHeader
                         || file.unitColumn }}</td>
-                    <td [class.not-found]="file.remarksColumn === 'NOT FOUND'">{{ file.remarksHeader
+                    <td class="column-remarks" [class.not-found]="file.remarksColumn === 'NOT FOUND'">{{ file.remarksHeader
                         || file.remarksColumn }}</td>
                     <td>{{ file.rowCount }}</td>
                     <td class="status-cell">
@@ -131,6 +136,42 @@
                     Clear All Files
                 </button>
             </div>
+        </div>
+    </div>
+
+    <div *ngIf="previewDialogVisible" class="preview-dialog-container">
+        <div class="preview-dialog-backdrop" (click)="closePreviewDialog()"></div>
+        <div class="preview-dialog-content" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+            <div class="preview-dialog-header">
+                <h3>Preview: {{ previewDialogFileName }}</h3>
+                <div *ngIf="previewTopLeftHeader" class="preview-meta">
+                    <span class="preview-meta-label">Top Left:</span>
+                    <span class="preview-meta-value">{{ previewTopLeftHeader }}</span>
+                </div>
+                <button type="button" class="preview-close-button" (click)="closePreviewDialog()" aria-label="Close preview">×</button>
+            </div>
+            <ng-container *ngIf="previewDialogHeaders.length > 0; else noPreviewData">
+                <div class="preview-dialog-body">
+                    <table>
+                        <thead>
+                            <tr>
+                            <th *ngFor="let header of previewDialogHeaders; let i = index"
+                                [class.highlight-column]="isPreviewColumnHighlighted(i)">{{ header }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let row of previewDialogRows">
+                            <td *ngFor="let cell of row; let i = index" [class.highlight-column]="isPreviewColumnHighlighted(i)">{{ cell }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </ng-container>
+            <ng-template #noPreviewData>
+                <div class="preview-dialog-body empty">
+                    <p class="preview-empty-state">No preview data available for this file.</p>
+                </div>
+            </ng-template>
         </div>
     </div>
 </div>

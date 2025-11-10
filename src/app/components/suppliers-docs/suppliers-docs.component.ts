@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService, SupplierFileInfo } from '../../services/data.service';
 import { LoggingService } from '../../services/logging.service';
+import * as XLSX from 'xlsx';
 
 interface SortState {
     column: string;
@@ -30,6 +31,12 @@ export class SuppliersDocsComponent implements OnInit {
     priceDividerChanged = false;
     initialPriceDivider: number = 0.9;
     separateFreshProvisions: boolean = false; // Default to "Do not Separate"
+    previewDialogVisible = false;
+    previewDialogHeaders: string[] = [];
+    previewDialogRows: string[][] = [];
+    previewDialogFileName = '';
+    previewTopLeftHeader = '';
+    previewDialogHighlightIndexes: number[] = [];
 
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
@@ -280,7 +287,11 @@ export class SuppliersDocsComponent implements OnInit {
         return this.sortState.direction === 'asc' ? '↑' : '↓';
     }
 
-    openFile(fileInfo: SupplierFileInfo): void {
+    canPreviewFile(fileInfo: SupplierFileInfo): boolean {
+        return !!fileInfo.file && !!fileInfo.topLeftCell && fileInfo.topLeftCell !== 'NOT FOUND' && fileInfo.topLeftCell.trim() !== '';
+    }
+
+    async openFile(fileInfo: SupplierFileInfo): Promise<void> {
         this.loggingService.logUserAction('file_opened', {
             fileName: fileInfo.fileName,
             fileSize: fileInfo.file.size,
@@ -295,6 +306,52 @@ export class SuppliersDocsComponent implements OnInit {
         setTimeout(() => {
             URL.revokeObjectURL(url);
         }, 1000);
+    }
+
+    async viewFilePreview(fileInfo: SupplierFileInfo): Promise<void> {
+        if (!this.canPreviewFile(fileInfo)) {
+            return;
+        }
+
+        this.loggingService.logButtonClick('supplier_file_preview_requested', 'SuppliersDocsComponent', {
+            fileName: fileInfo.fileName,
+            category: fileInfo.category
+        });
+
+        let headers: string[] = [];
+        let rows: string[][] = [];
+
+        const processedRows = this.dataService.getProcessedData()
+            .filter(row => row.fileName === fileInfo.fileName);
+
+        if (processedRows.length > 0 && processedRows[0].originalHeaders && processedRows[0].originalHeaders.length > 0) {
+            headers = processedRows[0].originalHeaders.map(header => header != null ? String(header) : '');
+            rows = processedRows.slice(0, 4).map(row => (row.originalData || []).map(cell => cell != null ? String(cell) : ''));
+        } else {
+            const fallbackPreview = await this.buildPreviewDirectlyFromFile(fileInfo);
+            headers = fallbackPreview.headers;
+            rows = fallbackPreview.rows;
+
+            if (headers.length === 0 || rows.length === 0) {
+                this.loggingService.logUserAction('supplier_file_preview_unavailable', {
+                    fileName: fileInfo.fileName
+                }, 'SuppliersDocsComponent');
+            }
+        }
+
+        const { trimmedHeaders, trimmedRows } = this.trimPreviewData(headers, rows);
+
+        this.previewDialogHeaders = trimmedHeaders;
+        this.previewDialogRows = trimmedRows;
+        this.previewTopLeftHeader = trimmedHeaders.length > 0 ? trimmedHeaders[0] : '';
+        this.previewDialogFileName = fileInfo.fileName;
+        this.previewDialogHighlightIndexes = this.getPreviewHighlightIndexes(fileInfo, trimmedHeaders.length);
+        this.previewDialogVisible = true;
+    }
+
+    closePreviewDialog(): void {
+        this.previewDialogVisible = false;
+        this.previewDialogHighlightIndexes = [];
     }
 
     onPriceDividerChange(): void {
@@ -326,6 +383,161 @@ export class SuppliersDocsComponent implements OnInit {
 
         // Update separate fresh provisions setting in data service
         this.dataService.setSeparateFreshProvisions(this.separateFreshProvisions);
+    }
+
+    isPreviewColumnHighlighted(index: number): boolean {
+        return this.previewDialogHighlightIndexes.includes(index);
+    }
+
+    private trimPreviewData(headers: string[], rows: string[][]): { trimmedHeaders: string[]; trimmedRows: string[][] } {
+        const columnCount = Math.max(headers.length, ...rows.map(row => row.length), 0);
+        let lastIndexWithData = columnCount - 1;
+
+        while (lastIndexWithData >= 0) {
+            const headerValue = (headers[lastIndexWithData] || '').trim();
+            const hasDataInColumn = rows.some(row => (row[lastIndexWithData] || '').trim() !== '');
+
+            if (headerValue !== '' || hasDataInColumn) {
+                break;
+            }
+
+            lastIndexWithData--;
+        }
+
+        if (lastIndexWithData < 0) {
+            return {
+                trimmedHeaders: [],
+                trimmedRows: []
+            };
+        }
+
+        const trimmedHeaders = headers.slice(0, lastIndexWithData + 1);
+        const trimmedRows = rows.map(row => row.slice(0, lastIndexWithData + 1));
+
+        return { trimmedHeaders, trimmedRows };
+    }
+
+    private getPreviewHighlightIndexes(fileInfo: SupplierFileInfo, columnCount: number): number[] {
+        const indexes = new Set<number>();
+
+        if (!fileInfo.topLeftCell || fileInfo.topLeftCell === 'NOT FOUND') {
+            return [];
+        }
+
+        const baseColumn = XLSX.utils.decode_cell(fileInfo.topLeftCell).c;
+        const addIndex = (columnRef?: string, headerValue?: string) => {
+            if (!columnRef || columnRef === 'NOT FOUND') {
+                if (!headerValue) {
+                    return;
+                }
+                const matchIndex = this.previewDialogHeaders.findIndex(header =>
+                    header && header.trim().toLowerCase() === headerValue.trim().toLowerCase()
+                );
+                if (matchIndex >= 0 && matchIndex < columnCount) {
+                    indexes.add(matchIndex);
+                }
+                return;
+            }
+
+            try {
+                const columnIndex = XLSX.utils.decode_col(columnRef) - baseColumn;
+                if (columnIndex >= 0 && columnIndex < columnCount) {
+                    indexes.add(columnIndex);
+                }
+            } catch {
+                // Fallback to header text match if decoding fails
+                if (headerValue) {
+                    const fallbackIndex = this.previewDialogHeaders.findIndex(header =>
+                        header && header.trim().toLowerCase() === headerValue.trim().toLowerCase()
+                    );
+                    if (fallbackIndex >= 0 && fallbackIndex < columnCount) {
+                        indexes.add(fallbackIndex);
+                    }
+                }
+            }
+        };
+
+        addIndex(fileInfo.descriptionColumn, fileInfo.descriptionHeader);
+        addIndex(fileInfo.priceColumn, fileInfo.priceHeader);
+        addIndex(fileInfo.unitColumn, fileInfo.unitHeader);
+        addIndex(fileInfo.remarksColumn, fileInfo.remarksHeader);
+
+        return Array.from(indexes.values()).sort((a, b) => a - b);
+    }
+
+    private buildPreviewDirectlyFromFile(fileInfo: SupplierFileInfo): Promise<{ headers: string[]; rows: string[][] }> {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+
+            reader.onload = (event) => {
+                try {
+                    const data = new Uint8Array(event.target?.result as ArrayBuffer);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+
+                    if (!worksheet) {
+                        resolve({ headers: [], rows: [] });
+                        return;
+                    }
+
+                    resolve(this.extractPreviewFromWorksheet(worksheet, fileInfo));
+                } catch (error) {
+                    this.loggingService.logError(error as Error, 'supplier_file_preview_read_error', 'SuppliersDocsComponent', {
+                        fileName: fileInfo.fileName
+                    });
+                    resolve({ headers: [], rows: [] });
+                }
+            };
+
+            reader.onerror = () => {
+                const readerError = reader.error?.message || 'Unknown file reader error';
+                this.loggingService.logError(new Error(readerError), 'supplier_file_preview_file_reader_error', 'SuppliersDocsComponent', {
+                    fileName: fileInfo.fileName
+                });
+                resolve({ headers: [], rows: [] });
+            };
+
+            reader.readAsArrayBuffer(fileInfo.file);
+        });
+    }
+
+    private extractPreviewFromWorksheet(worksheet: XLSX.WorkSheet, fileInfo: SupplierFileInfo): { headers: string[]; rows: string[][] } {
+        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+        const topLeft = XLSX.utils.decode_cell(fileInfo.topLeftCell);
+
+        const headers: string[] = [];
+        for (let col = topLeft.c; col <= range.e.c; col++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: topLeft.r, c: col });
+            const cell = worksheet[cellAddress];
+            headers.push(cell && cell.v != null ? String(cell.v) : '');
+        }
+
+        const rows: string[][] = [];
+        for (let row = topLeft.r + 1; row <= range.e.r && rows.length < 4; row++) {
+            const rowData: string[] = [];
+            let hasData = false;
+
+            for (let col = topLeft.c; col <= range.e.c; col++) {
+                const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+                const cell = worksheet[cellAddress];
+                const value = cell && cell.v != null ? String(cell.v) : '';
+
+                if (value.trim() !== '') {
+                    hasData = true;
+                }
+
+                rowData.push(value);
+            }
+
+            if (!hasData) {
+                continue;
+            }
+
+            rows.push(rowData);
+        }
+
+        return { headers, rows };
     }
 
 }

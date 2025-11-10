@@ -365,6 +365,13 @@
         }
     }
 
+    .column-header-description,
+    .column-header-price,
+    .column-header-unit,
+    .column-header-remarks {
+        background-color: #1a7ce8 !important;
+    }
+
     .not-found {
         background-color: #ffebee;
         color: #c62828;
@@ -379,6 +386,14 @@
     .status-cell {
         text-align: center;
         vertical-align: middle;
+    }
+
+    .file-name-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        min-width: 180px;
     }
 
     .status-icon {
@@ -422,6 +437,43 @@
         &:active {
             color: #003366;
             background-color: #e6f3ff;
+        }
+    }
+
+    td.column-description:not(.not-found),
+    td.column-price:not(.not-found),
+    td.column-unit:not(.not-found),
+    td.column-remarks:not(.not-found) {
+        background-color: #f2f8ff;
+    }
+
+    .view-button {
+        background-color: #0066cc;
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 14px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+
+        &:hover:not(:disabled) {
+            background-color: #0052a3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 102, 204, 0.25);
+        }
+
+        &:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        &:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.7;
+            box-shadow: none;
         }
     }
 }
@@ -518,5 +570,139 @@
                 }
             }
         }
+    }
+}
+
+.preview-dialog-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+}
+
+.preview-dialog-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.preview-dialog-content {
+    position: relative;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    padding: 20px;
+    width: 80%;
+    max-width: 900px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-dialog-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 16px;
+
+    h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: #0b5ed7;
+    }
+
+    .preview-meta {
+        margin-left: auto;
+        margin-right: 12px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        font-size: 14px;
+        color: #333;
+
+        .preview-meta-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .preview-meta-value {
+            font-weight: 600;
+            color: #0b5ed7;
+        }
+    }
+
+    .preview-close-button {
+        background: transparent;
+        border: none;
+        font-size: 26px;
+        line-height: 1;
+        cursor: pointer;
+        color: #333;
+        padding: 0 8px;
+        transition: color 0.2s ease;
+
+        &:hover {
+            color: #0b5ed7;
+        }
+
+        &:focus {
+            outline: none;
+            color: #0b5ed7;
+        }
+    }
+}
+
+.preview-dialog-body {
+    flex: 1;
+    overflow: auto;
+
+    &.empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+
+        th,
+        td {
+            border: 1px solid #dee2e6;
+            padding: 8px 10px;
+            font-size: 14px;
+            background-color: #ffffff;
+        }
+
+        th {
+            background-color: #f1f5ff;
+            font-weight: 600;
+            text-align: left;
+            color: #000000;
+        }
+
+        .highlight-column {
+            background-color: #fff3cd;
+        }
+    }
+
+    .preview-empty-state {
+        font-size: 16px;
+        font-weight: 500;
+        color: #555555;
+        text-align: center;
+        margin: 0;
     }
 }
