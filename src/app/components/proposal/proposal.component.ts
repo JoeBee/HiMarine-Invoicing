@@ -88,36 +88,25 @@ export class ProposalComponent implements OnInit {
 
     private updateExportFileName(): void {
         const parts: string[] = [];
-        parts.push('Proposal');
-
-        if (this.rfqData.invoiceNumber?.trim()) {
-            parts.push(this.rfqData.invoiceNumber.trim());
-        }
-
-        const formattedDate = this.formatDateForFileName(this.rfqData.invoiceDate);
-        if (formattedDate) {
-            parts.push(formattedDate);
-        }
-
-        if (this.rfqData.vessel?.trim()) {
-            parts.push(this.rfqData.vessel.trim());
-        }
-
-        if (this.rfqData.country?.trim()) {
-            parts.push(this.rfqData.country.trim());
-        }
-
-        if (this.rfqData.port?.trim()) {
-            parts.push(this.rfqData.port.trim());
-        }
-
-        if (this.rfqData.category?.trim()) {
-            parts.push(this.rfqData.category.trim());
-        }
 
         const companyLabel = this.getCompanyLabel(this.selectedCompany);
         if (companyLabel) {
             parts.push(companyLabel);
+        }
+
+        const vesselSegment = this.buildInvoiceDetailSegment('Vessel', this.rfqData.vessel);
+        if (vesselSegment) {
+            parts.push(vesselSegment);
+        }
+
+        const portSegment = this.buildInvoiceDetailSegment('Port', this.rfqData.port);
+        if (portSegment) {
+            parts.push(portSegment);
+        }
+
+        const categorySegment = this.buildInvoiceDetailSegment('Category', this.rfqData.category);
+        if (categorySegment) {
+            parts.push(categorySegment);
         }
 
         this.exportFileName = parts.filter(Boolean).join(' ');
@@ -126,30 +115,23 @@ export class ProposalComponent implements OnInit {
     private getCompanyLabel(company: 'HI US' | 'HI UK' | 'EOS'): string {
         switch (company) {
             case 'HI US':
-                return 'HI-US';
             case 'HI UK':
-                return 'HI-UK';
+                return 'Hi Marine';
             case 'EOS':
-                return 'EOS';
+                return 'EOS Supply';
             default:
                 return '';
         }
     }
 
-    private formatDateForFileName(dateString?: string): string {
-        if (!dateString) {
+    private buildInvoiceDetailSegment(_label: string, value?: string): string {
+        const trimmedValue = value?.trim();
+        if (!trimmedValue) {
             return '';
         }
-        const date = new Date(dateString);
-        if (Number.isNaN(date.getTime())) {
-            return '';
-        }
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
-        const month = months[date.getMonth()];
-        const day = date.getDate().toString().padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
+        return trimmedValue;
     }
+
 }
 
 
