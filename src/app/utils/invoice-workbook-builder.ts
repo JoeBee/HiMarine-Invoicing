@@ -401,7 +401,7 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
     };
 
     const categoryToUse = categoryOverride || data.category;
-    const invoiceNumberToUse = appendAtoInvoiceNumber ? `${data.invoiceNumber}A` : data.invoiceNumber;
+    const invoiceNumberToUse = appendAtoInvoiceNumber ? `${data.invoiceNumber}a` : data.invoiceNumber;
     let invoiceRow = invoiceDetailsStartRow;
     const invoiceDetails = [
         { label: 'No', value: invoiceNumberToUse, isDate: false },
