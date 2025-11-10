@@ -395,6 +395,8 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 this.createBondSheet(workbook);
             }
 
+            this.applyCambriaFont(workbook);
+
             // Generate Excel file
             const buffer = await workbook.xlsx.writeBuffer();
             const data = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -421,6 +423,37 @@ export class PriceListComponent implements OnInit, OnDestroy {
         } catch (error) {
             this.loggingService.logError(error as Error, 'excel_export', 'PriceListComponent');
         }
+    }
+
+    private applyCambriaFont(workbook: ExcelJS.Workbook): void {
+        workbook.eachSheet(worksheet => {
+            worksheet.columns?.forEach(column => {
+                if (!column) {
+                    return;
+                }
+                const columnFont = column.font || {};
+                column.font = { ...columnFont, name: 'Cambria', size: 11 };
+            });
+
+            worksheet.eachRow({ includeEmpty: true }, row => {
+                (row as any).font = { ...((row as any).font || {}), name: 'Cambria', size: 11 };
+
+                row.eachCell({ includeEmpty: true }, cell => {
+                    const cellFont = cell.font || {};
+                    cell.font = { ...cellFont, name: 'Cambria', size: 11 };
+
+                    const value = cell.value;
+                    if (value && typeof value === 'object' && 'richText' in value && Array.isArray((value as ExcelJS.CellRichTextValue).richText)) {
+                        const richTextValue = value as ExcelJS.CellRichTextValue;
+                        richTextValue.richText = richTextValue.richText.map(part => ({
+                            ...part,
+                            font: { ...(part.font || {}), name: 'Cambria', size: 11 }
+                        }));
+                        cell.value = richTextValue;
+                    }
+                });
+            });
+        });
     }
 
     private createCoverSheet(workbook: ExcelJS.Workbook, hasProvisionsData: boolean, hasBondData: boolean, separateFreshProvisions: boolean): void {

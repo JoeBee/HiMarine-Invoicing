@@ -105,6 +105,37 @@ function sanitizeFileName(name: string): string {
     return name.replace(/[<>:"/\\|?*]/g, '_');
 }
 
+function applyCambriaFontToWorkbook(workbook: ExcelJS.Workbook): void {
+    workbook.eachSheet(worksheet => {
+        worksheet.columns?.forEach(column => {
+            if (!column) {
+                return;
+            }
+            const columnFont = column.font || {};
+            column.font = { ...columnFont, name: 'Cambria', size: 11 };
+        });
+
+        worksheet.eachRow({ includeEmpty: true }, row => {
+            (row as any).font = { ...((row as any).font || {}), name: 'Cambria', size: 11 };
+
+            row.eachCell({ includeEmpty: true }, cell => {
+                const cellFont = cell.font || {};
+                cell.font = { ...cellFont, name: 'Cambria', size: 11 };
+
+                const value = cell.value;
+                if (value && typeof value === 'object' && 'richText' in value && Array.isArray((value as ExcelJS.CellRichTextValue).richText)) {
+                    const richTextValue = value as ExcelJS.CellRichTextValue;
+                    richTextValue.richText = richTextValue.richText.map(part => ({
+                        ...part,
+                        font: { ...(part.font || {}), name: 'Cambria', size: 11 }
+                    }));
+                    cell.value = richTextValue;
+                }
+            });
+        });
+    });
+}
+
 function formatDateAsText(dateString: string): string {
     if (!dateString) {
         return '';
@@ -633,6 +664,8 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
     };
     worksheet.pageSetup.horizontalCentered = true;
     worksheet.pageSetup.verticalCentered = false;
+
+    applyCambriaFontToWorkbook(workbook);
 
     let buffer = await workbook.xlsx.writeBuffer();
     try {

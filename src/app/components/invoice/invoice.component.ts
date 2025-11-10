@@ -732,6 +732,8 @@ export class InvoiceComponent implements OnInit {
             worksheet[totalAmountAddress].s = { font: { bold: true } };
         }
 
+        this.applyCambriaFontToSheet(worksheet);
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Invoice');
 
@@ -751,6 +753,35 @@ export class InvoiceComponent implements OnInit {
             itemsIncluded: includedData.length,
             totalAmount: this.finalTotalAmount
         }, 'InvoiceComponent');
+    }
+
+    private applyCambriaFontToSheet(worksheet: XLSX.WorkSheet): void {
+        const reference = worksheet['!ref'];
+        if (!reference) {
+            return;
+        }
+
+        const range = XLSX.utils.decode_range(reference);
+        for (let row = range.s.r; row <= range.e.r; row++) {
+            for (let col = range.s.c; col <= range.e.c; col++) {
+                const address = XLSX.utils.encode_cell({ r: row, c: col });
+                const cell = worksheet[address] as any;
+                if (!cell) {
+                    continue;
+                }
+
+                const style = cell.s ? { ...cell.s } : {};
+                const font = style.font ? { ...style.font } : {};
+                cell.s = {
+                    ...style,
+                    font: {
+                        ...font,
+                        name: 'Cambria',
+                        sz: 11
+                    }
+                };
+            }
+        }
     }
 
     generateInvoicePDF(): void {
