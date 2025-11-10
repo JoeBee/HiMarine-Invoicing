@@ -773,6 +773,12 @@
                                 background-color: #ffffff;
                             }
 
+                            .composite-select-group {
+                                display: flex;
+                                flex-direction: column;
+                                gap: 6px;
+                            }
+
                             .status-icon {
                                 font-size: 18px;
                                 font-weight: 700;

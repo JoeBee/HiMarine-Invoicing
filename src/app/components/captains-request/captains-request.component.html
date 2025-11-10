@@ -108,22 +108,56 @@
                                         </select>
                                     </td>
                                     <td class="unit-cell">
-                                        <select [(ngModel)]="tab.unit"
-                                            (change)="rfqState.onColumnChange(analysis, tab, 'unit')"
-                                            [disabled]="!tab.included" class="column-select">
-                                            <option value="">-- Select --</option>
-                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
-                                                {{ header }}</option>
-                                        </select>
+                                        <div class="composite-select-group">
+                                            <select [(ngModel)]="tab.unitPrimary"
+                                                (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'unit', 0)"
+                                                [disabled]="!tab.included" class="column-select">
+                                                <option value="">-- Select --</option>
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                    {{ header }}</option>
+                                            </select>
+                                            <select [(ngModel)]="tab.unitSecondary"
+                                                (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'unit', 1)"
+                                                [disabled]="!tab.included || !tab.unitPrimary" class="column-select">
+                                                <option value="">-- Select --</option>
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                    {{ header }}</option>
+                                            </select>
+                                            <select [(ngModel)]="tab.unitTertiary"
+                                                (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'unit', 2)"
+                                                [disabled]="!tab.included || !tab.unitPrimary || !tab.unitSecondary"
+                                                class="column-select">
+                                                <option value="">-- Select --</option>
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                    {{ header }}</option>
+                                            </select>
+                                        </div>
                                     </td>
                                     <td class="remark-cell">
-                                        <select [(ngModel)]="tab.remark"
-                                            (change)="rfqState.onColumnChange(analysis, tab, 'remark')"
-                                            [disabled]="!tab.included" class="column-select">
-                                            <option value="">-- Select --</option>
-                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
-                                                {{ header }}</option>
-                                        </select>
+                                        <div class="composite-select-group">
+                                            <select [(ngModel)]="tab.remarkPrimary"
+                                                (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'remark', 0)"
+                                                [disabled]="!tab.included" class="column-select">
+                                                <option value="">-- Select --</option>
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                    {{ header }}</option>
+                                            </select>
+                                            <select [(ngModel)]="tab.remarkSecondary"
+                                                (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'remark', 1)"
+                                                [disabled]="!tab.included || !tab.remarkPrimary" class="column-select">
+                                                <option value="">-- Select --</option>
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                    {{ header }}</option>
+                                            </select>
+                                            <select [(ngModel)]="tab.remarkTertiary"
+                                                (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'remark', 2)"
+                                                [disabled]="!tab.included || !tab.remarkPrimary || !tab.remarkSecondary"
+                                                class="column-select">
+                                                <option value="">-- Select --</option>
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                    {{ header }}</option>
+                                            </select>
+                                        </div>
                                     </td>
                                     <td class="status-cell">
                                         <ng-container *ngIf="rfqState.isTabReady(tab); else statusIncomplete">
@@ -142,9 +176,8 @@
                                     </td>
                                 </tr>
                                 <tr *ngIf="isLast" class="workbook-divider-row">
-                                    <td class="workbook-divider-cell" colspan="9">
-                                        <span></span>
-                                    </td>
+                                    <td class="workbook-divider-cell" colspan="9"
+                                        style="padding: 0; border-bottom: 1px solid #9aa3ab; height: 0;"></td>
                                 </tr>
                             </ng-container>
                         </ng-container>

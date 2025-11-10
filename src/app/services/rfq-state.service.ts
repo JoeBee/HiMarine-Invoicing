@@ -11,7 +11,13 @@ export interface TabInfo {
     product: string;
     qty: string;
     unit: string;
+    unitPrimary: string;
+    unitSecondary: string;
+    unitTertiary: string;
     remark: string;
+    remarkPrimary: string;
+    remarkSecondary: string;
+    remarkTertiary: string;
     isHidden: boolean;
     columnHeaders: string[];
     included: boolean;
@@ -429,7 +435,13 @@ export class RfqStateService {
             product: '',
             qty: '',
             unit: '',
+            unitPrimary: '',
+            unitSecondary: '',
+            unitTertiary: '',
             remark: '',
+            remarkPrimary: '',
+            remarkSecondary: '',
+            remarkTertiary: '',
             isHidden,
             columnHeaders,
             included: true,
@@ -441,8 +453,10 @@ export class RfqStateService {
             const autoSelection = this.autoSelectColumns(columnHeaders);
             tabInfo.product = autoSelection.product;
             tabInfo.qty = autoSelection.qty;
-            tabInfo.unit = autoSelection.unit;
-            tabInfo.remark = autoSelection.remark;
+            tabInfo.unitPrimary = autoSelection.unit;
+            tabInfo.remarkPrimary = autoSelection.remark;
+            this.syncCompositeField(tabInfo, 'unit');
+            this.syncCompositeField(tabInfo, 'remark');
         }
 
         tabInfo.rowCount = this.countDataRows(worksheet, tabInfo, range);
@@ -582,8 +596,14 @@ export class RfqStateService {
             const autoSelection = this.autoSelectColumns(columnHeaders);
             tab.product = autoSelection.product;
             tab.qty = autoSelection.qty;
-            tab.unit = autoSelection.unit;
-            tab.remark = autoSelection.remark;
+            tab.unitPrimary = autoSelection.unit;
+            tab.unitSecondary = '';
+            tab.unitTertiary = '';
+            tab.remarkPrimary = autoSelection.remark;
+            tab.remarkSecondary = '';
+            tab.remarkTertiary = '';
+            this.syncCompositeField(tab, 'remark');
+            this.syncCompositeField(tab, 'unit');
 
             tab.topLeftCell = topLeftCell;
 
@@ -668,7 +688,7 @@ export class RfqStateService {
         const hasRows = tab.rowCount > 0;
         const hasProduct = !!tab.product && tab.product.trim() !== '';
         const hasQty = !!tab.qty && tab.qty.trim() !== '';
-        const hasUnit = !!tab.unit && tab.unit.trim() !== '';
+        const hasUnit = this.hasValue(tab.unitPrimary);
 
         return hasTopLeft && hasRows && hasProduct && hasQty && hasUnit;
     }
@@ -976,12 +996,21 @@ export class RfqStateService {
                 const startCol = cellRef.c;
                 const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
 
+                const unitSelectionNames = this.getCompositeSelections(tab, 'unit');
+                const remarkSelectionNames = this.getCompositeSelections(tab, 'remark');
                 const productCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.product);
                 const qtyCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.qty);
-                const unitCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.unit);
-                const remarkCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.remark);
+                const unitCols = unitSelectionNames.map(selection => this.findColumnIndex(worksheet, headerRow, startCol, selection));
+                const remarkCols = remarkSelectionNames.map(selection => this.findColumnIndex(worksheet, headerRow, startCol, selection));
 
-                if ([productCol, qtyCol, unitCol, remarkCol].some(index => index === -1)) {
+                const hasMissingColumn =
+                    productCol === -1 ||
+                    qtyCol === -1 ||
+                    unitCols.length === 0 ||
+                    unitCols.some(index => index === -1) ||
+                    (remarkSelectionNames.length > 0 && remarkCols.some(index => index === -1));
+
+                if (hasMissingColumn) {
                     tables.push({
                         fileName: analysis.fileName,
                         tabName: tab.tabName,
@@ -997,8 +1026,11 @@ export class RfqStateService {
                 for (let row = headerRow + 1; row <= range.e.r; row++) {
                     const description = this.getCellString(worksheet, row, productCol);
                     const qty = this.getCellString(worksheet, row, qtyCol);
-                    const unit = this.getCellString(worksheet, row, unitCol);
-                    const remark = this.getCellString(worksheet, row, remarkCol);
+                    const unitValues = unitCols.map(col => this.getCellString(worksheet, row, col));
+                    const unit = this.combineCellValues(unitValues);
+                    const remark = remarkCols.length > 0
+                        ? this.combineCellValues(remarkCols.map(col => this.getCellString(worksheet, row, col)))
+                        : '';
 
                     const hasAnyValue = description !== '' || qty !== '' || unit !== '' || remark !== '';
                     if (!hasAnyValue) {
@@ -1260,6 +1292,27 @@ export class RfqStateService {
         return [...headers, ...fallback];
     }
 
+    onCompositeSelectionChanged(analysis: FileAnalysis, tab: TabInfo, columnType: 'unit' | 'remark', level: 0 | 1 | 2): void {
+        if (columnType === 'unit') {
+            if (!this.hasValue(tab.unitPrimary)) {
+                tab.unitSecondary = '';
+                tab.unitTertiary = '';
+            } else if (level === 1 && !this.hasValue(tab.unitSecondary)) {
+                tab.unitTertiary = '';
+            }
+        } else {
+            if (!this.hasValue(tab.remarkPrimary)) {
+                tab.remarkSecondary = '';
+                tab.remarkTertiary = '';
+            } else if (level === 1 && !this.hasValue(tab.remarkSecondary)) {
+                tab.remarkTertiary = '';
+            }
+        }
+
+        this.syncCompositeField(tab, columnType);
+        this.onColumnChange(analysis, tab, columnType);
+    }
+
     onTopLeftCellChange(event: Event, tab: TabInfo): void {
         const input = event.target as HTMLInputElement;
         let value = input.value.toUpperCase();
@@ -1294,11 +1347,19 @@ export class RfqStateService {
             tab.columnHeaders = [];
             tab.product = '';
             tab.qty = '';
+            tab.unitPrimary = '';
+            tab.unitSecondary = '';
+            tab.unitTertiary = '';
             tab.unit = '';
             tab.remark = '';
+            tab.remarkPrimary = '';
+            tab.remarkSecondary = '';
+            tab.remarkTertiary = '';
             tab.rowCount = 0;
             tab.previewHeaders = [];
             tab.previewRows = [];
+            this.syncCompositeField(tab, 'unit');
+            this.syncCompositeField(tab, 'remark');
         }
     }
 
@@ -1313,6 +1374,42 @@ export class RfqStateService {
 
     private updateInclusionState(tab: TabInfo): void {
         tab.included = !(tab.rowCount === 0 || !tab.topLeftCell || tab.topLeftCell.trim() === '');
+    }
+
+    private hasValue(value: string | undefined | null): boolean {
+        return !!(value && value.trim() !== '');
+    }
+
+    private getCompositeSelections(tab: TabInfo, columnType: 'unit' | 'remark'): string[] {
+        if (columnType === 'unit') {
+            return [tab.unitPrimary, tab.unitSecondary, tab.unitTertiary]
+                .filter((selection): selection is string => this.hasValue(selection));
+        }
+
+        return [tab.remarkPrimary, tab.remarkSecondary, tab.remarkTertiary]
+            .filter((selection): selection is string => this.hasValue(selection));
+    }
+
+    private combineCompositeSelections(values: Array<string | undefined>): string {
+        return values
+            .map(value => (value ?? '').trim())
+            .filter(value => value !== '')
+            .join(' ');
+    }
+
+    private syncCompositeField(tab: TabInfo, columnType: 'unit' | 'remark'): void {
+        const selections = this.getCompositeSelections(tab, columnType);
+        const combined = this.combineCompositeSelections(selections);
+
+        if (columnType === 'unit') {
+            tab.unit = combined;
+        } else {
+            tab.remark = combined;
+        }
+    }
+
+    private combineCellValues(values: string[]): string {
+        return this.combineCompositeSelections(values);
     }
 
     private buildPreviewData(worksheet: XLSX.WorkSheet, tab: TabInfo, range: XLSX.Range): { headers: string[]; rows: string[][] } {
@@ -1373,9 +1470,14 @@ export class RfqStateService {
         this.previewDialogTabName = tab.tabName;
 
         const highlightTargets = new Set<string>();
-        [tab.product, tab.qty, tab.unit, tab.remark]
-            .filter((value): value is string => !!value && value.trim() !== '')
-            .forEach(value => highlightTargets.add(value.trim().toLowerCase()));
+        if (this.hasValue(tab.product)) {
+            highlightTargets.add(tab.product.trim().toLowerCase());
+        }
+        this.getCompositeSelections(tab, 'unit').forEach(value => highlightTargets.add(value.trim().toLowerCase()));
+        this.getCompositeSelections(tab, 'remark').forEach(value => highlightTargets.add(value.trim().toLowerCase()));
+        if (this.hasValue(tab.qty)) {
+            highlightTargets.add(tab.qty.trim().toLowerCase());
+        }
 
         this.previewDialogHighlightIndexes = [];
         this.previewDialogHeaders.forEach((header, index) => {
