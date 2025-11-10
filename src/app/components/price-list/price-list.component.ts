@@ -456,6 +456,13 @@ export class PriceListComponent implements OnInit, OnDestroy {
         });
     }
 
+    private toUpperCellText(value: string | null | undefined): string {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        return value.toString().toUpperCase();
+    }
+
     private createCoverSheet(workbook: ExcelJS.Workbook, hasProvisionsData: boolean, hasBondData: boolean, separateFreshProvisions: boolean): void {
         const worksheet = workbook.addWorksheet('COVER SHEET');
 
@@ -721,7 +728,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         worksheet.properties.tabColor = { argb: 'FF4472C4' }; // Medium blue
 
         // Add headers
-        const headers = ['Pos.', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
+        const headers = ['Pos.', 'DESCRIPTION', 'REMARK', 'UNIT', 'Qty', 'Price', 'Total'];
         const headerRow = worksheet.addRow(headers);
 
         // Style header row with dark blue background and white text
@@ -746,9 +753,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
             const rowNumber = index + 2; // +2 because header is row 1, data starts at row 2
             const dataRow = worksheet.addRow([
                 (index + 1).toString(),
-                item.description,
-                item.remarks || '-',
-                item.unit,
+                this.toUpperCellText(item.description),
+                this.toUpperCellText(item.remarks || '-'),
+                this.toUpperCellText(item.unit),
                 0, // Qty column - set to 0 instead of empty string
                 this.roundToTwoDecimals(item.price), // Price as number for formula calculation, rounded to 2 decimals
                 '' // Empty Total column - will be filled with formula
@@ -819,7 +826,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         worksheet.properties.tabColor = { argb: 'FF4472C4' }; // Medium blue
 
         // Add headers
-        const headers = ['Pos.', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
+        const headers = ['Pos.', 'DESCRIPTION', 'REMARK', 'UNIT', 'Qty', 'Price', 'Total'];
         const headerRow = worksheet.addRow(headers);
 
         // Style header row with dark blue background and white text
@@ -844,9 +851,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
             const rowNumber = index + 2; // +2 because header is row 1, data starts at row 2
             const dataRow = worksheet.addRow([
                 (index + 1).toString(),
-                item.description,
-                item.remarks || '-',
-                item.unit,
+                this.toUpperCellText(item.description),
+                this.toUpperCellText(item.remarks || '-'),
+                this.toUpperCellText(item.unit),
                 0, // Qty column - set to 0 instead of empty string
                 this.roundToTwoDecimals(item.price), // Price as number for formula calculation, rounded to 2 decimals
                 '' // Empty Total column - will be filled with formula
@@ -917,7 +924,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         worksheet.properties.tabColor = { argb: 'FFB4C6E7' }; // Light blue
 
         // Add headers
-        const headers = ['Pos.', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
+        const headers = ['Pos.', 'DESCRIPTION', 'REMARK', 'UNIT', 'Qty', 'Price', 'Total'];
         const headerRow = worksheet.addRow(headers);
 
         // Style header row with dark blue background and white text
@@ -942,9 +949,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
             const rowNumber = index + 2; // +2 because header is row 1, data starts at row 2
             const dataRow = worksheet.addRow([
                 (index + 1).toString(),
-                item.description,
-                item.remarks || '-',
-                item.unit,
+                this.toUpperCellText(item.description),
+                this.toUpperCellText(item.remarks || '-'),
+                this.toUpperCellText(item.unit),
                 0, // Qty column - set to 0 instead of empty string
                 this.roundToTwoDecimals(item.price), // Price as number for formula calculation, rounded to 2 decimals
                 '' // Empty Total column - will be filled with formula

@@ -136,6 +136,16 @@ function applyCambriaFontToWorkbook(workbook: ExcelJS.Workbook): void {
     });
 }
 
+function toUpperCaseText(value: unknown): string {
+    if (typeof value === 'string') {
+        return value.toUpperCase();
+    }
+    if (value === undefined || value === null) {
+        return '';
+    }
+    return String(value).toUpperCase();
+}
+
 function formatDateAsText(dateString: string): string {
     if (!dateString) {
         return '';
@@ -408,7 +418,7 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
     });
 
     const tableStartRow = Math.max(bankRow, invoiceRow) + 2;
-    const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
+    const headers = ['Pos', 'DESCRIPTION', 'REMARK', 'UNIT', 'Qty', 'Price', 'Total'];
     headers.forEach((header, index) => {
         const cell = worksheet.getCell(tableStartRow, index + 1);
         cell.value = header;
@@ -436,17 +446,17 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
         posCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
         const descCell = worksheet.getCell(rowIndex, 2);
-        descCell.value = item.description;
+        descCell.value = toUpperCaseText(item.description);
         descCell.font = { size: 10, name: 'Calibri' };
         descCell.alignment = { horizontal: 'left', vertical: 'middle' };
 
         const remarkCell = worksheet.getCell(rowIndex, 3);
-        remarkCell.value = item.remark;
+        remarkCell.value = toUpperCaseText(item.remark);
         remarkCell.font = { size: 10, name: 'Calibri' };
         remarkCell.alignment = { horizontal: 'left', vertical: 'middle' };
 
         const unitCell = worksheet.getCell(rowIndex, 4);
-        unitCell.value = item.unit;
+        unitCell.value = toUpperCaseText(item.unit);
         unitCell.font = { size: 10, name: 'Calibri' };
         unitCell.alignment = { horizontal: 'center', vertical: 'middle' };
 

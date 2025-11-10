@@ -676,14 +676,16 @@ export class InvoiceComponent implements OnInit {
 
         // Prepare data for Excel
         const worksheetData = [
-            ['File Name', 'Description', 'Count', 'Remarks', 'Unit Price', 'Total Price'],
+            ['File Name', 'DESCRIPTION', 'Count', 'REMARKS', 'Unit Price', 'Total Price'],
             ...includedData.map(row => {
                 const adjustedPrice = row.price * 1.10 / 0.9;
+                const description = row.description ? String(row.description).toUpperCase() : '';
+                const remarks = row.remarks ? String(row.remarks).toUpperCase() : '';
                 return [
                     row.fileName,
-                    row.description,
+                    description,
                     row.count,
-                    row.remarks,
+                    remarks,
                     adjustedPrice,
                     row.count * adjustedPrice
                 ];
