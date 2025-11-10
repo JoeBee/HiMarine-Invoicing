@@ -52,95 +52,101 @@
                     </thead>
                     <tbody>
                         <ng-container *ngFor="let analysis of rfqState.fileAnalyses; let fileIndex = index">
-                            <tr *ngFor="let tab of analysis.tabs; let isFirst = first; let tabIndex = index"
-                                [class.file-first-row]="isFirst" [class.excluded-row]="!tab.included"
-                                [attr.data-file-index]="fileIndex" [attr.data-tab-index]="tabIndex">
-                                <td *ngIf="isFirst" [attr.rowspan]="analysis.tabs.length" class="file-name-cell"
-                                    (click)="rfqState.openFile(analysis)">
-                                    {{ analysis.fileName }}
-                                </td>
-                                <td class="exclude-cell">
-                                    <input type="checkbox" [(ngModel)]="tab.included"
-                                        (change)="rfqState.onIncludeChange(tab)" class="exclude-checkbox">
-                                </td>
-                                <td class="tab-name-cell" [class.hidden-tab]="tab.isHidden">
-                                    <div class="tab-name-text">
-                                        {{ tab.tabName }}
-                                        <span *ngIf="tab.isHidden" class="hidden-label">(Hidden)</span>
-                                    </div>
-                                    <button type="button" class="preview-toggle"
-                                        (click)="rfqState.openPreviewDialog(analysis, tab)"
-                                        [disabled]="tab.previewRows.length === 0">
-                                        View
-                                    </button>
-                                </td>
-                                <td class="top-left-cell">
-                                    <input type="text" [(ngModel)]="tab.topLeftCell"
-                                        (input)="rfqState.onTopLeftCellChange($event, tab)"
-                                        (blur)="rfqState.validateTopLeftCell(tab)"
-                                        (focus)="rfqState.onTopLeftCellFocus($event, fileIndex, tabIndex)"
-                                        [attr.list]="(!tab.topLeftCell || tab.topLeftCell.trim() === '') ? ('topLeftList-' + fileIndex + '-' + tabIndex) : null"
-                                        [disabled]="!tab.included" class="top-left-input" placeholder="e.g., A1"
-                                        maxlength="3" pattern="[A-Za-z][0-9]{1,2}">
-                                    <datalist *ngIf="!tab.topLeftCell || tab.topLeftCell.trim() === ''"
-                                        [attr.id]="'topLeftList-' + fileIndex + '-' + tabIndex">
-                                        <option *ngFor="let cell of rfqState.getTopLeftCellOptionsLimited()"
-                                            [value]="cell">{{ cell }}</option>
-                                    </datalist>
-                                </td>
-                                <td class="row-count">{{ tab.rowCount }}</td>
-                                <td class="product-cell">
-                                    <select [(ngModel)]="tab.product"
-                                        (change)="rfqState.onColumnChange(analysis, tab, 'product')"
-                                        [disabled]="!tab.included" class="column-select">
-                                        <option value="">-- Select --</option>
-                                        <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
-                                            {{ header }}</option>
-                                    </select>
-                                </td>
-                                <td class="qty-cell">
-                                    <select [(ngModel)]="tab.qty"
-                                        (change)="rfqState.onColumnChange(analysis, tab, 'qty')"
-                                        [disabled]="!tab.included" class="column-select">
-                                        <option value="">-- Select --</option>
-                                        <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
-                                            {{ header }}</option>
-                                    </select>
-                                </td>
-                                <td class="unit-cell">
-                                    <select [(ngModel)]="tab.unit"
-                                        (change)="rfqState.onColumnChange(analysis, tab, 'unit')"
-                                        [disabled]="!tab.included" class="column-select">
-                                        <option value="">-- Select --</option>
-                                        <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
-                                            {{ header }}</option>
-                                    </select>
-                                </td>
-                                <td class="remark-cell">
-                                    <select [(ngModel)]="tab.remark"
-                                        (change)="rfqState.onColumnChange(analysis, tab, 'remark')"
-                                        [disabled]="!tab.included" class="column-select">
-                                        <option value="">-- Select --</option>
-                                        <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
-                                            {{ header }}</option>
-                                    </select>
-                                </td>
-                                <td class="status-cell">
-                                    <ng-container *ngIf="rfqState.isTabReady(tab); else statusIncomplete">
-                                        <span class="status-icon ready" aria-label="Ready to generate table">✔</span>
-                                    </ng-container>
-                                    <ng-template #statusIncomplete>
-                                        <span class="status-icon not-ready"
-                                            aria-label="Missing required selections">✖</span>
-                                    </ng-template>
-                                </td>
-                                <td class="actions-cell" *ngIf="isFirst" [attr.rowspan]="analysis.tabs.length">
-                                    <button type="button" class="remove-file-button"
-                                        (click)="rfqState.removeFile(fileIndex)">
-                                        Remove
-                                    </button>
-                                </td>
-                            </tr>
+                            <ng-container *ngFor="let tab of analysis.tabs; let isFirst = first; let isLast = last; let tabIndex = index">
+                                <tr [class.file-first-row]="isFirst" [class.excluded-row]="!tab.included"
+                                    [attr.data-file-index]="fileIndex" [attr.data-tab-index]="tabIndex">
+                                    <td *ngIf="isFirst" [attr.rowspan]="analysis.tabs.length + 1" class="file-name-cell"
+                                        (click)="rfqState.openFile(analysis)">
+                                        {{ analysis.fileName }}
+                                    </td>
+                                    <td class="exclude-cell">
+                                        <input type="checkbox" [(ngModel)]="tab.included"
+                                            (change)="rfqState.onIncludeChange(tab)" class="exclude-checkbox">
+                                    </td>
+                                    <td class="tab-name-cell" [class.hidden-tab]="tab.isHidden">
+                                        <div class="tab-name-text">
+                                            {{ tab.tabName }}
+                                            <span *ngIf="tab.isHidden" class="hidden-label">(Hidden)</span>
+                                        </div>
+                                        <button type="button" class="preview-toggle"
+                                            (click)="rfqState.openPreviewDialog(analysis, tab)"
+                                            [disabled]="tab.previewRows.length === 0">
+                                            View
+                                        </button>
+                                    </td>
+                                    <td class="top-left-cell">
+                                        <input type="text" [(ngModel)]="tab.topLeftCell"
+                                            (input)="rfqState.onTopLeftCellChange($event, tab)"
+                                            (blur)="rfqState.validateTopLeftCell(tab)"
+                                            (focus)="rfqState.onTopLeftCellFocus($event, fileIndex, tabIndex)"
+                                            [attr.list]="(!tab.topLeftCell || tab.topLeftCell.trim() === '') ? ('topLeftList-' + fileIndex + '-' + tabIndex) : null"
+                                            [disabled]="!tab.included" class="top-left-input" placeholder="e.g., A1"
+                                            maxlength="3" pattern="[A-Za-z][0-9]{1,2}">
+                                        <datalist *ngIf="!tab.topLeftCell || tab.topLeftCell.trim() === ''"
+                                            [attr.id]="'topLeftList-' + fileIndex + '-' + tabIndex">
+                                            <option *ngFor="let cell of rfqState.getTopLeftCellOptionsLimited()"
+                                                [value]="cell">{{ cell }}</option>
+                                        </datalist>
+                                    </td>
+                                    <td class="row-count">{{ tab.rowCount }}</td>
+                                    <td class="product-cell">
+                                        <select [(ngModel)]="tab.product"
+                                            (change)="rfqState.onColumnChange(analysis, tab, 'product')"
+                                            [disabled]="!tab.included" class="column-select">
+                                            <option value="">-- Select --</option>
+                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                {{ header }}</option>
+                                        </select>
+                                    </td>
+                                    <td class="qty-cell">
+                                        <select [(ngModel)]="tab.qty"
+                                            (change)="rfqState.onColumnChange(analysis, tab, 'qty')"
+                                            [disabled]="!tab.included" class="column-select">
+                                            <option value="">-- Select --</option>
+                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                {{ header }}</option>
+                                        </select>
+                                    </td>
+                                    <td class="unit-cell">
+                                        <select [(ngModel)]="tab.unit"
+                                            (change)="rfqState.onColumnChange(analysis, tab, 'unit')"
+                                            [disabled]="!tab.included" class="column-select">
+                                            <option value="">-- Select --</option>
+                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                {{ header }}</option>
+                                        </select>
+                                    </td>
+                                    <td class="remark-cell">
+                                        <select [(ngModel)]="tab.remark"
+                                            (change)="rfqState.onColumnChange(analysis, tab, 'remark')"
+                                            [disabled]="!tab.included" class="column-select">
+                                            <option value="">-- Select --</option>
+                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                {{ header }}</option>
+                                        </select>
+                                    </td>
+                                    <td class="status-cell">
+                                        <ng-container *ngIf="rfqState.isTabReady(tab); else statusIncomplete">
+                                            <span class="status-icon ready" aria-label="Ready to generate table">✔</span>
+                                        </ng-container>
+                                        <ng-template #statusIncomplete>
+                                            <span class="status-icon not-ready"
+                                                aria-label="Missing required selections">✖</span>
+                                        </ng-template>
+                                    </td>
+                                    <td class="actions-cell" *ngIf="isFirst" [attr.rowspan]="analysis.tabs.length + 1">
+                                        <button type="button" class="remove-file-button"
+                                            (click)="rfqState.removeFile(fileIndex)">
+                                            Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="isLast" class="workbook-divider-row">
+                                    <td class="workbook-divider-cell" colspan="9">
+                                        <span></span>
+                                    </td>
+                                </tr>
+                            </ng-container>
                         </ng-container>
                     </tbody>
                 </table>
