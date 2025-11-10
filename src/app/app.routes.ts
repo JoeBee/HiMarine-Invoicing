@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
     {
         path: '',
-        redirectTo: '/suppliers/supplier-docs',
+        redirectTo: '/rfq/captains-request',
         pathMatch: 'full'
     },
     {

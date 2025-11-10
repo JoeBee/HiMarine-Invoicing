@@ -22,22 +22,14 @@ export class AppComponent {
             .pipe(filter(event => event instanceof NavigationEnd))
             .subscribe((event) => {
                 const navigationEvent = event as NavigationEnd;
-                this.updateActiveMainTab(navigationEvent.url);
+                this.updateActiveMainTab(navigationEvent.urlAfterRedirects);
             });
+
+        this.activeMainTab = this.getMainTabFromUrl(this.router.url);
     }
 
     updateActiveMainTab(url: string): void {
-        if (url.startsWith('/suppliers')) {
-            this.activeMainTab = 'suppliers';
-        } else if (url.startsWith('/invoicing')) {
-            this.activeMainTab = 'invoicing';
-        } else if (url.startsWith('/rfq')) {
-            this.activeMainTab = 'rfq';
-        } else if (url.startsWith('/history')) {
-            this.activeMainTab = 'history';
-        } else {
-            this.activeMainTab = '';
-        }
+        this.activeMainTab = this.getMainTabFromUrl(url);
     }
 
     onMainTabClick(tab: string): void {
@@ -55,6 +47,22 @@ export class AppComponent {
         } else if (tab === 'history') {
             this.router.navigate(['/history']);
         }
+    }
+
+    private getMainTabFromUrl(url: string): string {
+        if (url.startsWith('/suppliers')) {
+            return 'suppliers';
+        }
+        if (url.startsWith('/invoicing')) {
+            return 'invoicing';
+        }
+        if (url.startsWith('/rfq')) {
+            return 'rfq';
+        }
+        if (url.startsWith('/history')) {
+            return 'history';
+        }
+        return '';
     }
 
     openInfoModal(): void {
