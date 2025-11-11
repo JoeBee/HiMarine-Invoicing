@@ -676,7 +676,7 @@ export class InvoiceComponent implements OnInit {
 
         // Prepare data for Excel
         const worksheetData = [
-            ['File Name', 'DESCRIPTION', 'Count', 'REMARKS', 'Unit Price', 'Total Price'],
+            ['File Name', 'Description', 'Count', 'Remarks', 'Unit Price', 'Total Price'],
             ...includedData.map(row => {
                 const adjustedPrice = row.price * 1.10 / 0.9;
                 const description = row.description ? String(row.description).toUpperCase() : '';
@@ -695,6 +695,32 @@ export class InvoiceComponent implements OnInit {
 
         // Create workbook and worksheet
         const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+        const headerAddresses = ['A1', 'B1', 'C1', 'D1', 'E1', 'F1'];
+        headerAddresses.forEach(address => {
+            const cell = worksheet[address] as any;
+            if (!cell) {
+                return;
+            }
+            const baseStyle = cell.s ? { ...cell.s } : {};
+            const baseFont = baseStyle.font ? { ...baseStyle.font } : {};
+            cell.s = {
+                ...baseStyle,
+                font: {
+                    ...baseFont,
+                    bold: true,
+                    color: { rgb: 'FFFFFFFF' }
+                },
+                fill: {
+                    patternType: 'solid',
+                    fgColor: { rgb: 'FF4472C4' }
+                },
+                alignment: {
+                    horizontal: 'center',
+                    vertical: 'center'
+                }
+            };
+        });
 
         // Set column widths
         worksheet['!cols'] = [

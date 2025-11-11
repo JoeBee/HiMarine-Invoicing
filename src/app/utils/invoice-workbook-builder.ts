@@ -107,17 +107,7 @@ function sanitizeFileName(name: string): string {
 
 function applyCambriaFontToWorkbook(workbook: ExcelJS.Workbook): void {
     workbook.eachSheet(worksheet => {
-        worksheet.columns?.forEach(column => {
-            if (!column) {
-                return;
-            }
-            const columnFont = column.font || {};
-            column.font = { ...columnFont, name: 'Cambria', size: 11 };
-        });
-
         worksheet.eachRow({ includeEmpty: true }, row => {
-            (row as any).font = { ...((row as any).font || {}), name: 'Cambria', size: 11 };
-
             row.eachCell({ includeEmpty: true }, cell => {
                 const cellFont = cell.font || {};
                 cell.font = { ...cellFont, name: 'Cambria', size: 11 };
@@ -418,7 +408,7 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
     });
 
     const tableStartRow = Math.max(bankRow, invoiceRow) + 2;
-    const headers = ['Pos', 'DESCRIPTION', 'REMARK', 'UNIT', 'Qty', 'Price', 'Total'];
+    const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
     headers.forEach((header, index) => {
         const cell = worksheet.getCell(tableStartRow, index + 1);
         cell.value = header;

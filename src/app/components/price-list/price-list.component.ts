@@ -427,17 +427,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
     private applyCambriaFont(workbook: ExcelJS.Workbook): void {
         workbook.eachSheet(worksheet => {
-            worksheet.columns?.forEach(column => {
-                if (!column) {
-                    return;
-                }
-                const columnFont = column.font || {};
-                column.font = { ...columnFont, name: 'Cambria', size: 11 };
-            });
-
             worksheet.eachRow({ includeEmpty: true }, row => {
-                (row as any).font = { ...((row as any).font || {}), name: 'Cambria', size: 11 };
-
                 row.eachCell({ includeEmpty: true }, cell => {
                     const cellFont = cell.font || {};
                     cell.font = { ...cellFont, name: 'Cambria', size: 11 };
@@ -728,7 +718,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         worksheet.properties.tabColor = { argb: 'FF4472C4' }; // Medium blue
 
         // Add headers
-        const headers = ['Pos.', 'DESCRIPTION', 'REMARK', 'UNIT', 'Qty', 'Price', 'Total'];
+        const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
         const headerRow = worksheet.addRow(headers);
 
         // Style header row with dark blue background and white text
@@ -826,7 +816,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         worksheet.properties.tabColor = { argb: 'FF4472C4' }; // Medium blue
 
         // Add headers
-        const headers = ['Pos.', 'DESCRIPTION', 'REMARK', 'UNIT', 'Qty', 'Price', 'Total'];
+        const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
         const headerRow = worksheet.addRow(headers);
 
         // Style header row with dark blue background and white text
@@ -924,7 +914,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
         worksheet.properties.tabColor = { argb: 'FFB4C6E7' }; // Light blue
 
         // Add headers
-        const headers = ['Pos.', 'DESCRIPTION', 'REMARK', 'UNIT', 'Qty', 'Price', 'Total'];
+        const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
         const headerRow = worksheet.addRow(headers);
 
         // Style header row with dark blue background and white text
