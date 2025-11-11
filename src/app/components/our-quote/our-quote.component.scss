@@ -691,11 +691,8 @@
                         }
                     }
 
-                    th:nth-child(6),
-                    th:nth-child(7),
-                    th:nth-child(8),
-                    th:nth-child(9) {
-                        background: #d6ecff;
+                    th.mapped-column-header {
+                        background-color: #d6ecff;
                         color: #023a73;
                     }
 
@@ -731,7 +728,9 @@
                             &.product-cell,
                             &.qty-cell,
                             &.unit-cell,
-                            &.remark-cell {
+                            &.price-cell,
+                            &.remark-cell,
+                            &.mapped-column-cell {
                                 background-color: #f1f7ff;
                             }
 

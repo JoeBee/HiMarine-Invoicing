@@ -18,6 +18,7 @@ export interface TabInfo {
     remarkPrimary: string;
     remarkSecondary: string;
     remarkTertiary: string;
+    price: string;
     isHidden: boolean;
     columnHeaders: string[];
     included: boolean;
@@ -471,6 +472,7 @@ export class RfqStateService {
             remarkPrimary: '',
             remarkSecondary: '',
             remarkTertiary: '',
+            price: '',
             isHidden,
             columnHeaders,
             included: true,
@@ -484,6 +486,7 @@ export class RfqStateService {
             tabInfo.qty = autoSelection.qty;
             tabInfo.unitPrimary = autoSelection.unit;
             tabInfo.remarkPrimary = autoSelection.remark;
+            tabInfo.price = autoSelection.price;
             this.syncCompositeField(tabInfo, 'unit');
             this.syncCompositeField(tabInfo, 'remark');
         }
@@ -622,6 +625,7 @@ export class RfqStateService {
             tab.remarkPrimary = autoSelection.remark;
             tab.remarkSecondary = '';
             tab.remarkTertiary = '';
+            tab.price = autoSelection.price;
             this.syncCompositeField(tab, 'remark');
             this.syncCompositeField(tab, 'unit');
 
@@ -1024,13 +1028,16 @@ export class RfqStateService {
                 const qtyCol = this.findColumnIndex(worksheet, headerRow, startCol, tab.qty);
                 const unitCols = unitSelectionNames.map(selection => this.findColumnIndex(worksheet, headerRow, startCol, selection));
                 const remarkCols = remarkSelectionNames.map(selection => this.findColumnIndex(worksheet, headerRow, startCol, selection));
+                const hasPriceSelected = this.hasValue(tab.price);
+                const priceCol = hasPriceSelected ? this.findColumnIndex(worksheet, headerRow, startCol, tab.price) : -1;
 
                 const hasMissingColumn =
                     productCol === -1 ||
                     qtyCol === -1 ||
                     unitCols.length === 0 ||
                     unitCols.some(index => index === -1) ||
-                    (remarkSelectionNames.length > 0 && remarkCols.some(index => index === -1));
+                    (remarkSelectionNames.length > 0 && remarkCols.some(index => index === -1)) ||
+                    (hasPriceSelected && priceCol === -1);
 
                 if (hasMissingColumn) {
                     tables.push({
@@ -1053,8 +1060,9 @@ export class RfqStateService {
                     const remark = remarkCols.length > 0
                         ? this.combineCellValues(remarkCols.map(col => this.getCellString(worksheet, row, col)))
                         : '';
+                    const price = priceCol !== -1 ? this.getCellString(worksheet, row, priceCol) : '';
 
-                    const hasAnyValue = description !== '' || qty !== '' || unit !== '' || remark !== '';
+                    const hasAnyValue = description !== '' || qty !== '' || unit !== '' || remark !== '' || price !== '';
                     if (!hasAnyValue) {
                         break;
                     }
@@ -1071,7 +1079,7 @@ export class RfqStateService {
                         remark,
                         unit,
                         qty,
-                        price: '',
+                        price,
                         total: ''
                     };
 
@@ -1282,7 +1290,7 @@ export class RfqStateService {
         }, 1000);
     }
 
-    onColumnChange(analysis: FileAnalysis, tab: TabInfo, columnType: 'product' | 'qty' | 'unit' | 'remark'): void {
+    onColumnChange(analysis: FileAnalysis, tab: TabInfo, columnType: 'product' | 'qty' | 'unit' | 'remark' | 'price'): void {
         void this.refreshProposalPreview();
     }
 
@@ -1370,6 +1378,7 @@ export class RfqStateService {
             tab.remarkPrimary = '';
             tab.remarkSecondary = '';
             tab.remarkTertiary = '';
+            tab.price = '';
             tab.rowCount = 0;
             tab.previewHeaders = [];
             tab.previewRows = [];
@@ -1493,6 +1502,9 @@ export class RfqStateService {
         if (this.hasValue(tab.qty)) {
             highlightTargets.add(tab.qty.trim().toLowerCase());
         }
+        if (this.hasValue(tab.price)) {
+            highlightTargets.add(tab.price.trim().toLowerCase());
+        }
 
         this.previewDialogHighlightIndexes = [];
         this.previewDialogHeaders.forEach((header, index) => {
@@ -1553,8 +1565,8 @@ export class RfqStateService {
         }
     }
 
-    private autoSelectColumns(columnHeaders: string[]): { product: string; qty: string; unit: string; remark: string } {
-        const result = { product: '', qty: '', unit: '', remark: '' };
+    private autoSelectColumns(columnHeaders: string[]): { product: string; qty: string; unit: string; remark: string; price: string } {
+        const result = { product: '', qty: '', unit: '', remark: '', price: '' };
 
         const headerMap = new Map<string, string>();
         columnHeaders.forEach(header => {
@@ -1594,6 +1606,23 @@ export class RfqStateService {
             if (found) {
                 result.remark = found;
                 break;
+            }
+        }
+
+        const priceOptions = ['Price', 'Unit Price', 'Unit Cost', 'Cost', 'List Price'];
+        for (const option of priceOptions) {
+            const found = headerMap.get(option.toLowerCase());
+            if (found) {
+                result.price = found;
+                break;
+            }
+        }
+        if (!result.price) {
+            for (const header of columnHeaders) {
+                if (header.toLowerCase().includes('price')) {
+                    result.price = header;
+                    break;
+                }
             }
         }
 

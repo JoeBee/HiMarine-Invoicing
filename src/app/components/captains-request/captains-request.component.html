@@ -42,10 +42,11 @@
                             <th>Tab Name</th>
                             <th>Top Left</th>
                             <th>#Rows</th>
-                            <th>Product*</th>
-                            <th>Qty*</th>
-                            <th>Unit*</th>
-                            <th>Remark (Optional)</th>
+                            <th class="mapped-column-header">Product*</th>
+                            <th class="mapped-column-header">Qty*</th>
+                            <th class="mapped-column-header">Unit*</th>
+                            <th class="mapped-column-header">Price (Optional)</th>
+                            <th class="mapped-column-header">Remark (Optional)</th>
                             <th>Status</th>
                             <th class="remove-column-header">Remove</th>
                         </tr>
@@ -90,7 +91,7 @@
                                         </datalist>
                                     </td>
                                     <td class="row-count">{{ tab.rowCount }}</td>
-                                    <td class="product-cell">
+                                    <td class="product-cell mapped-column-cell">
                                         <select [(ngModel)]="tab.product"
                                             (change)="rfqState.onColumnChange(analysis, tab, 'product')"
                                             [disabled]="!tab.included" class="column-select">
@@ -100,7 +101,7 @@
                                                 {{ header }}</option>
                                         </select>
                                     </td>
-                                    <td class="qty-cell">
+                                    <td class="qty-cell mapped-column-cell">
                                         <select [(ngModel)]="tab.qty"
                                             (change)="rfqState.onColumnChange(analysis, tab, 'qty')"
                                             [disabled]="!tab.included" class="column-select">
@@ -110,7 +111,7 @@
                                                 {{ header }}</option>
                                         </select>
                                     </td>
-                                    <td class="unit-cell">
+                                    <td class="unit-cell mapped-column-cell">
                                         <div class="composite-select-group">
                                             <select [(ngModel)]="tab.unitPrimary"
                                                 (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'unit', 0)"
@@ -139,7 +140,17 @@
                                             </select>
                                         </div>
                                     </td>
-                                    <td class="remark-cell">
+                                    <td class="price-cell mapped-column-cell">
+                                        <select [(ngModel)]="tab.price"
+                                            (change)="rfqState.onColumnChange(analysis, tab, 'price')"
+                                            [disabled]="!tab.included" class="column-select">
+                                            <option value="">-- Select --</option>
+                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                [value]="header">
+                                                {{ header }}</option>
+                                        </select>
+                                    </td>
+                                    <td class="remark-cell mapped-column-cell">
                                         <div class="composite-select-group">
                                             <select [(ngModel)]="tab.remarkPrimary"
                                                 (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'remark', 0)"
@@ -186,7 +197,7 @@
                                     </td>
                                 </tr>
                                 <tr *ngIf="isLast" class="workbook-divider-row">
-                                    <td class="workbook-divider-cell" colspan="9"
+                                    <td class="workbook-divider-cell" colspan="10"
                                         style="padding: 0; border-bottom: 1px solid #9aa3ab; height: 0;"></td>
                                 </tr>
                             </ng-container>
