@@ -465,15 +465,6 @@ export class RfqStateService {
         tabInfo.previewRows = preview.rows;
         this.updateInclusionState(tabInfo);
 
-        this.loggingService.logUserAction('sheet_analyzed', {
-            fileName: file.name,
-            sheetName,
-            topLeftCell,
-            columnCount: columnHeaders.length,
-            rowCount: tabInfo.rowCount,
-            isHidden
-        }, 'RfqStateService');
-
         return tabInfo;
     }
 
@@ -658,10 +649,6 @@ export class RfqStateService {
     }
 
     removeFile(index: number): void {
-        this.loggingService.logUserAction('file_removed', {
-            fileName: this.fileAnalyses[index].fileName
-        }, 'RfqStateService');
-
         this.uploadedFiles = this.uploadedFiles.filter((_, i) => i !== index);
         this.fileAnalyses.splice(index, 1);
         void this.refreshProposalPreview();
@@ -1261,13 +1248,6 @@ export class RfqStateService {
     }
 
     onColumnChange(analysis: FileAnalysis, tab: TabInfo, columnType: 'product' | 'qty' | 'unit' | 'remark'): void {
-        this.loggingService.logUserAction('column_selected', {
-            fileName: analysis.fileName,
-            tabName: tab.tabName,
-            columnType: columnType,
-            selectedValue: tab[columnType]
-        }, 'RfqStateService');
-
         void this.refreshProposalPreview();
     }
 
