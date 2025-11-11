@@ -42,11 +42,40 @@
                             <th>Tab Name</th>
                             <th>Top Left</th>
                             <th>#Rows</th>
-                            <th class="mapped-column-header">Product*</th>
-                            <th class="mapped-column-header">Qty*</th>
-                            <th class="mapped-column-header">Unit*</th>
-                            <th class="mapped-column-header">Price (Optional)</th>
-                            <th class="mapped-column-header">Remark (Optional)</th>
+                            <th class="mapped-column-header">
+                                <button type="button" class="column-info-button"
+                                    (click)="openColumnInfoDialog('product')">
+                                    <span>Product*</span>
+                                    <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                                </button>
+                            </th>
+                            <th class="mapped-column-header">
+                                <button type="button" class="column-info-button" (click)="openColumnInfoDialog('qty')">
+                                    <span>Qty*</span>
+                                    <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                                </button>
+                            </th>
+                            <th class="mapped-column-header">
+                                <button type="button" class="column-info-button"
+                                    (click)="openColumnInfoDialog('unit')">
+                                    <span>Unit*</span>
+                                    <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                                </button>
+                            </th>
+                            <th class="mapped-column-header">
+                                <button type="button" class="column-info-button"
+                                    (click)="openColumnInfoDialog('price')">
+                                    <span>Price (Optional)</span>
+                                    <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                                </button>
+                            </th>
+                            <th class="mapped-column-header">
+                                <button type="button" class="column-info-button"
+                                    (click)="openColumnInfoDialog('remark')">
+                                    <span>Remark (Optional)</span>
+                                    <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                                </button>
+                            </th>
                             <th>Status</th>
                             <th class="remove-column-header">Remove</th>
                         </tr>
@@ -204,6 +233,26 @@
                         </ng-container>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+    <div *ngIf="columnInfoDialogVisible" class="column-info-dialog-container">
+        <div class="column-info-dialog-backdrop" (click)="closeColumnInfoDialog()"></div>
+        <div class="column-info-dialog-content" role="dialog" aria-modal="true"
+            aria-labelledby="column-info-dialog-title" (click)="$event.stopPropagation()">
+            <div class="column-info-dialog-header">
+                <h3 id="column-info-dialog-title">{{ columnInfoDialogTitle }}</h3>
+                <button type="button" class="column-info-dialog-close" (click)="closeColumnInfoDialog()"
+                    aria-label="Close column info dialog">×</button>
+            </div>
+            <div class="column-info-dialog-body">
+                <p>{{ columnInfoDialogDescription }}</p>
+                <ul>
+                    <li *ngFor="let item of columnInfoDialogItems">{{ item }}</li>
+                </ul>
+                <p *ngIf="columnInfoDialogFootnote" class="column-info-dialog-footnote">
+                    {{ columnInfoDialogFootnote }}
+                </p>
             </div>
         </div>
     </div>

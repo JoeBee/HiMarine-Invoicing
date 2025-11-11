@@ -1609,20 +1609,12 @@ export class RfqStateService {
             }
         }
 
-        const priceOptions = ['Price', 'Unit Price', 'Unit Cost', 'Cost', 'List Price'];
+        const priceOptions = ['Price'];
         for (const option of priceOptions) {
             const found = headerMap.get(option.toLowerCase());
             if (found) {
                 result.price = found;
                 break;
-            }
-        }
-        if (!result.price) {
-            for (const header of columnHeaders) {
-                if (header.toLowerCase().includes('price')) {
-                    result.price = header;
-                    break;
-                }
             }
         }
 
