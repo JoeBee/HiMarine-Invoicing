@@ -26,10 +26,15 @@ export class OurQuoteComponent implements OnInit {
 
     constructor(public rfqState: RfqStateService, private currencyPipe: CurrencyPipe) {
         this.rfqData = this.rfqState.rfqData;
+        this.exportFileName = this.rfqState.getProposalExportFileName();
     }
 
     ngOnInit(): void {
-        this.updateExportFileName();
+        if (this.exportFileName) {
+            this.onExportFileNameChange();
+        } else {
+            this.updateExportFileName();
+        }
     }
 
     get selectedCompany(): ('HI US' | 'HI UK' | 'EOS') | null {
@@ -79,6 +84,7 @@ export class OurQuoteComponent implements OnInit {
     onExportFileNameChange(): void {
         // Allow manual override but keep value in sync for potential future use.
         this.exportFileName = (this.exportFileName || '').trim();
+        this.rfqState.setProposalExportFileName(this.exportFileName);
     }
 
     onCompanyChange(company: 'HI US' | 'HI UK' | 'EOS'): void {
@@ -160,6 +166,7 @@ export class OurQuoteComponent implements OnInit {
         }
 
         this.exportFileName = parts.filter(Boolean).join(' ');
+        this.rfqState.setProposalExportFileName(this.exportFileName);
     }
 
     private getCompanyLabel(company: ('HI US' | 'HI UK' | 'EOS') | null): string {

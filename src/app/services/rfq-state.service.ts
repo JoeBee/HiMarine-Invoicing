@@ -246,12 +246,22 @@ export class RfqStateService {
     previewDialogTabName = '';
     private previewDialogHighlightIndexes: number[] = [];
 
+    private proposalExportFileName = '';
+
     constructor(private readonly loggingService: LoggingService) {
         this.onCompanySelectionChange();
     }
 
     setSelectedCurrency(currency: CurrencyCode): void {
         this.selectedCurrency = currency;
+    }
+
+    setProposalExportFileName(fileName: string | null | undefined): void {
+        this.proposalExportFileName = (fileName ?? '').trim();
+    }
+
+    getProposalExportFileName(): string {
+        return this.proposalExportFileName;
     }
 
     getSelectedCurrencySymbol(): string {
@@ -745,8 +755,8 @@ export class RfqStateService {
         for (const table of tablesToExport) {
             try {
                 const tableCurrency = this.determineProposalPrimaryCurrency(table.items);
-                const fileNameBase = this.buildProposalFileName(table);
-                const workbookData = this.buildProposalWorkbookData(table, tableCurrency, fileNameBase);
+                const fileNameOverride = this.getResolvedProposalExportFileName(table) ?? this.buildProposalFileName(table);
+                const workbookData = this.buildProposalWorkbookData(table, tableCurrency, fileNameOverride);
 
                 const { blob, fileName } = await buildInvoiceStyleWorkbook({
                     data: workbookData,
@@ -755,7 +765,7 @@ export class RfqStateService {
                     categoryOverride: table.tabName,
                     appendAtoInvoiceNumber: false,
                     includeFees: false,
-                    fileNameOverride: fileNameBase
+                    fileNameOverride
                 });
 
                 saveAs(blob, fileName);
@@ -961,6 +971,17 @@ export class RfqStateService {
             invoiceDue: this.rfqData.invoiceDue,
             exportFileName: fileNameBase
         };
+    }
+
+    private getResolvedProposalExportFileName(_table: ProposalTable): string | null {
+        const trimmed = this.proposalExportFileName.trim();
+        if (!trimmed) {
+            return null;
+        }
+
+        const withoutExtension = trimmed.replace(/\.xlsx$/i, '');
+        const sanitized = this.sanitizeFileNameSegment(withoutExtension);
+        return sanitized ? sanitized : null;
     }
 
     private async refreshProposalPreview(): Promise<void> {
