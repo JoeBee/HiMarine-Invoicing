@@ -52,7 +52,8 @@
                     </thead>
                     <tbody>
                         <ng-container *ngFor="let analysis of rfqState.fileAnalyses; let fileIndex = index">
-                            <ng-container *ngFor="let tab of analysis.tabs; let isFirst = first; let isLast = last; let tabIndex = index">
+                            <ng-container
+                                *ngFor="let tab of analysis.tabs; let isFirst = first; let isLast = last; let tabIndex = index">
                                 <tr [class.file-first-row]="isFirst" [class.excluded-row]="!tab.included"
                                     [attr.data-file-index]="fileIndex" [attr.data-tab-index]="tabIndex">
                                     <td *ngIf="isFirst" [attr.rowspan]="analysis.tabs.length + 1" class="file-name-cell"
@@ -94,7 +95,8 @@
                                             (change)="rfqState.onColumnChange(analysis, tab, 'product')"
                                             [disabled]="!tab.included" class="column-select">
                                             <option value="">-- Select --</option>
-                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                [value]="header">
                                                 {{ header }}</option>
                                         </select>
                                     </td>
@@ -103,7 +105,8 @@
                                             (change)="rfqState.onColumnChange(analysis, tab, 'qty')"
                                             [disabled]="!tab.included" class="column-select">
                                             <option value="">-- Select --</option>
-                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                [value]="header">
                                                 {{ header }}</option>
                                         </select>
                                     </td>
@@ -113,14 +116,16 @@
                                                 (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'unit', 0)"
                                                 [disabled]="!tab.included" class="column-select">
                                                 <option value="">-- Select --</option>
-                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                    [value]="header">
                                                     {{ header }}</option>
                                             </select>
                                             <select [(ngModel)]="tab.unitSecondary"
                                                 (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'unit', 1)"
                                                 [disabled]="!tab.included || !tab.unitPrimary" class="column-select">
                                                 <option value="">-- Select --</option>
-                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                    [value]="header">
                                                     {{ header }}</option>
                                             </select>
                                             <select [(ngModel)]="tab.unitTertiary"
@@ -128,7 +133,8 @@
                                                 [disabled]="!tab.included || !tab.unitPrimary || !tab.unitSecondary"
                                                 class="column-select">
                                                 <option value="">-- Select --</option>
-                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                    [value]="header">
                                                     {{ header }}</option>
                                             </select>
                                         </div>
@@ -139,14 +145,16 @@
                                                 (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'remark', 0)"
                                                 [disabled]="!tab.included" class="column-select">
                                                 <option value="">-- Select --</option>
-                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                    [value]="header">
                                                     {{ header }}</option>
                                             </select>
                                             <select [(ngModel)]="tab.remarkSecondary"
                                                 (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'remark', 1)"
                                                 [disabled]="!tab.included || !tab.remarkPrimary" class="column-select">
                                                 <option value="">-- Select --</option>
-                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                    [value]="header">
                                                     {{ header }}</option>
                                             </select>
                                             <select [(ngModel)]="tab.remarkTertiary"
@@ -154,14 +162,16 @@
                                                 [disabled]="!tab.included || !tab.remarkPrimary || !tab.remarkSecondary"
                                                 class="column-select">
                                                 <option value="">-- Select --</option>
-                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)" [value]="header">
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                    [value]="header">
                                                     {{ header }}</option>
                                             </select>
                                         </div>
                                     </td>
                                     <td class="status-cell">
                                         <ng-container *ngIf="rfqState.isTabReady(tab); else statusIncomplete">
-                                            <span class="status-icon ready" aria-label="Ready to generate table">✔</span>
+                                            <span class="status-icon ready"
+                                                aria-label="Ready to generate table">✔</span>
                                         </ng-container>
                                         <ng-template #statusIncomplete>
                                             <span class="status-icon not-ready"
@@ -170,7 +180,7 @@
                                     </td>
                                     <td class="actions-cell" *ngIf="isFirst" [attr.rowspan]="analysis.tabs.length + 1">
                                         <button type="button" class="remove-file-button"
-                                            (click)="rfqState.removeFile(fileIndex)">
+                                            (click)="openRemoveDialog(fileIndex)">
                                             Remove
                                         </button>
                                     </td>
@@ -213,6 +223,26 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="removeDialogVisible" class="confirm-remove-dialog-container">
+        <div class="confirm-remove-dialog-backdrop" (click)="cancelRemoveFile()"></div>
+        <div class="confirm-remove-dialog-content" role="dialog" aria-modal="true"
+            aria-labelledby="confirm-remove-title" aria-describedby="confirm-remove-description"
+            (click)="$event.stopPropagation()">
+            <div class="confirm-remove-dialog-body">
+                <div class="confirm-remove-dialog-icon" aria-hidden="true">⚠️</div>
+                <h3 id="confirm-remove-title">Remove workbook?</h3>
+                <p id="confirm-remove-description">
+                    {{ pendingRemovalFileName ? 'The workbook "' + pendingRemovalFileName + '" and all of its tabs will
+                    be removed.' : 'The selected workbook and all of its tabs will be removed.' }}
+                </p>
+                <div class="confirm-remove-dialog-actions">
+                    <button type="button" class="confirm-remove-secondary" (click)="cancelRemoveFile()">Cancel</button>
+                    <button type="button" class="confirm-remove-primary" (click)="confirmRemoveFile()">Remove</button>
+                </div>
             </div>
         </div>
     </div>

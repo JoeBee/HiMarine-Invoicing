@@ -4,13 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { ProposalItem, ProposalTable, RfqData, RfqStateService } from '../../services/rfq-state.service';
 
 @Component({
-    selector: 'app-proposal',
+    selector: 'app-our-quote',
     standalone: true,
     imports: [CommonModule, FormsModule],
-    templateUrl: './proposal.component.html',
-    styleUrls: ['./proposal.component.scss']
+    templateUrl: './our-quote.component.html',
+    styleUrls: ['./our-quote.component.scss']
 })
-export class ProposalComponent implements OnInit {
+export class OurQuoteComponent implements OnInit {
     public rfqData: RfqData;
     exportFileName = '';
 

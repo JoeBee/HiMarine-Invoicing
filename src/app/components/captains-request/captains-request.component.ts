@@ -8,10 +8,13 @@ import { RfqStateService } from '../../services/rfq-state.service';
     standalone: true,
     imports: [CommonModule, FormsModule],
     templateUrl: './captains-request.component.html',
-    styleUrls: ['../proposal/proposal.component.scss']
+    styleUrls: ['../our-quote/our-quote.component.scss']
 })
 export class RfqCaptainsRequestComponent {
     isDragOver = false;
+    removeDialogVisible = false;
+    fileIndexPendingRemoval: number | null = null;
+    pendingRemovalFileName: string | null = null;
 
     constructor(public rfqState: RfqStateService) { }
 
@@ -44,6 +47,29 @@ export class RfqCaptainsRequestComponent {
             this.rfqState.handleFiles(Array.from(input.files));
             input.value = '';
         }
+    }
+
+    openRemoveDialog(fileIndex: number): void {
+        this.fileIndexPendingRemoval = fileIndex;
+        this.pendingRemovalFileName = this.rfqState.fileAnalyses[fileIndex]?.fileName ?? null;
+        this.removeDialogVisible = true;
+    }
+
+    confirmRemoveFile(): void {
+        if (this.fileIndexPendingRemoval !== null) {
+            this.rfqState.removeFile(this.fileIndexPendingRemoval);
+        }
+        this.resetRemoveDialogState();
+    }
+
+    cancelRemoveFile(): void {
+        this.resetRemoveDialogState();
+    }
+
+    private resetRemoveDialogState(): void {
+        this.removeDialogVisible = false;
+        this.fileIndexPendingRemoval = null;
+        this.pendingRemovalFileName = null;
     }
 }
 

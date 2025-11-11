@@ -53,7 +53,7 @@ export const routes: Routes = [
     },
     {
         path: 'rfq/proposal',
-        loadComponent: () => import('./components/proposal/proposal.component').then(m => m.ProposalComponent)
+        loadComponent: () => import('./components/our-quote/our-quote.component').then(m => m.OurQuoteComponent)
     }
 ];
 
