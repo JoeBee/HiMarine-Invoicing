@@ -51,6 +51,16 @@ export interface ProposalTable {
     items: ProposalItem[];
 }
 
+export type CurrencyCode = 'USD' | 'EUR' | 'AUD' | 'NZD' | 'CAD';
+
+export const CURRENCY_SYMBOL_MAP: Record<CurrencyCode, string> = {
+    USD: '$',
+    EUR: '€',
+    AUD: 'A$',
+    NZD: 'NZ$',
+    CAD: 'C$'
+};
+
 export interface RfqData {
     // Our Company Details
     ourCompanyName: string;
@@ -96,6 +106,7 @@ export class RfqStateService {
     isProcessing = false;
     errorMessage = '';
     selectedCompany: 'HI US' | 'HI UK' | 'EOS' = 'HI US';
+    selectedCurrency: CurrencyCode = 'USD';
 
     rfqData: RfqData = {
         ourCompanyName: '',
@@ -237,6 +248,14 @@ export class RfqStateService {
 
     constructor(private readonly loggingService: LoggingService) {
         this.onCompanySelectionChange();
+    }
+
+    setSelectedCurrency(currency: CurrencyCode): void {
+        this.selectedCurrency = currency;
+    }
+
+    getSelectedCurrencySymbol(): string {
+        return CURRENCY_SYMBOL_MAP[this.selectedCurrency] ?? '$';
     }
 
     private getTodayDate(): string {
@@ -784,14 +803,8 @@ export class RfqStateService {
         }
     }
 
-    private determineProposalPrimaryCurrency(items: ProposalItem[]): string {
-        for (const item of items) {
-            const currency = this.detectCurrencyFromString(item.price) || this.detectCurrencyFromString(item.total);
-            if (currency) {
-                return currency;
-            }
-        }
-        return '£';
+    private determineProposalPrimaryCurrency(_items: ProposalItem[]): string {
+        return this.getSelectedCurrencySymbol();
     }
 
     private detectCurrencyFromString(value: unknown): string | null {
@@ -853,8 +866,9 @@ export class RfqStateService {
     }
 
     private mapProposalItemToWorkbookItem(item: ProposalItem, fallbackCurrency: string): InvoiceWorkbookItem {
+        const preferredCurrency = this.getSelectedCurrencySymbol();
         const detectedCurrency = this.detectCurrencyFromString(item.price) || this.detectCurrencyFromString(item.total);
-        const currency = detectedCurrency || fallbackCurrency || '£';
+        const currency = preferredCurrency || detectedCurrency || fallbackCurrency || '£';
 
         const qtyParsed = this.parseNumericFromMixed(item.qty);
         let qtyValue: number | string;

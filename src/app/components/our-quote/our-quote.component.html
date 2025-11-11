@@ -21,31 +21,46 @@
 
         <div class="selection-section">
             <div class="bank-selection-section">
-                <h3>Companies:</h3>
                 <div class="company-actions">
-                    <div class="radio-group">
-                        <label class="radio-option" [class.active]="selectedCompany === 'HI US'">
-                            <input type="radio" name="company" value="HI US" [(ngModel)]="selectedCompany"
-                                (change)="onCompanyChange('HI US')">
-                            <span class="radio-label">HI US</span>
-                        </label>
-                        <label class="radio-option" [class.active]="selectedCompany === 'HI UK'">
-                            <input type="radio" name="company" value="HI UK" [(ngModel)]="selectedCompany"
-                                (change)="onCompanyChange('HI UK')">
-                            <span class="radio-label">HI UK</span>
-                        </label>
-                        <label class="radio-option" [class.active]="selectedCompany === 'EOS'">
-                            <input type="radio" name="company" value="EOS" [(ngModel)]="selectedCompany"
-                                (change)="onCompanyChange('EOS')">
-                            <span class="radio-label">EOS</span>
-                        </label>
+                    <div class="radio-groups">
+                        <div class="radio-group">
+                            <input type="radio" id="quoteCompanyHIUS" name="company" value="HI US"
+                                [(ngModel)]="selectedCompany">
+                            <label for="quoteCompanyHIUS">HI US</label>
+
+                            <input type="radio" id="quoteCompanyHIUK" name="company" value="HI UK"
+                                [(ngModel)]="selectedCompany">
+                            <label for="quoteCompanyHIUK">HI UK</label>
+
+                            <input type="radio" id="quoteCompanyEOS" name="company" value="EOS"
+                                [(ngModel)]="selectedCompany">
+                            <label for="quoteCompanyEOS">EOS</label>
+                        </div>
+                        <div class="radio-group currency-group">
+                            <ng-container *ngFor="let option of currencyOptions">
+                                <input type="radio" [id]="'quoteCurrency' + option.code" name="currency"
+                                    [value]="option.code" [(ngModel)]="selectedCurrency">
+                                <label [attr.for]="'quoteCurrency' + option.code">{{ option.label }}</label>
+                            </ng-container>
+                        </div>
                     </div>
                     <div class="company-buttons">
-                        <button class="create-rfq-button" (click)="createRFQs()" [disabled]="proposalTableCount === 0">
+                        <div class="export-filename-inline">
+                            <label class="filename-label" for="inlineExportFileName">Export File Name:</label>
+                            <div class="filename-input-wrapper">
+                                <input id="inlineExportFileName" type="text" [(ngModel)]="exportFileName"
+                                    (ngModelChange)="onExportFileNameChange()" class="filename-input">
+                                <span class="file-extension-label">.xlsx</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="create-rfq-bar">
+                        <!-- <p class="help-text">Disabled until all required columns are identified or tabs are excluded.
+                        </p> -->
+                        <button class="create-rfq-button" (click)="createRFQs()"
+                            [disabled]="proposalTableCount === 0 || !selectedCompany || !selectedCurrency">
                             Create {{ proposalTableCount }} RFQ(s)
                         </button>
-                        <p class="help-text">Disabled until all required columns are identified or tabs are excluded.
-                        </p>
                     </div>
                 </div>
             </div>
@@ -296,8 +311,8 @@
                                     <td class="mapped-column">{{ item.qty }}</td>
                                     <td class="mapped-column">{{ item.unit }}</td>
                                     <td class="mapped-column">{{ item.remark }}</td>
-                                    <td>{{ item.price }}</td>
-                                    <td>{{ item.total }}</td>
+                                    <td>{{ formatCurrency(item.price) }}</td>
+                                    <td>{{ formatCurrency(item.total) }}</td>
                                 </tr>
                             </tbody>
                         </table>
