@@ -410,7 +410,12 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
             // Use the export filename from input, or fallback to default if empty
             // If exportFileName is empty, use the computed default (what's shown in the input)
-            const fileName = this.exportFileName.trim() || this.generateDefaultFileName();
+            let fileName = this.exportFileName.trim() || this.generateDefaultFileName();
+            
+            // Add .xlsx extension if not already present
+            if (!fileName.toLowerCase().endsWith('.xlsx')) {
+                fileName += '.xlsx';
+            }
 
             saveAs(data, fileName);
 
@@ -1123,8 +1128,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
             fileName += ' ' + this.selectedCountry;
         }
 
-        // Add file extension
-        fileName += '.xlsx';
+        // Don't add file extension here - it will be added in the template and export
 
         return fileName;
     }

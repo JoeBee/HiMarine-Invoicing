@@ -130,6 +130,8 @@
         border-radius: 8px;
         background-color: #f9f9f9;
         width: 100%;
+        gap: 15px;
+        flex-wrap: nowrap;
 
         .dropdown-container {
             display: flex;
@@ -166,17 +168,23 @@
             }
         }
 
-        .export-filename-input {
+        .filename-input {
+            flex: 1;
+            min-width: 150px;
             padding: 8px 12px;
-            border: 1px solid #ddd;
+            border: 1px solid #ccc;
             border-radius: 4px;
-            background-color: white;
             font-size: 14px;
-            width: 300px;
+            transition: border-color 0.3s ease;
 
             &:focus {
                 outline: none;
-                border-color: #0066cc;
+                border-color: #217346;
+                box-shadow: 0 0 0 2px rgba(33, 115, 70, 0.1);
+            }
+
+            &:hover {
+                border-color: #999;
             }
         }
 
@@ -187,19 +195,38 @@
         .country-section {
             display: flex;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .filename-section {
             display: flex;
             align-items: center;
-            justify-content: center;
             flex: 1;
-            gap: 10px;
+            gap: 8px;
+            min-width: 0; // Allow flex item to shrink below content size
+
+            .filename-label {
+                font-size: 14px;
+                font-weight: bold;
+                color: #333;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .file-extension-label {
+                font-size: 14px;
+                font-weight: bold;
+                color: #333;
+                white-space: nowrap;
+                margin-left: 0;
+                flex-shrink: 0;
+            }
         }
 
         .button-section {
             display: flex;
             align-items: center;
+            flex-shrink: 0;
         }
     }
 

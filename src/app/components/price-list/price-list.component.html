@@ -49,9 +49,10 @@
                     </div>
                 </div>
                 <div class="filename-section">
-                    <label for="exportFileName">Export File Name:</label>
+                    <label for="exportFileName" class="filename-label">Export File Name:</label>
                     <input type="text" id="exportFileName" [ngModel]="exportFileName || getDefaultFileName()"
-                        (ngModelChange)="exportFileName = $event" class="export-filename-input">
+                        (ngModelChange)="exportFileName = $event" class="filename-input">
+                    <label class="file-extension-label">.xlsx</label>
                 </div>
                 <div class="button-section">
                     <button class="primary" [disabled]="processedData.length === 0 || !selectedCurrency"
