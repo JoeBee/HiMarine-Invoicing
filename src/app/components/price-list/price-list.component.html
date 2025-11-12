@@ -1,221 +1,243 @@
-<div class="price-list-container">
-    <h1>Price List Review</h1>
-
-    <!-- Export Section -->
-    <div class="action-section" *ngIf="hasProcessedFiles">
-        <div class="export-controls">
-            <div class="radio-group">
-                <input type="radio" id="radioEOS" name="company" value="EOS" [(ngModel)]="selectedCompany" (change)="onCompanyChange()">
-                <label for="radioEOS">EOS</label>
-                <input type="radio" id="radioHIMarine" name="company" value="Hi Marine" [(ngModel)]="selectedCompany" (change)="onCompanyChange()">
-                <label for="radioHIMarine">Hi Marine</label>
-            </div>
-            <div class="radio-group currency-group">
-                <input type="radio" id="radioEUR" name="currency" value="EUR" [(ngModel)]="selectedCurrency">
-                <label for="radioEUR">EUR (€)</label>
-                <input type="radio" id="radioAUD" name="currency" value="AUD" [(ngModel)]="selectedCurrency">
-                <label for="radioAUD">AUD (A$)</label>
-                <input type="radio" id="radioNZD" name="currency" value="NZD" [(ngModel)]="selectedCurrency">
-                <label for="radioNZD">NZD (NZ$)</label>
-                <input type="radio" id="radioUSD" name="currency" value="USD" [(ngModel)]="selectedCurrency">
-                <label for="radioUSD">USD ($)</label>
-                <input type="radio" id="radioCAD" name="currency" value="CAD" [(ngModel)]="selectedCurrency">
-                <label for="radioCAD">CAD (C$)</label>
-            </div>
-        </div>
-        <div class="export-filename-control" *ngIf="hasProcessedFiles">
-            <div class="country-section">
-                <div class="dropdown-container">
-                    <label for="countrySelection">Country:</label>
-                    <select id="countrySelection" [(ngModel)]="selectedCountry" (change)="onCountryChange()"
-                        class="filter-dropdown">
-                        <option value="">Select Country</option>
-                        <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
-                    </select>
+<div class="price-list-container"
+    [ngClass]="{ 'eos-theme': selectedCompany === 'EOS', 'hi-marine-theme': selectedCompany === 'Hi Marine' }">
+    <div class="content-wrapper">
+        <!-- Top Logo Section -->
+        <div class="top-section" *ngIf="processedData.length > 0">
+            <div class="top-section-content">
+                <div class="company-logo">
+                    <img [src]="selectedCompany === 'EOS' ? 'assets/images/EosSupplyLtd.png' : 'assets/images/HIMarineTopImage_sm.png'"
+                        alt="Company Logo" class="top-logo">
                 </div>
             </div>
-            <div class="filename-section">
-                <label for="exportFileName">Export File Name:</label>
-                <input type="text" id="exportFileName" 
-                    [ngModel]="exportFileName || getDefaultFileName()"
-                    (ngModelChange)="exportFileName = $event"
-                    class="export-filename-input">
-            </div>
-            <div class="button-section">
-                <button class="primary" [disabled]="processedData.length === 0 || !selectedCurrency"
-                    (click)="exportToExcel()">
-                    Export Price List </button>
-            </div>
         </div>
-    </div>
 
+        <h1>Price List Review</h1>
 
-    <div *ngIf="processedData.length > 0" class="data-table">
-        <!-- <h2>Processed Data</h2> -->
-
-        <!-- Filter Controls -->
-        <div class="filter-controls">
-            <div class="filter-group">
-                <label for="fileNameFilter">Filter by File Name ({{ availableFileNames.length }}):</label>
-                <div class="dropdown-container">
-                    <select id="fileNameFilter" [(ngModel)]="selectedFileName" (change)="onFileNameFilterChange()"
-                        class="filter-dropdown">
-                        <option value="">All Files</option>
-                        <option *ngFor="let fileName of availableFileNames" [value]="fileName">{{ fileName }}</option>
-                    </select>
-                    <button type="button" *ngIf="selectedFileName" (click)="clearFileNameFilter()"
-                        class="clear-dropdown-btn" title="Clear selection">×</button>
+        <!-- Export Section -->
+        <div class="action-section" *ngIf="hasProcessedFiles">
+            <div class="export-controls">
+                <div class="radio-group">
+                    <input type="radio" id="radioEOS" name="company" value="EOS" [(ngModel)]="selectedCompany"
+                        (change)="onCompanyChange()">
+                    <label for="radioEOS">EOS</label>
+                    <input type="radio" id="radioHIMarine" name="company" value="Hi Marine"
+                        [(ngModel)]="selectedCompany" (change)="onCompanyChange()">
+                    <label for="radioHIMarine">Hi Marine</label>
+                </div>
+                <div class="radio-group currency-group">
+                    <input type="radio" id="radioEUR" name="currency" value="EUR" [(ngModel)]="selectedCurrency">
+                    <label for="radioEUR">EUR (€)</label>
+                    <input type="radio" id="radioAUD" name="currency" value="AUD" [(ngModel)]="selectedCurrency">
+                    <label for="radioAUD">AUD (A$)</label>
+                    <input type="radio" id="radioNZD" name="currency" value="NZD" [(ngModel)]="selectedCurrency">
+                    <label for="radioNZD">NZD (NZ$)</label>
+                    <input type="radio" id="radioUSD" name="currency" value="USD" [(ngModel)]="selectedCurrency">
+                    <label for="radioUSD">USD ($)</label>
+                    <input type="radio" id="radioCAD" name="currency" value="CAD" [(ngModel)]="selectedCurrency">
+                    <label for="radioCAD">CAD (C$)</label>
                 </div>
             </div>
-
-            <div class="filter-group">
-                <label for="descriptionFilter">Filter by Description:</label>
-                <div class="dropdown-container">
-                    <select id="descriptionFilter" [(ngModel)]="selectedDescription"
-                        (change)="onDescriptionFilterChange()" class="filter-dropdown">
-                        <option value="">All Descriptions</option>
-                        <option *ngFor="let desc of commonDescriptions" [value]="desc">{{ desc }}</option>
-                    </select>
-                    <button type="button" *ngIf="selectedDescription" (click)="clearDescriptionFilter()"
-                        class="clear-dropdown-btn" title="Clear selection">×</button>
+            <div class="export-filename-control" *ngIf="hasProcessedFiles">
+                <div class="country-section">
+                    <div class="dropdown-container">
+                        <label for="countrySelection">Country:</label>
+                        <select id="countrySelection" [(ngModel)]="selectedCountry" (change)="onCountryChange()"
+                            class="filter-dropdown">
+                            <option value="">Select Country</option>
+                            <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filename-section">
+                    <label for="exportFileName">Export File Name:</label>
+                    <input type="text" id="exportFileName" [ngModel]="exportFileName || getDefaultFileName()"
+                        (ngModelChange)="exportFileName = $event" class="export-filename-input">
+                </div>
+                <div class="button-section">
+                    <button class="primary" [disabled]="processedData.length === 0 || !selectedCurrency"
+                        (click)="exportToExcel()">
+                        Export Price List </button>
                 </div>
             </div>
+        </div>
 
-            <div class="filter-group">
-                <label for="descriptionTextFilter">Search Description:</label>
-                <input type="text" id="descriptionTextFilter" [(ngModel)]="descriptionTextFilter"
-                    (input)="onDescriptionTextFilterChange()" placeholder="Enter text to search..."
-                    class="filter-input">
+
+        <div *ngIf="processedData.length > 0" class="data-table">
+            <!-- <h2>Processed Data</h2> -->
+
+            <!-- Filter Controls -->
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label for="fileNameFilter">Filter by File Name ({{ availableFileNames.length }}):</label>
+                    <div class="dropdown-container">
+                        <select id="fileNameFilter" [(ngModel)]="selectedFileName" (change)="onFileNameFilterChange()"
+                            class="filter-dropdown">
+                            <option value="">All Files</option>
+                            <option *ngFor="let fileName of availableFileNames" [value]="fileName">{{ fileName }}
+                            </option>
+                        </select>
+                        <button type="button" *ngIf="selectedFileName" (click)="clearFileNameFilter()"
+                            class="clear-dropdown-btn" title="Clear selection">×</button>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label for="descriptionFilter">Filter by Description:</label>
+                    <div class="dropdown-container">
+                        <select id="descriptionFilter" [(ngModel)]="selectedDescription"
+                            (change)="onDescriptionFilterChange()" class="filter-dropdown">
+                            <option value="">All Descriptions</option>
+                            <option *ngFor="let desc of commonDescriptions" [value]="desc">{{ desc }}</option>
+                        </select>
+                        <button type="button" *ngIf="selectedDescription" (click)="clearDescriptionFilter()"
+                            class="clear-dropdown-btn" title="Clear selection">×</button>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label for="descriptionTextFilter">Search Description:</label>
+                    <input type="text" id="descriptionTextFilter" [(ngModel)]="descriptionTextFilter"
+                        (input)="onDescriptionTextFilterChange()" placeholder="Enter text to search..."
+                        class="filter-input">
+                </div>
+
+                <button type="button" (click)="clearFilters()" class="clear-filters-btn">Clear Filters</button>
             </div>
 
-            <button type="button" (click)="clearFilters()" class="clear-filters-btn">Clear Filters</button>
-        </div>
+            <div class="results-info" *ngIf="filteredData.length > 0">
+                <p>Selected {{ getSelectedCount() }} of {{ filteredData.length }} results</p>
+                <button class="secondary" [disabled]="processedData.length === 0" (click)="showInvalidPricesDialog()">
+                    Show Invalid
+                </button>
+            </div>
 
-        <div class="results-info" *ngIf="filteredData.length > 0">
-            <p>Selected {{ getSelectedCount() }} of {{ filteredData.length }} results</p>
-            <button class="secondary" [disabled]="processedData.length === 0" (click)="showInvalidPricesDialog()">
-                Show Invalid
-            </button>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th class="select-all-header sortable-header" (click)="sortData('included')">
-                        <input type="checkbox" [checked]="selectAllState === 'all'"
-                            [indeterminate]="selectAllState === 'some'" (change)="onSelectAllChange($event)"
-                            class="select-all-checkbox" title="Select All" (click)="$event.stopPropagation()">
-                        <span class="select-all-label">Include {{ getSortIcon('included') }}</span>
-                    </th>
-                    <th class="sortable-header" (click)="sortData('fileName')">
-                        File Name {{ getSortIcon('fileName') }}
-                    </th>
-                    <th class="sortable-header" (click)="sortData('category')">
-                        Category {{ getSortIcon('category') }}
-                    </th>
-                    <th class="sortable-header" (click)="sortData('description')">
-                        Description {{ getSortIcon('description') }}
-                    </th>
-                    <th class="sortable-header" (click)="sortData('unit')">
-                        Unit {{ getSortIcon('unit') }}
-                    </th>
-                    <th class="sortable-header" (click)="sortData('remarks')">
-                        Remarks {{ getSortIcon('remarks') }}
-                    </th>
-                    <th class="sortable-header" (click)="sortData('price')">
-                        Price {{ getSortIcon('price') }}
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <ng-container *ngFor="let row of filteredData; let i = index">
-                    <tr class="data-row" (click)="onRowClick(i)" [class.expanded]="isRowExpanded(i)">
-                        <td>
-                            <input type="checkbox" [checked]="row.included" (change)="onIncludeChange(i, $event)"
-                                class="include-checkbox" (click)="$event.stopPropagation()">
-                        </td>
-                        <td>{{ row.fileName }}</td>
-                        <td>{{ row.category || 'N/A' }}</td>
-                        <td>{{ row.description }}</td>
-                        <td>{{ row.unit }}</td>
-                        <td>{{ row.remarks }}</td>
-                        <td>{{ selectedCurrency ? (row.price | currency:selectedCurrency:'symbol':'1.2-2') : (row.price
-                            | number:'1.2-2') }}</td>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="select-all-header sortable-header" (click)="sortData('included')">
+                            <input type="checkbox" [checked]="selectAllState === 'all'"
+                                [indeterminate]="selectAllState === 'some'" (change)="onSelectAllChange($event)"
+                                class="select-all-checkbox" title="Select All" (click)="$event.stopPropagation()">
+                            <span class="select-all-label">Include {{ getSortIcon('included') }}</span>
+                        </th>
+                        <th class="sortable-header" (click)="sortData('fileName')">
+                            File Name {{ getSortIcon('fileName') }}
+                        </th>
+                        <th class="sortable-header" (click)="sortData('category')">
+                            Category {{ getSortIcon('category') }}
+                        </th>
+                        <th class="sortable-header" (click)="sortData('description')">
+                            Description {{ getSortIcon('description') }}
+                        </th>
+                        <th class="sortable-header" (click)="sortData('unit')">
+                            Unit {{ getSortIcon('unit') }}
+                        </th>
+                        <th class="sortable-header" (click)="sortData('remarks')">
+                            Remarks {{ getSortIcon('remarks') }}
+                        </th>
+                        <th class="sortable-header" (click)="sortData('price')">
+                            Price {{ getSortIcon('price') }}
+                        </th>
                     </tr>
+                </thead>
+                <tbody>
+                    <ng-container *ngFor="let row of filteredData; let i = index">
+                        <tr class="data-row" (click)="onRowClick(i)" [class.expanded]="isRowExpanded(i)">
+                            <td>
+                                <input type="checkbox" [checked]="row.included" (change)="onIncludeChange(i, $event)"
+                                    class="include-checkbox" (click)="$event.stopPropagation()">
+                            </td>
+                            <td>{{ row.fileName }}</td>
+                            <td>{{ row.category || 'N/A' }}</td>
+                            <td>{{ row.description }}</td>
+                            <td>{{ row.unit }}</td>
+                            <td>{{ row.remarks }}</td>
+                            <td>{{ selectedCurrency ? (row.price | currency:selectedCurrency:'symbol':'1.2-2') :
+                                (row.price
+                                | number:'1.2-2') }}</td>
+                        </tr>
 
-                    <!-- Expanded row showing original XLSX data -->
-                    <tr *ngIf="isRowExpanded(i)" class="expanded-row">
-                        <td colspan="7" class="expanded-content">
-                            <div class="original-data-container">
-                                <h4>Original Data from {{ row.fileName }}</h4>
-                                <div class="original-data-table" *ngIf="row.originalData && row.originalHeaders">
-                                    <table class="original-table">
-                                        <thead>
-                                            <tr>
-                                                <th *ngFor="let header of row.originalHeaders">{{ header }}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td *ngFor="let cellData of row.originalData">{{ cellData }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                        <!-- Expanded row showing original XLSX data -->
+                        <tr *ngIf="isRowExpanded(i)" class="expanded-row">
+                            <td colspan="7" class="expanded-content">
+                                <div class="original-data-container">
+                                    <h4>Original Data from {{ row.fileName }}</h4>
+                                    <div class="original-data-table" *ngIf="row.originalData && row.originalHeaders">
+                                        <table class="original-table">
+                                            <thead>
+                                                <tr>
+                                                    <th *ngFor="let header of row.originalHeaders">{{ header }}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td *ngFor="let cellData of row.originalData">{{ cellData }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div *ngIf="!row.originalData || !row.originalHeaders" class="no-original-data">
+                                        <p>Original data not available for this row.</p>
+                                    </div>
                                 </div>
-                                <div *ngIf="!row.originalData || !row.originalHeaders" class="no-original-data">
-                                    <p>Original data not available for this row.</p>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </ng-container>
-            </tbody>
-        </table>
-    </div>
+                            </td>
+                        </tr>
+                    </ng-container>
+                </tbody>
+            </table>
+        </div>
 
-    <div *ngIf="processedData.length === 0" class="empty-state">
-        <p>No processed data available. Please upload files on the Supplier Docs tab and process them on the Suppliers
-            tab.</p>
-    </div>
+        <div *ngIf="processedData.length === 0" class="empty-state">
+            <p>No processed data available. Please upload files on the Supplier Docs tab and process them on the
+                Suppliers
+                tab.</p>
+        </div>
 
-    <div *ngIf="processedData.length > 0 && filteredData.length === 0" class="empty-state">
-        <p>No results match the current filters. Try adjusting your filter criteria.</p>
-    </div>
+        <div *ngIf="processedData.length > 0 && filteredData.length === 0" class="empty-state">
+            <p>No results match the current filters. Try adjusting your filter criteria.</p>
+        </div>
 
-    <!-- Invalid Price Records Dialog -->
-    <div *ngIf="showInvalidPriceDialog" class="dialog-overlay" (click)="closeInvalidPriceDialog()">
-        <div class="dialog-content" (click)="$event.stopPropagation()">
-            <div class="dialog-header">
-                <h3>Invalid Price Records</h3>
-                <button type="button" class="close-btn" (click)="closeInvalidPriceDialog()">&times;</button>
-            </div>
-            <div class="dialog-body">
-                <p>The following {{ invalidPriceRecords.length }} records have invalid prices and are excluded from
-                    Excel exports:</p>
-                <div class="invalid-records-list">
-                    <table class="invalid-records-table">
-                        <thead>
-                            <tr>
-                                <th>File Name</th>
-                                <th>Description</th>
-                                <th>Price</th>
-                                <th>Unit</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let record of invalidPriceRecords">
-                                <td>{{ record.fileName }}</td>
-                                <td>{{ record.description }}</td>
-                                <td>{{ record.price }}</td>
-                                <td>{{ record.unit }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+        <!-- Invalid Price Records Dialog -->
+        <div *ngIf="showInvalidPriceDialog" class="dialog-overlay" (click)="closeInvalidPriceDialog()">
+            <div class="dialog-content" (click)="$event.stopPropagation()">
+                <div class="dialog-header">
+                    <h3>Invalid Price Records</h3>
+                    <button type="button" class="close-btn" (click)="closeInvalidPriceDialog()">&times;</button>
+                </div>
+                <div class="dialog-body">
+                    <p>The following {{ invalidPriceRecords.length }} records have invalid prices and are excluded from
+                        Excel exports:</p>
+                    <div class="invalid-records-list">
+                        <table class="invalid-records-table">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Description</th>
+                                    <th>Price</th>
+                                    <th>Unit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let record of invalidPriceRecords">
+                                    <td>{{ record.fileName }}</td>
+                                    <td>{{ record.description }}</td>
+                                    <td>{{ record.price }}</td>
+                                    <td>{{ record.unit }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="dialog-footer">
+                    <button type="button" class="btn btn-secondary" (click)="closeInvalidPriceDialog()">Close</button>
                 </div>
             </div>
-            <div class="dialog-footer">
-                <button type="button" class="btn btn-secondary" (click)="closeInvalidPriceDialog()">Close</button>
-            </div>
+        </div>
+
+        <!-- Bottom Logo Section -->
+        <div class="bottom-section" *ngIf="processedData.length > 0">
+            <img [src]="selectedCompany === 'EOS' ? 'assets/images/EosSupplyLtdBottomBorder.png' : 'assets/images/HIMarineBottomBorder.png'"
+                alt="Company Bottom Border" class="bottom-logo-image">
         </div>
     </div>
 </div>

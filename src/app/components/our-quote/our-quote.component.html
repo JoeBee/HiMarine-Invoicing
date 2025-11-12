@@ -1,7 +1,7 @@
 <div class="proposal-container"
-    [ngClass]="{ 'eos-theme': selectedCompany === 'EOS', 'us-theme': selectedCompany === 'HI US', 'uk-theme': selectedCompany === 'HI UK' }">
+    [ngClass]="{ 'eos-theme': selectedCompany === 'EOS', 'hi-marine-theme': selectedCompany === 'HI US' || selectedCompany === 'HI UK' }">
     <div class="content-wrapper">
-        <div class="top-section">
+        <div class="top-section" *ngIf="proposalTables.length > 0">
             <div class="top-section-content">
                 <div class="company-logo">
                     <img [src]="selectedCompany === 'EOS' ? 'assets/images/EosSupplyLtd.png' : 'assets/images/HIMarineTopImage_sm.png'"
@@ -321,7 +321,7 @@
             </div>
         </div>
 
-        <div class="bottom-section">
+        <div class="bottom-section" *ngIf="proposalTables.length > 0">
             <img [src]="selectedCompany === 'EOS' ? 'assets/images/EosSupplyLtdBottomBorder.png' : 'assets/images/HIMarineBottomBorder.png'"
                 alt="Company Bottom Border" class="bottom-logo-image">
         </div>

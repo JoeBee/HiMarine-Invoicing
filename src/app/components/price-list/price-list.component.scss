@@ -4,6 +4,37 @@
     min-height: calc(100vh - 120px);
     margin: -40px -20px;
     padding: 60px 40px;
+    font-family: Arial, sans-serif;
+    color: #000;
+
+    .content-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .top-section {
+        margin-bottom: 30px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 20px;
+
+        .top-section-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .company-logo {
+            .top-logo {
+                height: 80px;
+                width: auto;
+            }
+        }
+    }
 
     h1 {
         color: #0066cc;
@@ -22,6 +53,32 @@
         font-size: 16px;
         line-height: 1.5;
         margin-bottom: 15px;
+    }
+
+    .bottom-section {
+        border-top: 2px solid #000;
+        padding-top: 20px;
+        margin-top: 30px;
+
+        .bottom-logo-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    }
+
+    // EOS theme styles
+    &.eos-theme {
+        background-color: #e6eefc;
+
+        .content-wrapper {
+            background: white;
+        }
+    }
+
+    // Hi Marine theme styles
+    &.hi-marine-theme {
+        background-color: #ffe6e6;
     }
 }
 

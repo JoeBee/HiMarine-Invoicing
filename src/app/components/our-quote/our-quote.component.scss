@@ -530,6 +530,16 @@
         }
     }
 
+    // Hi Marine theme styles (for HI US and HI UK)
+    &.hi-marine-theme {
+        background-color: #f0f7ff;
+
+        .radio-group .radio-option input[type="radio"] {
+            accent-color: #2E7D32;
+        }
+    }
+
+    // Keep us-theme and uk-theme for backward compatibility
     &.us-theme,
     &.uk-theme {
         .radio-group .radio-option input[type="radio"] {

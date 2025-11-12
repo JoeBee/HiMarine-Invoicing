@@ -638,8 +638,15 @@
 
     // When EOS is selected at the root, shade all editable fields light blue
     &.eos-theme {
+        background-color: #e6eefc;
+
         .editable-field {
             background-color: #d9edf7 !important;
         }
+    }
+
+    // Hi Marine theme styles
+    &.hi-marine-theme {
+        background-color: #f0f7ff;
     }
 }

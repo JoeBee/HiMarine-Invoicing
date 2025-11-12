@@ -1,7 +1,7 @@
-<div class="invoice-container" [ngClass]="{ 'eos-theme': selectedBank === 'EOS' }">
+<div class="invoice-container" [ngClass]="{ 'eos-theme': selectedBank === 'EOS', 'hi-marine-theme': selectedBank === 'US' || selectedBank === 'UK' }">
     <div class="content-wrapper">
         <!-- Top Logo Section with Export Buttons -->
-        <div class="top-section">
+        <div class="top-section" *ngIf="invoiceData.items.length > 0">
             <div class="top-section-content">
                 <div class="company-logo">
                     <img [src]="selectedBank === 'EOS' ? 'assets/images/EosSupplyLtd.png' : 'assets/images/HIMarineTopImage_sm.png'"
@@ -374,7 +374,7 @@
         </div>
 
         <!-- Bottom Logo Section -->
-        <div class="bottom-section">
+        <div class="bottom-section" *ngIf="invoiceData.items.length > 0">
             <img [src]="selectedBank === 'EOS' ? 'assets/images/EosSupplyLtdBottomBorder.png' : 'assets/images/HIMarineBottomBorder.png'"
                 alt="Company Bottom Border" class="bottom-logo-image">
         </div>
