@@ -3,11 +3,12 @@ import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { LoggingService } from './services/logging.service';
+import { InformationModalComponent } from './components/information-modal/information-modal.component';
 
 @Component({
     selector: 'app-root',
     standalone: true,
-    imports: [RouterModule, CommonModule],
+    imports: [RouterModule, CommonModule, InformationModalComponent],
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss']
 })
