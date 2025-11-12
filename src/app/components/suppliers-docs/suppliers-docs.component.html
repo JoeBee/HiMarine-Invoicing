@@ -65,16 +65,36 @@
                         Top Left Cell {{ getSortIcon('topLeftCell') }}
                     </th>
                     <th class="sortable-header column-header-description" (click)="sortData('descriptionColumn')">
-                        Description {{ getSortIcon('descriptionColumn') }}
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span>Description {{ getSortIcon('descriptionColumn') }}</span>
+                            <button type="button" class="column-info-button" (click)="openColumnInfoDialog('description'); $event.stopPropagation()">
+                                <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                            </button>
+                        </div>
                     </th>
                     <th class="sortable-header column-header-price" (click)="sortData('priceColumn')">
-                        Price {{ getSortIcon('priceColumn') }}
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span>Price {{ getSortIcon('priceColumn') }}</span>
+                            <button type="button" class="column-info-button" (click)="openColumnInfoDialog('price'); $event.stopPropagation()">
+                                <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                            </button>
+                        </div>
                     </th>
                     <th class="sortable-header column-header-unit" (click)="sortData('unitColumn')">
-                        Unit {{ getSortIcon('unitColumn') }}
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span>Unit {{ getSortIcon('unitColumn') }}</span>
+                            <button type="button" class="column-info-button" (click)="openColumnInfoDialog('unit'); $event.stopPropagation()">
+                                <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                            </button>
+                        </div>
                     </th>
                     <th class="sortable-header column-header-remarks" (click)="sortData('remarksColumn')">
-                        Remarks {{ getSortIcon('remarksColumn') }}
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span>Remarks {{ getSortIcon('remarksColumn') }}</span>
+                            <button type="button" class="column-info-button" (click)="openColumnInfoDialog('remarks'); $event.stopPropagation()">
+                                <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                            </button>
+                        </div>
                     </th>
                     <th class="sortable-header" (click)="sortData('rowCount')">
                         Row Count {{ getSortIcon('rowCount') }}
@@ -171,6 +191,27 @@
                     <p class="preview-empty-state">No preview data available for this file.</p>
                 </div>
             </ng-template>
+        </div>
+    </div>
+
+    <div *ngIf="columnInfoDialogVisible" class="column-info-dialog-container">
+        <div class="column-info-dialog-backdrop" (click)="closeColumnInfoDialog()"></div>
+        <div class="column-info-dialog-content" role="dialog" aria-modal="true"
+            aria-labelledby="column-info-dialog-title" (click)="$event.stopPropagation()">
+            <div class="column-info-dialog-header">
+                <h3 id="column-info-dialog-title">{{ columnInfoDialogTitle }}</h3>
+                <button type="button" class="column-info-dialog-close" (click)="closeColumnInfoDialog()"
+                    aria-label="Close column info dialog">×</button>
+            </div>
+            <div class="column-info-dialog-body">
+                <p>{{ columnInfoDialogDescription }}</p>
+                <ul>
+                    <li *ngFor="let item of columnInfoDialogItems">{{ item }}</li>
+                </ul>
+                <p *ngIf="columnInfoDialogFootnote" class="column-info-dialog-footnote">
+                    {{ columnInfoDialogFootnote }}
+                </p>
+            </div>
         </div>
     </div>
 </div>

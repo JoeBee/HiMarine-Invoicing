@@ -93,7 +93,7 @@ export class HistoryComponent implements OnInit {
                 }
             }
         });
-        
+
         // Sort by most recent timestamp first, then by IP address
         this.ipAddresses = Array.from(ipMap.entries())
             .sort((a, b) => {
@@ -238,13 +238,20 @@ export class HistoryComponent implements OnInit {
         // Make action more specific based on category and details
         switch (category) {
             case 'user_action':
-                if (action.includes('button')) {
-                    return `Button clicked: ${action.replace('button_click_', '').replace(/_/g, ' ')}`;
+                if (action === 'button_click') {
+                    if (details && details.buttonName) {
+                        return details.buttonName.replace(/_/g, ' ');
+                    }
+                    // If button_click action but no buttonName, return empty string to avoid "button click" text
+                    return '';
+                }
+                if (action.includes('button') && action !== 'button_click') {
+                    return action.replace('button_click_', '').replace(/_/g, ' ');
                 }
                 if (action.includes('form')) {
                     return `Form submitted: ${action.replace('form_submit_', '').replace(/_/g, ' ')}`;
                 }
-                return `User action: ${action.replace(/_/g, ' ')}`;
+                return action.replace(/_/g, ' ');
 
             case 'file_upload':
                 if (details && details.fileName) {

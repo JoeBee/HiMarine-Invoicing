@@ -769,3 +769,123 @@
         margin: 0;
     }
 }
+
+.column-info-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font: inherit;
+    padding: 0;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, 0.8);
+        outline-offset: 2px;
+    }
+
+    .column-info-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1;
+    }
+}
+
+.column-info-dialog-container {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1045;
+}
+
+.column-info-dialog-backdrop {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(11, 31, 53, 0.55);
+}
+
+.column-info-dialog-content {
+    position: relative;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 16px 38px rgba(11, 31, 53, 0.35);
+    padding: 24px 28px;
+    width: min(480px, calc(100% - 40px));
+    max-width: 90vw;
+    color: #1b2733;
+    line-height: 1.5;
+}
+
+.column-info-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        color: #0b5ed7;
+    }
+
+    .column-info-dialog-close {
+        background: transparent;
+        border: none;
+        font-size: 26px;
+        line-height: 1;
+        cursor: pointer;
+        color: #32404d;
+        padding: 0 8px;
+        transition: color 0.2s ease;
+
+        &:hover {
+            color: #0b5ed7;
+        }
+
+        &:focus-visible {
+            outline: 2px solid rgba(11, 94, 215, 0.3);
+            border-radius: 4px;
+        }
+    }
+}
+
+.column-info-dialog-body {
+    p {
+        margin: 0 0 16px;
+    }
+
+    ul {
+        margin: 0 0 16px 20px;
+        padding: 0;
+
+        li {
+            margin-bottom: 8px;
+            list-style: disc;
+        }
+    }
+
+    .column-info-dialog-footnote {
+        font-size: 13px;
+        color: #5c6c7c;
+        margin-bottom: 0;
+    }
+}

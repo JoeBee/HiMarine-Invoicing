@@ -37,6 +37,63 @@ export class SuppliersDocsComponent implements OnInit {
     previewDialogFileName = '';
     previewTopLeftHeader = '';
     previewDialogHighlightIndexes: number[] = [];
+    columnInfoDialogVisible = false;
+    columnInfoDialogTitle = '';
+    columnInfoDialogDescription = '';
+    columnInfoDialogItems: string[] = [];
+    columnInfoDialogFootnote: string = '';
+
+    private readonly columnInfoConfig: Record<'description' | 'price' | 'unit' | 'remarks', {
+        title: string;
+        description: string;
+        items: string[];
+        footnote?: string;
+    }> = {
+        description: {
+            title: 'Description Column Auto-Mapping',
+            description: 'We auto-select the Description column when an Excel header includes one of these values:',
+            items: [
+                '"description"',
+                '"descrption"',
+                '"product"',
+                '"item"',
+                '"name"'
+            ],
+            footnote: 'Matching uses case-insensitive partial matching (includes).'
+        },
+        price: {
+            title: 'Price Column Auto-Mapping',
+            description: 'We auto-select the Price column when an Excel header includes one of these values (and header length is less than 25 characters):',
+            items: [
+                '"price"',
+                '"cost"',
+                '"unit aud"',
+                '"amount"',
+                '"value"'
+            ],
+            footnote: 'Matching uses case-insensitive partial matching (includes) and requires header length < 25 characters.'
+        },
+        unit: {
+            title: 'Unit Column Auto-Mapping',
+            description: 'We auto-select the Unit column when an Excel header exactly matches one of these values:',
+            items: [
+                '"unit"',
+                '"units"',
+                '"uom"',
+                '"uoms"'
+            ],
+            footnote: 'Matching is case-insensitive exact match (===) after trimming.'
+        },
+        remarks: {
+            title: 'Remarks Column Auto-Mapping',
+            description: 'We auto-select the Remarks column when an Excel header includes one of these values:',
+            items: [
+                '"remark"',
+                '"comment"'
+            ],
+            footnote: 'Matching uses case-insensitive partial matching (includes).'
+        }
+    };
 
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
@@ -542,6 +599,27 @@ export class SuppliersDocsComponent implements OnInit {
 
             reader.readAsArrayBuffer(fileInfo.file);
         });
+    }
+
+    openColumnInfoDialog(column: 'description' | 'price' | 'unit' | 'remarks'): void {
+        const config = this.columnInfoConfig[column];
+        if (!config) {
+            return;
+        }
+
+        this.columnInfoDialogTitle = config.title;
+        this.columnInfoDialogDescription = config.description;
+        this.columnInfoDialogItems = [...config.items];
+        this.columnInfoDialogFootnote = config.footnote ?? '';
+        this.columnInfoDialogVisible = true;
+    }
+
+    closeColumnInfoDialog(): void {
+        this.columnInfoDialogVisible = false;
+        this.columnInfoDialogTitle = '';
+        this.columnInfoDialogDescription = '';
+        this.columnInfoDialogItems = [];
+        this.columnInfoDialogFootnote = '';
     }
 
     private extractPreviewFromWorksheet(worksheet: XLSX.WorkSheet, fileInfo: SupplierFileInfo): { headers: string[]; rows: string[][] } {
