@@ -6,6 +6,7 @@ import { LoggingService } from '../../services/logging.service';
 import { FRESH_PROVISIONS_LIST, NOT_FRESH } from '../../constants/fresh-provisions.constants';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
 
 interface SortState {
     column: string;
@@ -396,9 +397,84 @@ export class PriceListComponent implements OnInit, OnDestroy {
             }
 
             this.applyCambriaFont(workbook);
+            this.applyPrintSettings(workbook);
 
             // Generate Excel file
-            const buffer = await workbook.xlsx.writeBuffer();
+            let buffer = await workbook.xlsx.writeBuffer();
+
+            // Set view to Page Break Preview for all worksheets by manipulating XML
+            // ExcelJS doesn't directly support setting view state, so we modify the XML directly
+            // Using the exact same approach as invoice-workbook-builder.ts, but for all worksheets
+            try {
+                const zip = await JSZip.loadAsync(buffer);
+                const worksheetFiles = Object.keys(zip.files).filter(name =>
+                    name.startsWith('xl/worksheets/sheet') && name.endsWith('.xml')
+                ).sort(); // Sort to ensure consistent processing order
+
+                // Process each worksheet file individually using exact invoice-workbook-builder logic
+                for (const worksheetFile of worksheetFiles) {
+                    try {
+                        const worksheetXml = await zip.file(worksheetFile)?.async('string');
+                        if (!worksheetXml) {
+                            continue;
+                        }
+
+                        // Use exact same logic as invoice-workbook-builder.ts (line by line)
+                        // This matches the working implementation exactly
+                        let modifiedXml = worksheetXml;
+                        if (modifiedXml.includes('<sheetViews>')) {
+                            modifiedXml = modifiedXml.replace(
+                                /<sheetView([^>]*?)(\s*\/?>)/g,
+                                (match, attrs, closing) => {
+                                    let cleanAttrs = attrs.replace(/\s*view="[^"]*"/g, '');
+                                    if (cleanAttrs && !cleanAttrs.endsWith(' ')) {
+                                        cleanAttrs += ' ';
+                                    }
+                                    return `<sheetView${cleanAttrs}view="pageBreakPreview"${closing}`;
+                                }
+                            );
+
+                            if (!modifiedXml.includes('view="pageBreakPreview"')) {
+                                modifiedXml = modifiedXml.replace(
+                                    /<sheetViews>(\s*)<sheetView([^>]*?)(\s*\/?>)/g,
+                                    (match, spacing, attrs, closing) => {
+                                        let cleanAttrs = attrs.replace(/\s*view="[^"]*"/g, '');
+                                        if (cleanAttrs && !cleanAttrs.endsWith(' ')) {
+                                            cleanAttrs += ' ';
+                                        }
+                                        return `<sheetViews>${spacing}<sheetView${cleanAttrs}view="pageBreakPreview"${closing}`;
+                                    }
+                                );
+
+                                // Only add new sheetView if no sheetView element exists at all
+                                // This prevents breaking XML structure when sheetView has child elements
+                                if (!modifiedXml.includes('view="pageBreakPreview"') && 
+                                    !modifiedXml.match(/<sheetView/)) {
+                                    modifiedXml = modifiedXml.replace(
+                                        '<sheetViews>',
+                                        '<sheetViews><sheetView view="pageBreakPreview"/>'
+                                    );
+                                }
+                            }
+                        } else {
+                            modifiedXml = modifiedXml.replace(
+                                /(<worksheet[^>]*>)/,
+                                '$1<sheetViews><sheetView view="pageBreakPreview"/></sheetViews>'
+                            );
+                        }
+
+                        zip.file(worksheetFile, modifiedXml);
+                    } catch (worksheetError) {
+                        // Log error for this specific worksheet but continue with others
+                        console.warn(`Error processing worksheet ${worksheetFile}:`, worksheetError);
+                    }
+                }
+
+                buffer = await zip.generateAsync({ type: 'arraybuffer' });
+            } catch (zipError) {
+                console.warn('Could not modify Excel file for Page Break Preview view:', zipError);
+            }
+
             const data = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
             // Generate filename with current date in yyyyMMdd format
@@ -448,6 +524,35 @@ export class PriceListComponent implements OnInit, OnDestroy {
                     }
                 });
             });
+        });
+    }
+
+    private applyPrintSettings(workbook: ExcelJS.Workbook): void {
+        workbook.eachSheet(worksheet => {
+            // Set page orientation to Portrait
+            worksheet.pageSetup.orientation = 'portrait';
+
+            // Set paper size to A4 (9 is the Excel code for A4)
+            worksheet.pageSetup.paperSize = 9;
+
+            // Set margins (in inches)
+            worksheet.pageSetup.margins = {
+                top: 0.59,
+                bottom: 0.59,
+                left: 0.393,
+                right: 0.393,
+                header: 0.314,
+                footer: 0.314
+            };
+
+            // Set scaling to fit to 1 page wide by 1 page tall
+            worksheet.pageSetup.fitToPage = true;
+            worksheet.pageSetup.fitToWidth = 1;
+            worksheet.pageSetup.fitToHeight = 1;
+
+            // Center horizontally on page
+            worksheet.pageSetup.horizontalCentered = true;
+            worksheet.pageSetup.verticalCentered = false;
         });
     }
 
@@ -722,6 +827,11 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Set tab color - medium blue
         worksheet.properties.tabColor = { argb: 'FF4472C4' }; // Medium blue
 
+        // Initialize views (required for page break preview manipulation)
+        if (!worksheet.views || worksheet.views.length === 0) {
+            worksheet.views = [{}];
+        }
+
         // Add headers
         const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
         const headerRow = worksheet.addRow(headers);
@@ -824,6 +934,11 @@ export class PriceListComponent implements OnInit, OnDestroy {
         // Set tab color - medium blue (same as PROVISIONS)
         worksheet.properties.tabColor = { argb: 'FF4472C4' }; // Medium blue
 
+        // Initialize views (required for page break preview manipulation)
+        if (!worksheet.views || worksheet.views.length === 0) {
+            worksheet.views = [{}];
+        }
+
         // Add headers
         const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
         const headerRow = worksheet.addRow(headers);
@@ -925,6 +1040,11 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
         // Set tab color - light blue
         worksheet.properties.tabColor = { argb: 'FFB4C6E7' }; // Light blue
+
+        // Initialize views (required for page break preview manipulation)
+        if (!worksheet.views || worksheet.views.length === 0) {
+            worksheet.views = [{}];
+        }
 
         // Add headers
         const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];

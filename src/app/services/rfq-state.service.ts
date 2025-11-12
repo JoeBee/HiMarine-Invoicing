@@ -71,7 +71,7 @@ export interface RfqData {
     ourCompanyCountry: string;
     ourCompanyPhone: string;
     ourCompanyEmail: string;
-    // Vessel Details
+    // Billing Information
     vesselName: string;
     vesselName2: string;
     vesselAddress: string;

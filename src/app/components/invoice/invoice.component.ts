@@ -40,7 +40,7 @@ interface InvoiceData {
     ourCompanyCountry: string;
     ourCompanyPhone: string;
     ourCompanyEmail: string;
-    // Vessel Details
+    // Billing Information
     vesselName: string;
     vesselName2: string;
     vesselAddress: string;
@@ -196,7 +196,7 @@ export class InvoiceComponent implements OnInit {
         ourCompanyCountry: '',
         ourCompanyPhone: '',
         ourCompanyEmail: '',
-        // Vessel Details
+        // Billing Information
         vesselName: '',
         vesselName2: '',
         vesselAddress: '',
@@ -343,7 +343,7 @@ export class InvoiceComponent implements OnInit {
         this.invoiceData.ourCompanyPhone = '';
         this.invoiceData.ourCompanyEmail = '';
 
-        // Clear Vessel Details
+        // Clear Billing Information
         this.invoiceData.vesselName = '';
         this.invoiceData.vesselName2 = '';
         this.invoiceData.vesselAddress = '';
@@ -373,7 +373,7 @@ export class InvoiceComponent implements OnInit {
         this.invoiceData.ourCompanyPhone = '';
         this.invoiceData.ourCompanyEmail = 'office@himarinecompany.com';
 
-        // Vessel Details (do not auto-populate; keep blank by default)
+        // Billing Information (do not auto-populate; keep blank by default)
         this.invoiceData.vesselName = '';
         this.invoiceData.vesselName2 = '';
         this.invoiceData.vesselAddress = '';
@@ -401,7 +401,7 @@ export class InvoiceComponent implements OnInit {
         this.invoiceData.ourCompanyPhone = '+1 857 2045786';
         this.invoiceData.ourCompanyEmail = 'office@himarinecompany.com';
 
-        // Vessel Details (do not auto-populate; keep blank by default)
+        // Billing Information (do not auto-populate; keep blank by default)
         this.invoiceData.vesselName = '';
         this.invoiceData.vesselName2 = '';
         this.invoiceData.vesselAddress = '';
@@ -428,7 +428,7 @@ export class InvoiceComponent implements OnInit {
         this.invoiceData.ourCompanyPhone = '';
         this.invoiceData.ourCompanyEmail = '';
 
-        // Vessel Details (do not auto-populate; keep blank by default)
+        // Billing Information (do not auto-populate; keep blank by default)
         this.invoiceData.vesselName = '';
         this.invoiceData.vesselName2 = '';
         this.invoiceData.vesselAddress = '';

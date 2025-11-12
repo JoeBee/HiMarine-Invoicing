@@ -30,19 +30,25 @@
 ### Main Navigation Tabs (Top Level)
 Located in `app.component.html`:
 
-1. **Suppliers Tab** (`/suppliers/*`)
+1. **Request for Quotation (RFQ) Tab** (`/rfq/*`)
+
+            - Sub-tabs:
+                    - Captain's Request (`/rfq/captains-request`)
+                    - Our Quote (`/rfq/proposal`)
+
+2. **Suppliers Tab** (`/suppliers/*`)
 
             - Sub-tabs:
                     - Supplier Docs (`/suppliers/supplier-docs`)
                     - Price List (`/suppliers/price-list`)
 
-2. **Invoicing Tab** (`/invoicing/*`)
+3. **Invoicing Tab** (`/invoicing/*`)
 
             - Sub-tabs:
                     - Captain's Order (`/invoicing/captains-order`)
                     - Invoice (`/invoicing/invoice`)
 
-3. **History Tab** (`/history`)
+4. **History Tab** (`/history`)
 
             - No sub-tabs
 
@@ -51,7 +57,7 @@ Located in `app.component.html`:
 File: `src/app/app.routes.ts`
 
 Routes use lazy loading with `loadComponent()` for optimal performance:
-- Default route redirects to `/suppliers/supplier-docs`
+- Default route redirects to `/rfq/captains-request`
 - All routes use standalone component imports
 - Routes are organized by main tab sections
 
@@ -76,7 +82,55 @@ Routes use lazy loading with `loadComponent()` for optimal performance:
 
 ### Core Components
 
-#### 1. SuppliersDocsComponent
+#### 1. RfqCaptainsRequestComponent
+
+**Location:** `src/app/components/captains-request/`
+**Route:** `/rfq/captains-request`
+
+**Purpose:** Upload and process captain request Excel files for RFQ generation
+
+**Key Features:**
+- Excel file upload interface
+- File processing and data extraction
+- RFQ data preparation
+- Integration with RFQ state service
+
+**Data Flow:**
+- Files uploaded → `RfqStateService`
+- Processed data stored in RFQ state
+- Data flows to Our Quote component
+
+#### 2. OurQuoteComponent
+
+**Location:** `src/app/components/our-quote/`
+**Route:** `/rfq/proposal`
+
+**Purpose:** Generate and manage RFQ proposals (quotes)
+
+**Key Features:**
+- Company selection (HI US, HI UK, EOS) with theme switching
+- Currency selection (EUR, AUD, NZD, USD, CAD)
+- Dynamic company branding (top and bottom images) - only shown when proposal tables exist
+- Export filename input with separate `.xlsx` label
+- Company details and bank details configuration
+- Billing Information section (formerly Vessel Details)
+- Invoice details configuration
+- Proposal tables display with collapsible sections
+- Create RFQ functionality
+- Theme-based styling (EOS theme: light blue, Hi Marine theme: light blue/red)
+
+**Data Flow:**
+- Reads from `RfqStateService`
+- Manages proposal data and RFQ generation
+- Exports RFQ proposals
+
+**Theme Features:**
+- EOS theme: Light blue background (#e6eefc), EOS branding images
+- Hi Marine theme: Light blue/red background, Hi Marine branding images
+- Top logo and bottom border images switch based on company selection
+- Images only display when `proposalTables.length > 0`
+
+#### 3. SuppliersDocsComponent
 
 **Location:** `src/app/components/suppliers-docs/`
 **Route:** `/suppliers/supplier-docs`
@@ -97,7 +151,7 @@ Routes use lazy loading with `loadComponent()` for optimal performance:
 - Files uploaded → `DataService.addSupplierFiles()`
 - Analysis results stored in `DataService.supplierFiles$`
 
-#### 2. PriceListComponent
+#### 4. PriceListComponent
 
 **Location:** `src/app/components/price-list/`
 
@@ -106,14 +160,20 @@ Routes use lazy loading with `loadComponent()` for optimal performance:
 **Purpose:** Process uploaded files and select items for invoicing
 
 **Key Features:**
+- Company selection (EOS, Hi Marine) with theme switching
+- Currency selection (EUR, AUD, NZD, USD, CAD)
+- Country selection dropdown
+- Dynamic company branding (top and bottom images) - only shown when processed data exists
+- Export filename input with separate `.xlsx` label (flexible width to fit container)
 - "Process Supplier Files" button (enabled when files exist)
-- Currency selection (radio buttons)
-- Toggle switch for comma/question mark display
 - Data extraction and display
 - Item selection via checkboxes
 - Price calculation with divider
 - Export processed data to Excel format
 - Maintains original file upload order
+- Filtering by file name, description, and text search
+- Sortable columns
+- Expandable rows showing original data
 
 **Data Flow:**
 - Reads from `DataService.supplierFiles$`
@@ -122,7 +182,13 @@ Routes use lazy loading with `loadComponent()` for optimal performance:
 - Updates item selection state
 - Exports to `DataService.excelData$`
 
-#### 3. CaptainsOrderComponent
+**Theme Features:**
+- EOS theme: Light blue background (#e6eefc), EOS branding images
+- Hi Marine theme: Light red background (#ffe6e6), Hi Marine branding images
+- Top logo and bottom border images switch based on company selection
+- Images only display when `processedData.length > 0`
+
+#### 5. CaptainsOrderComponent
 
 **Location:** `src/app/components/captains-order/`
 
@@ -135,7 +201,7 @@ Routes use lazy loading with `loadComponent()` for optimal performance:
 - Similar processing workflow to supplier files
 - Specialized for captain orders
 
-#### 4. InvoiceComponent
+#### 6. InvoiceComponent
 
 **Location:** `src/app/components/invoice/`
 
@@ -145,7 +211,10 @@ Routes use lazy loading with `loadComponent()` for optimal performance:
 
 **Key Features:**
 
+- Company selection (US, UK, EOS) with theme switching
 - Split Invoices / One Invoice toggle switch (default: Split Invoices)
+- Dynamic company branding (top and bottom images) - only shown when invoice items exist
+- Export filename input with separate `.xlsx` label
 - Invoice preview and summary statistics
 - Multiple export formats:
         - Excel (.xlsx) with formulas and formatting
@@ -155,18 +224,27 @@ Routes use lazy loading with `loadComponent()` for optimal performance:
         - Appends "A" to invoice number for Provisions when both exist
         - Skips empty categories
 - Excel export features:
-        - Vessel details (values only, no labels)
+        - Billing Information (values only, no labels) - formerly "Vessel Details"
         - Tab column excluded
         - Items renumbered from 1 in each file
         - Company branding and bank details
         - Automatic calculations and formulas
+- Fees & Discounts section (Delivery fee, Port fee, Agency fee, Transport/Customs/Launch fees, Launch fee, Discount %)
+- Billing Information section (Name, Name 2, Address, Address 2, City, Country)
+- Invoice Details section (No, Invoice Date, Vessel, Country, Port, Category, Invoice Due)
 
 **Data Flow:**
 - Reads from `DataService.excelData$`
 - Generates invoices based on selected mode
 - Downloads files via FileSaver
 
-#### 5. HistoryComponent
+**Theme Features:**
+- EOS theme: Light blue background (#e6eefc), EOS branding images, light blue editable fields
+- Hi Marine theme: Light blue background (#f0f7ff), Hi Marine branding images
+- Top logo and bottom border images switch based on company selection
+- Images only display when `invoiceData.items.length > 0`
+
+#### 7. HistoryComponent
 
 **Location:** `src/app/components/history/`
 
@@ -194,7 +272,7 @@ Routes use lazy loading with `loadComponent()` for optimal performance:
 - Filters applied client-side
 - Pagination handles large datasets
 
-#### 6. InvoicingComponent
+#### 8. InvoicingComponent
 
 **Location:** `src/app/components/invoicing/`
 
@@ -202,7 +280,7 @@ Routes use lazy loading with `loadComponent()` for optimal performance:
 
 **Purpose:** Alternative invoicing interface
 
-#### 7. SuppliersComponent
+#### 9. SuppliersComponent
 
 **Location:** `src/app/components/suppliers/`
 
@@ -242,6 +320,24 @@ Routes use lazy loading with `loadComponent()` for optimal performance:
 - `ProcessedDataRow` - Extracted row data
 - `ExcelItemData` - Final invoice item format
 - `ExcelProcessedData` - Organized invoice data
+
+### RfqStateService
+
+**Location:** `src/app/services/rfq-state.service.ts`
+
+**Responsibilities:**
+- RFQ (Request for Quotation) state management
+- Proposal data management
+- Company and currency selection state
+- RFQ generation and export
+
+**Key Features:**
+- Manages RFQ data structure (company details, bank details, billing information, invoice details)
+- Handles proposal tables and items
+- Company selection state (HI US, HI UK, EOS)
+- Currency selection state
+- Country and port management
+- Export filename generation
 
 ### LoggingService
 
@@ -333,7 +429,7 @@ Routes use lazy loading with `loadComponent()` for optimal performance:
    ↓
 6. Generate Excel workbook with:
    - Company details and branding
-   - Vessel details (values only)
+   - Billing Information (values only) - formerly "Vessel Details"
    - Invoice details (number, date, category)
    - Items table (Pos, Description, Remark, Unit, Qty, Price, Total)
    - Totals and fees section
@@ -389,6 +485,14 @@ HiMarine-Invoicing/
 ├── src/
 │   ├── app/
 │   │   ├── components/
+│   │   │   ├── captains-request/        # RFQ captain request processing
+│   │   │   │   ├── captains-request.component.ts
+│   │   │   │   ├── captains-request.component.html
+│   │   │   │   └── captains-request.component.scss
+│   │   │   ├── our-quote/               # RFQ proposal/quote generation
+│   │   │   │   ├── our-quote.component.ts
+│   │   │   │   ├── our-quote.component.html
+│   │   │   │   └── our-quote.component.scss
 │   │   │   ├── suppliers-docs/          # Main supplier file upload
 │   │   │   │   ├── suppliers-docs.component.ts
 │   │   │   │   ├── suppliers-docs.component.html
@@ -400,12 +504,16 @@ HiMarine-Invoicing/
 │   │   │   ├── captains-order/         # Captain order processing
 │   │   │   ├── invoice/                 # Invoice generation
 │   │   │   ├── history/                 # Log viewing
+│   │   │   ├── information-modal/       # Information/help modal
 │   │   │   ├── invoicing/               # Alternative invoicing (legacy)
-│   │   │   ├── suppliers/               # Alternative suppliers (legacy)
+│   │   │   ├── suppliers/                # Alternative suppliers (legacy)
 │   │   │   └── process-data/            # (Empty/unused)
 │   │   ├── services/
 │   │   │   ├── data.service.ts          # Core data management
-│   │   │   └── logging.service.ts      # Logging and analytics
+│   │   │   ├── logging.service.ts       # Logging and analytics
+│   │   │   └── rfq-state.service.ts     # RFQ state management
+│   │   ├── utils/
+│   │   │   └── invoice-workbook-builder.ts  # Excel workbook generation utility
 │   │   ├── app.component.ts             # Root component
 │   │   ├── app.component.html           # Navigation and modal
 │   │   ├── app.component.scss           # Global navigation styles
@@ -436,25 +544,37 @@ HiMarine-Invoicing/
 
 ### PriceListComponent Features
 
+- Company selection (EOS, Hi Marine) with theme switching
 - Batch file processing
-- Currency selection (USD, EUR, GBP, etc.)
-- Comma/Question mark toggle
+- Currency selection (EUR, AUD, NZD, USD, CAD)
+- Country selection dropdown
+- Export filename with separate `.xlsx` label (flexible width)
+- Dynamic company branding (top/bottom images, conditional display)
 - Item inclusion checkboxes
 - Price divider adjustment
 - Excel export of processed data
 - Maintains file upload order
+- Advanced filtering (file name, description, text search)
+- Sortable columns
+- Expandable rows showing original data
 
 ### InvoiceComponent Features
 
+- Company selection (US, UK, EOS) with theme switching
 - Split Invoices / One Invoice toggle
+- Dynamic company branding (top/bottom images, conditional display)
+- Export filename with separate `.xlsx` label
 - Invoice preview with summary
 - Excel export with full formatting
 - PDF export capability
 - Automatic item renumbering
-- Vessel details export (values only)
+- Billing Information export (values only) - formerly "Vessel Details"
 - Tab column exclusion
 - Conditional invoice numbering (append "A")
 - Company branding and bank details
+- Fees & Discounts configuration
+- Billing Information section (Name, Name 2, Address, Address 2, City, Country)
+- Invoice Details section (No, Invoice Date, Vessel, Country, Port, Category, Invoice Due)
 
 ### HistoryComponent Features
 
@@ -491,6 +611,24 @@ All state is managed through RxJS Observables in services:
 
 ## User Workflows
 
+### RFQ Workflow
+
+1. **Upload Captain Request**
+
+            - Navigate to RFQ → Captain's Request
+            - Upload captain request Excel files
+            - Process files for RFQ generation
+
+2. **Create Proposal/Quote**
+
+            - Navigate to RFQ → Our Quote
+            - Select company (HI US, HI UK, or EOS)
+            - Select currency
+            - Fill in company details, bank details, billing information
+            - Configure invoice details
+            - Review proposal tables
+            - Click "Create RFQ(s)" to generate
+
 ### Standard Invoice Workflow
 
 1. **Upload Supplier Files**
@@ -502,16 +640,22 @@ All state is managed through RxJS Observables in services:
 2. **Process and Select Items**
 
             - Navigate to Suppliers → Price List
+            - Select company (EOS or Hi Marine)
             - Select currency
+            - Select country (optional)
             - Click "Process Supplier Files"
             - Review extracted data
             - Check items to include
             - Adjust prices if needed
+            - Export price list if needed
 
 3. **Generate Invoice**
 
             - Navigate to Invoicing → Invoice
+            - Select company (US, UK, or EOS)
             - Choose export mode (Split Invoices or One Invoice)
+            - Fill in billing information
+            - Configure fees and discounts
             - Review preview and summary
             - Click "Export Invoice" (Excel) or "Generate PDF"
             - Download file(s)
@@ -549,6 +693,9 @@ All state is managed through RxJS Observables in services:
 - Color-coded states (active, hover, disabled)
 - Responsive layout
 - Smooth animations and transitions
+- Theme-based styling (EOS vs Hi Marine)
+- Dynamic branding with conditional image display
+- Flexible form layouts with proper spacing
 
 ## Deployment Architecture
 
@@ -586,6 +733,56 @@ All state is managed through RxJS Observables in services:
 - Efficient Excel file parsing
 - Optimized Observable subscriptions
 
+## Theme System
+
+### Company Theme Switching
+
+The application supports dynamic theme switching based on company selection:
+
+**EOS Theme:**
+- Background: Light blue (#e6eefc)
+- Top Logo: `EosSupplyLtd.png`
+- Bottom Border: `EosSupplyLtdBottomBorder.png`
+- Editable fields: Light blue highlight (#d9edf7)
+- Radio button accent: Dark blue (#0B2E66)
+
+**Hi Marine Theme:**
+- Background: Light red/blue (varies by component)
+- Top Logo: `HIMarineTopImage_sm.png`
+- Bottom Border: `HIMarineBottomBorder.png`
+- Radio button accent: Dark green (#2E7D32)
+
+**Implementation:**
+- Theme classes applied via `[ngClass]` directive
+- Top and bottom images conditionally displayed based on data availability
+- Images only show when processed data/proposal tables/invoice items exist
+- Theme switching happens automatically when company selection changes
+
+**Components with Theme Support:**
+- PriceListComponent (EOS, Hi Marine)
+- InvoiceComponent (EOS, Hi Marine - US/UK)
+- OurQuoteComponent (EOS, Hi Marine - HI US/HI UK)
+
+## Recent Updates
+
+### UI/UX Improvements
+
+1. **Export Filename Enhancement:**
+   - `.xlsx` extension removed from input field
+   - Added as separate label after input (matching invoice component)
+   - Flexible input width to fit container properly
+   - Applied to PriceListComponent
+
+2. **Terminology Update:**
+   - "Vessel Details" renamed to "Billing Information" throughout application
+   - Updated in all components, services, and documentation
+   - More accurate representation of the data being collected
+
+3. **Conditional Image Display:**
+   - Top logo and bottom border images only display when data exists
+   - Prevents empty state from showing branding
+   - Applied to all components with theme support
+
 ## Future Enhancement Areas
 
 Based on codebase analysis, potential improvements:
@@ -594,4 +791,5 @@ Based on codebase analysis, potential improvements:
 - User management: Multi-user support, roles
 - Template management: Save invoice templates
 - Reporting: Advanced analytics and reporting
+- RFQ workflow: Enhanced proposal management and tracking
 
