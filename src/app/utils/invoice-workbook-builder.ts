@@ -442,8 +442,8 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
         descCell.value = toUpperCaseText(item.description);
         descCell.font = { size: 10, name: 'Calibri', bold: shouldBlankNumericColumns };
         descCell.alignment = shouldBlankNumericColumns
-            ? { horizontal: 'center', vertical: 'middle' }
-            : { horizontal: 'left', vertical: 'middle' };
+            ? { horizontal: 'center', vertical: 'middle', wrapText: true }
+            : { horizontal: 'left', vertical: 'middle', wrapText: true };
 
         const remarkCell = worksheet.getCell(rowIndex, 3);
         remarkCell.value = toUpperCaseText(item.remark);

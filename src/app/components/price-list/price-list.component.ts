@@ -771,6 +771,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 };
                 cell.alignment = { vertical: 'middle' };
             });
+            
+            // Enable word-wrap for Description column (column 2)
+            const descCell = worksheet.getCell(`B${rowNumber}`);
+            descCell.alignment = { ...descCell.alignment, wrapText: true };
         });
 
         // Set column widths
@@ -869,6 +873,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 };
                 cell.alignment = { vertical: 'middle' };
             });
+            
+            // Enable word-wrap for Description column (column 2)
+            const descCell = worksheet.getCell(`B${rowNumber}`);
+            descCell.alignment = { ...descCell.alignment, wrapText: true };
         });
 
         // Set column widths
@@ -967,6 +975,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 };
                 cell.alignment = { vertical: 'middle' };
             });
+            
+            // Enable word-wrap for Description column (column 2)
+            const descCell = worksheet.getCell(`B${rowNumber}`);
+            descCell.alignment = { ...descCell.alignment, wrapText: true };
         });
 
         // Set column widths
