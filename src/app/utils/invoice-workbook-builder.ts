@@ -318,10 +318,11 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
         const cell = worksheet.getCell(`A${row}`);
         cell.value = {
             richText: [
-                { text: `${label}: `, font: { bold: false, size: 11, name: 'Calibri' } },
-                { text: `${value || ''}`, font: { size: 11, name: 'Calibri', bold: false } }
+                { text: `${label}: `, font: { bold: true, size: 11, name: 'Calibri' } },
+                { text: `${value || ''}`, font: { size: 11, name: 'Calibri', bold: true } }
             ]
         } as any;
+        cell.font = { size: 11, name: 'Calibri', bold: true };
         cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true } as any;
     };
 
@@ -358,7 +359,7 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
         worksheet.mergeCells(`A${bankRow}:D${bankRow}`);
         const ukDomesticHeader = worksheet.getCell(`A${bankRow}`);
         ukDomesticHeader.value = 'UK DOMESTIC WIRES:';
-        ukDomesticHeader.font = { bold: false, size: 11, name: 'Calibri' };
+        ukDomesticHeader.font = { bold: true, size: 11, name: 'Calibri' };
         ukDomesticHeader.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
         bankRow++;
 
@@ -381,12 +382,12 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
     const writeInvoiceDetail = (row: number, label: string, value: string, isDate: boolean = false) => {
         const labelCell = worksheet.getCell(`E${row}`);
         labelCell.value = `${label}:`;
-        labelCell.font = { size: 11, name: 'Calibri', bold: false };
+        labelCell.font = { size: 11, name: 'Calibri', bold: true };
         labelCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
 
         const valueCell = worksheet.getCell(`F${row}`);
         valueCell.value = isDate && value ? formatDateAsText(value) : (value || '');
-        valueCell.font = { size: 11, name: 'Calibri', bold: false };
+        valueCell.font = { size: 11, name: 'Calibri', bold: true };
         valueCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false } as any;
     };
 
