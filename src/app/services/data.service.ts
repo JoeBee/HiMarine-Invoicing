@@ -52,19 +52,26 @@ export interface ExcelProcessedData {
     };
 }
 
+type PriceDividerMap = Record<string, number>;
+
+const DEFAULT_PRICE_DIVIDERS: PriceDividerMap = {
+    Bonded: 0.9,
+    Provisions: 0.9
+};
+
 @Injectable({
     providedIn: 'root'
 })
 export class DataService {
     private supplierFilesSubject = new BehaviorSubject<SupplierFileInfo[]>([]);
     private processedDataSubject = new BehaviorSubject<ProcessedDataRow[]>([]);
-    private priceDividerSubject = new BehaviorSubject<number>(0.9);
+    private priceDividerSubject = new BehaviorSubject<PriceDividerMap>({ ...DEFAULT_PRICE_DIVIDERS });
     private separateFreshProvisionsSubject = new BehaviorSubject<boolean>(false); // Default to "Do not Separate"
     private excelDataSubject = new BehaviorSubject<ExcelProcessedData | null>(null);
 
     supplierFiles$: Observable<SupplierFileInfo[]> = this.supplierFilesSubject.asObservable();
     processedData$: Observable<ProcessedDataRow[]> = this.processedDataSubject.asObservable();
-    priceDivider$: Observable<number> = this.priceDividerSubject.asObservable();
+    priceDivider$: Observable<PriceDividerMap> = this.priceDividerSubject.asObservable();
     separateFreshProvisions$: Observable<boolean> = this.separateFreshProvisionsSubject.asObservable();
     excelData$: Observable<ExcelProcessedData | null> = this.excelDataSubject.asObservable();
 
@@ -320,8 +327,9 @@ export class DataService {
 
                         // Apply price divider to the price
                         const originalPrice = Number(priceCell.v);
-                        const priceDivider = this.priceDividerSubject.value;
-                        const adjustedPrice = originalPrice / priceDivider;
+                        const priceDivider = this.getPriceDividerForCategory(fileInfo.category);
+                        const safeDivider = priceDivider > 0 ? priceDivider : 1;
+                        const adjustedPrice = originalPrice / safeDivider;
 
                         rows.push({
                             fileName: fileInfo.fileName,
@@ -343,6 +351,24 @@ export class DataService {
 
             reader.readAsArrayBuffer(fileInfo.file);
         });
+    }
+
+    private getPriceDividerForCategory(category?: string): number {
+        const dividers = {
+            ...DEFAULT_PRICE_DIVIDERS,
+            ...this.priceDividerSubject.value
+        };
+
+        if (category && dividers[category] !== undefined) {
+            return dividers[category];
+        }
+
+        if (dividers['Bonded'] !== undefined) {
+            return dividers['Bonded'];
+        }
+
+        const firstDivider = Object.values(dividers).find(value => typeof value === 'number');
+        return typeof firstDivider === 'number' ? firstDivider : 1;
     }
 
     getProcessedData(): ProcessedDataRow[] {
@@ -374,16 +400,41 @@ export class DataService {
         this.processedDataSubject.next([]);
     }
 
-    setPriceDivider(divider: number): void {
-        this.priceDividerSubject.next(divider);
+    setPriceDivider(divider: number, category?: string): void {
+        const current = this.priceDividerSubject.value;
+        const normalizedCategory = category ?? null;
+
+        let updated: PriceDividerMap;
+        if (normalizedCategory) {
+            updated = {
+                ...DEFAULT_PRICE_DIVIDERS,
+                ...current,
+                [normalizedCategory]: divider
+            };
+        } else {
+            const categories = Object.keys({ ...DEFAULT_PRICE_DIVIDERS, ...current });
+            updated = categories.reduce((map, key) => {
+                map[key] = divider;
+                return map;
+            }, {} as PriceDividerMap);
+        }
+
+        this.priceDividerSubject.next(updated);
         // Automatically reprocess data when price divider changes
         if (this.supplierFilesSubject.value.length > 0) {
             this.processSupplierFiles();
         }
     }
 
-    getPriceDivider(): number {
-        return this.priceDividerSubject.value;
+    getPriceDivider(category?: string): number {
+        return this.getPriceDividerForCategory(category);
+    }
+
+    getPriceDividers(): PriceDividerMap {
+        return {
+            ...DEFAULT_PRICE_DIVIDERS,
+            ...this.priceDividerSubject.value
+        };
     }
 
     setExcelData(data: ExcelProcessedData): void {

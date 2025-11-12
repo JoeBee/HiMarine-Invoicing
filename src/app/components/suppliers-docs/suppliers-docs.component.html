@@ -2,48 +2,43 @@
     <!-- <h1>Suppliers Docs</h1> -->
 
     <div class="drop-zones-container">
-        <div class="drop-zone" [class.drag-over]="isDragging && hoveredDropzone === 'Bonded'"
-            (dragover)="onDragOver($event, 'Bonded')" (dragleave)="onDragLeave($event)"
-            (drop)="onDrop($event, 'Bonded')" (click)="triggerFileInput('Bonded')">
-            <div class="icon">🪥🥤💧</div>
-            <p><strong>Bonded</strong></p>
-            <input type="file" id="fileInput-Bonded" multiple accept=".xlsx,.xls"
-                (change)="onFileSelect($event, 'Bonded')" style="display: none;">
+        <div class="drop-zone-column">
+            <div class="drop-zone" [class.drag-over]="isDragging && hoveredDropzone === 'Bonded'"
+                (dragover)="onDragOver($event, 'Bonded')" (dragleave)="onDragLeave($event)"
+                (drop)="onDrop($event, 'Bonded')" (click)="triggerFileInput('Bonded')">
+                <div class="icon">🪥🥤💧</div>
+                <p><strong>Bonded</strong></p>
+                <input type="file" id="fileInput-Bonded" multiple accept=".xlsx,.xls"
+                    (change)="onFileSelect($event, 'Bonded')" style="display: none;">
+            </div>
+            <div class="price-divider-card">
+                <input type="number" id="priceDividerBonded" [(ngModel)]="priceDividerBonded"
+                    (ngModelChange)="onPriceDividerChange('Bonded')" step="0.01" min="0" max="999.99" placeholder="0.9"
+                    class="price-divider-input">
+                <p class="price-divider-description">{{ getPriceDividerDescription('Bonded') }}</p>
+            </div>
         </div>
 
-        <div class="drop-zone" [class.drag-over]="isDragging && hoveredDropzone === 'Provisions'"
-            (dragover)="onDragOver($event, 'Provisions')" (dragleave)="onDragLeave($event)"
-            (drop)="onDrop($event, 'Provisions')" (click)="triggerFileInput('Provisions')">
-            <div class="icon">🥩🥕🧀</div>
-            <p><strong>Provisions</strong></p>
-            <input type="file" id="fileInput-Provisions" multiple accept=".xlsx,.xls"
-                (change)="onFileSelect($event, 'Provisions')" style="display: none;">
+        <div class="drop-zone-column">
+            <div class="drop-zone" [class.drag-over]="isDragging && hoveredDropzone === 'Provisions'"
+                (dragover)="onDragOver($event, 'Provisions')" (dragleave)="onDragLeave($event)"
+                (drop)="onDrop($event, 'Provisions')" (click)="triggerFileInput('Provisions')">
+                <div class="icon">🥩🥕🧀</div>
+                <p><strong>Provisions</strong></p>
+                <input type="file" id="fileInput-Provisions" multiple accept=".xlsx,.xls"
+                    (change)="onFileSelect($event, 'Provisions')" style="display: none;">
+            </div>
+            <div class="price-divider-card">
+                <input type="number" id="priceDividerProvisions" [(ngModel)]="priceDividerProvisions"
+                    (ngModelChange)="onPriceDividerChange('Provisions')" step="0.01" min="0" max="999.99"
+                    placeholder="0.9" class="price-divider-input">
+                <p class="price-divider-description">{{ getPriceDividerDescription('Provisions') }}</p>
+            </div>
         </div>
     </div>
 
     <div class="drop-zone-instructions">
         <p>Drag and drop Excel files here or click to browse</p>
-    </div>
-
-    <!-- Price Divider and Process Controls -->
-    <div class="controls-section">
-        <div class="price-divider-group">
-            <label for="priceDivider">Price Divider:</label>
-            <input type="number" id="priceDivider" [(ngModel)]="priceDivider" (ngModelChange)="onPriceDividerChange()"
-                step="0.01" min="0" max="999.99" placeholder="0.9" class="price-divider-input">
-            <span class="price-divider-label">(e.g., 0.9 increases prices by ~11%)</span>
-        </div>
-
-        <div class="separate-fresh-provisions-group">
-            <div class="toggle-container">
-                <span class="toggle-label">{{ separateFreshProvisions ? 'Separate Fresh Provisions:' : 'Do not Separate Provisions' }}</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="separateFreshProvisions" [(ngModel)]="separateFreshProvisions"
-                        (ngModelChange)="onSeparateFreshProvisionsChange()">
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-        </div>
     </div>
 
     <div *ngIf="isProcessing" class="processing-message">
@@ -93,7 +88,8 @@
                 <tr *ngFor="let file of supplierFiles">
                     <td class="file-name-cell">
                         <span class="clickable-filename" (click)="openFile(file)">{{ file.fileName }}</span>
-                        <button type="button" class="view-button" (click)="viewFilePreview(file)" [disabled]="!canPreviewFile(file)">
+                        <button type="button" class="view-button" (click)="viewFilePreview(file)"
+                            [disabled]="!canPreviewFile(file)">
                             View
                         </button>
                     </td>
@@ -105,7 +101,8 @@
                         || file.priceColumn }}</td>
                     <td class="column-unit" [class.not-found]="file.unitColumn === 'NOT FOUND'">{{ file.unitHeader
                         || file.unitColumn }}</td>
-                    <td class="column-remarks" [class.not-found]="file.remarksColumn === 'NOT FOUND'">{{ file.remarksHeader
+                    <td class="column-remarks" [class.not-found]="file.remarksColumn === 'NOT FOUND'">{{
+                        file.remarksHeader
                         || file.remarksColumn }}</td>
                     <td>{{ file.rowCount }}</td>
                     <td class="status-cell">
@@ -148,20 +145,22 @@
                     <span class="preview-meta-label">Top Left:</span>
                     <span class="preview-meta-value">{{ previewTopLeftHeader }}</span>
                 </div>
-                <button type="button" class="preview-close-button" (click)="closePreviewDialog()" aria-label="Close preview">×</button>
+                <button type="button" class="preview-close-button" (click)="closePreviewDialog()"
+                    aria-label="Close preview">×</button>
             </div>
             <ng-container *ngIf="previewDialogHeaders.length > 0; else noPreviewData">
                 <div class="preview-dialog-body">
                     <table>
                         <thead>
                             <tr>
-                            <th *ngFor="let header of previewDialogHeaders; let i = index"
-                                [class.highlight-column]="isPreviewColumnHighlighted(i)">{{ header }}</th>
+                                <th *ngFor="let header of previewDialogHeaders; let i = index"
+                                    [class.highlight-column]="isPreviewColumnHighlighted(i)">{{ header }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr *ngFor="let row of previewDialogRows">
-                            <td *ngFor="let cell of row; let i = index" [class.highlight-column]="isPreviewColumnHighlighted(i)">{{ cell }}</td>
+                                <td *ngFor="let cell of row; let i = index"
+                                    [class.highlight-column]="isPreviewColumnHighlighted(i)">{{ cell }}</td>
                             </tr>
                         </tbody>
                     </table>

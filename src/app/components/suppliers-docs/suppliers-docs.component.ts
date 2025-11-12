@@ -24,12 +24,12 @@ export class SuppliersDocsComponent implements OnInit {
     sortState: SortState = { column: '', direction: 'asc' };
     showConfirmDialog = false;
     hoveredDropzone: string | null = null;
-    priceDivider: number = 0.9;
+    priceDividerBonded: number = 0.9;
+    priceDividerProvisions: number = 0.9;
     hasSupplierFiles = false;
     buttonDisabled = true; // Always disabled since we removed the process button
     hasNewFiles = false;
-    priceDividerChanged = false;
-    initialPriceDivider: number = 0.9;
+    initialPriceDividers: Record<string, number> = { Bonded: 0.9, Provisions: 0.9 };
     separateFreshProvisions: boolean = false; // Default to "Do not Separate"
     previewDialogVisible = false;
     previewDialogHeaders: string[] = [];
@@ -43,9 +43,14 @@ export class SuppliersDocsComponent implements OnInit {
     ngOnInit(): void {
         this.hasSupplierFiles = this.dataService.hasSupplierFiles();
 
-        // Load price divider from data service
-        this.priceDivider = this.dataService.getPriceDivider();
-        this.initialPriceDivider = this.priceDivider;
+        // Load price dividers from data service
+        const priceDividers = this.dataService.getPriceDividers();
+        this.priceDividerBonded = priceDividers['Bonded'] ?? 0.9;
+        this.priceDividerProvisions = priceDividers['Provisions'] ?? 0.9;
+        this.initialPriceDividers = {
+            Bonded: this.priceDividerBonded,
+            Provisions: this.priceDividerProvisions
+        };
 
         // Load separate fresh provisions setting from data service
         this.separateFreshProvisions = this.dataService.getSeparateFreshProvisions();
@@ -148,8 +153,13 @@ export class SuppliersDocsComponent implements OnInit {
                 }, 'SuppliersDocsComponent');
 
                 this.hasNewFiles = false; // Reset since we processed immediately
-                this.priceDividerChanged = false; // Reset since we processed immediately
-                this.initialPriceDivider = this.priceDivider; // Update initial value
+                const latestDividers = this.dataService.getPriceDividers();
+                this.initialPriceDividers = {
+                    Bonded: latestDividers['Bonded'] ?? this.priceDividerBonded,
+                    Provisions: latestDividers['Provisions'] ?? this.priceDividerProvisions
+                };
+                this.priceDividerBonded = this.initialPriceDividers['Bonded'];
+                this.priceDividerProvisions = this.initialPriceDividers['Provisions'];
                 this.updateButtonState();
             } catch (error) {
                 this.loggingService.logError(error as Error, 'file_processing', 'SuppliersDocsComponent', {
@@ -194,7 +204,6 @@ export class SuppliersDocsComponent implements OnInit {
 
         // Reset flags when all files are cleared
         this.hasNewFiles = false;
-        this.priceDividerChanged = false;
         this.updateButtonState();
     }
 
@@ -354,20 +363,53 @@ export class SuppliersDocsComponent implements OnInit {
         this.previewDialogHighlightIndexes = [];
     }
 
-    onPriceDividerChange(): void {
+    onPriceDividerChange(category: 'Bonded' | 'Provisions'): void {
+        const newValue = category === 'Bonded' ? this.priceDividerBonded : this.priceDividerProvisions;
+        const previousValue = this.initialPriceDividers[category] ?? 0.9;
+
         this.loggingService.logFormSubmission('price_divider_change', {
-            newValue: this.priceDivider,
-            previousValue: this.initialPriceDivider
+            category,
+            newValue,
+            previousValue
         }, 'SuppliersDocsComponent');
 
         // Update price divider in data service (this will automatically reprocess)
-        this.dataService.setPriceDivider(this.priceDivider);
+        this.dataService.setPriceDivider(newValue, category);
 
         // Reset flags since processing happens automatically
         this.hasNewFiles = false;
-        this.priceDividerChanged = false;
-        this.initialPriceDivider = this.priceDivider;
+        this.initialPriceDividers = {
+            ...this.initialPriceDividers,
+            [category]: newValue
+        };
         this.updateButtonState();
+    }
+
+    getPriceDividerDescription(category: 'Bonded' | 'Provisions'): string {
+        const value = category === 'Bonded' ? this.priceDividerBonded : this.priceDividerProvisions;
+        return this.buildPriceDividerDescription(value);
+    }
+
+    private buildPriceDividerDescription(value: number): string {
+        if (!Number.isFinite(value) || value <= 0) {
+            return 'Price Divider (enter a value greater than 0 to calculate adjustment)';
+        }
+
+        const formattedValue = this.formatDividerValue(value);
+        const percentChange = (1 / value - 1) * 100;
+
+        if (Math.abs(percentChange) < 0.5) {
+            return `Price Divider (${formattedValue} keeps prices roughly the same (~0%))`;
+        }
+
+        const direction = percentChange >= 0 ? 'increases' : 'decreases';
+        const roundedPercent = Math.round(Math.abs(percentChange));
+        return `Price Divider (${formattedValue} ${direction} prices by ~${roundedPercent}%)`;
+    }
+
+    private formatDividerValue(value: number): string {
+        const rounded = Number(value.toFixed(2));
+        return rounded.toString();
     }
 
     updateButtonState(): void {
