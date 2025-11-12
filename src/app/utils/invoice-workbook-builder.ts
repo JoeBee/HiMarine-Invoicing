@@ -12,6 +12,7 @@ export interface InvoiceWorkbookItem {
     price: number;
     total: number;
     currency: string;
+    blankNumericColumns?: boolean;
 }
 
 export interface InvoiceWorkbookData {
@@ -430,6 +431,7 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
 
     items.forEach((item, index) => {
         const rowIndex = tableStartRow + 1 + index;
+        const shouldBlankNumericColumns = !!item.blankNumericColumns;
 
         const posCell = worksheet.getCell(rowIndex, 1);
         posCell.value = index + 1;
@@ -438,8 +440,10 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
 
         const descCell = worksheet.getCell(rowIndex, 2);
         descCell.value = toUpperCaseText(item.description);
-        descCell.font = { size: 10, name: 'Calibri' };
-        descCell.alignment = { horizontal: 'left', vertical: 'middle' };
+        descCell.font = { size: 10, name: 'Calibri', bold: shouldBlankNumericColumns };
+        descCell.alignment = shouldBlankNumericColumns
+            ? { horizontal: 'center', vertical: 'middle' }
+            : { horizontal: 'left', vertical: 'middle' };
 
         const remarkCell = worksheet.getCell(rowIndex, 3);
         remarkCell.value = toUpperCaseText(item.remark);
@@ -452,23 +456,37 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
         unitCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
         const qtyCell = worksheet.getCell(rowIndex, 5);
-        const qtyValue = typeof item.qty === 'string' ? Number(item.qty) : item.qty;
-        qtyCell.value = Number.isFinite(qtyValue as number) ? qtyValue : (item.qty || 0);
+        if (shouldBlankNumericColumns) {
+            qtyCell.value = null;
+        } else {
+            const qtyValue = typeof item.qty === 'string' ? Number(item.qty) : item.qty;
+            qtyCell.value = Number.isFinite(qtyValue as number) ? qtyValue : (item.qty || 0);
+        }
         qtyCell.font = { size: 10, name: 'Calibri' };
         qtyCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
         const priceCell = worksheet.getCell(rowIndex, 6);
-        priceCell.value = Math.round((item.price || 0) * 100) / 100;
+        const currencyFormat = getCurrencyExcelFormat(item.currency || primaryCurrency);
+        if (shouldBlankNumericColumns) {
+            priceCell.value = null;
+            priceCell.numFmt = undefined as any;
+        } else {
+            priceCell.value = Math.round((item.price || 0) * 100) / 100;
+            priceCell.numFmt = currencyFormat;
+        }
         priceCell.font = { size: 10, name: 'Calibri' };
         priceCell.alignment = { horizontal: 'right', vertical: 'middle' };
-        const currencyFormat = getCurrencyExcelFormat(item.currency || primaryCurrency);
-        priceCell.numFmt = currencyFormat;
 
         const totalCell = worksheet.getCell(rowIndex, 7);
-        totalCell.value = { formula: `E${rowIndex}*F${rowIndex}` } as any;
+        if (shouldBlankNumericColumns) {
+            totalCell.value = null;
+            totalCell.numFmt = undefined as any;
+        } else {
+            totalCell.value = { formula: `E${rowIndex}*F${rowIndex}` } as any;
+            totalCell.numFmt = currencyFormat;
+        }
         totalCell.font = { size: 10, name: 'Calibri' };
         totalCell.alignment = { horizontal: 'right', vertical: 'middle' };
-        totalCell.numFmt = currencyFormat;
 
         const border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } } as any;
         posCell.border = border;

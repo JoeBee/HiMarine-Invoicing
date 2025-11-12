@@ -884,9 +884,15 @@ export class RfqStateService {
         const detectedCurrency = this.detectCurrencyFromString(item.price) || this.detectCurrencyFromString(item.total);
         const currency = preferredCurrency || detectedCurrency || fallbackCurrency || '£';
 
+        const remarkTrimmed = (item.remark ?? '').trim();
+        const unitTrimmed = (item.unit ?? '').trim();
+        const shouldBlankNumericColumns = remarkTrimmed === '' && unitTrimmed === '';
+
         const qtyParsed = this.parseNumericFromMixed(item.qty);
         let qtyValue: number | string;
-        if (qtyParsed !== null) {
+        if (shouldBlankNumericColumns) {
+            qtyValue = '';
+        } else if (qtyParsed !== null) {
             qtyValue = qtyParsed;
         } else if (typeof item.qty === 'string') {
             qtyValue = item.qty.trim();
@@ -894,8 +900,8 @@ export class RfqStateService {
             qtyValue = '';
         }
 
-        const priceParsed = this.parseNumericFromMixed(item.price) ?? 0;
-        const totalParsed = this.parseNumericFromMixed(item.total) ?? 0;
+        const priceParsed = shouldBlankNumericColumns ? 0 : (this.parseNumericFromMixed(item.price) ?? 0);
+        const totalParsed = shouldBlankNumericColumns ? 0 : (this.parseNumericFromMixed(item.total) ?? 0);
 
         return {
             pos: item.pos,
@@ -905,7 +911,8 @@ export class RfqStateService {
             qty: qtyValue,
             price: priceParsed,
             total: totalParsed,
-            currency
+            currency,
+            blankNumericColumns: shouldBlankNumericColumns
         };
     }
 
