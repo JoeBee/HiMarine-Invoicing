@@ -53,9 +53,10 @@ export interface ProposalTable {
     items: ProposalItem[];
 }
 
-export type CurrencyCode = 'USD' | 'EUR' | 'AUD' | 'NZD' | 'CAD';
+export type CurrencyCode = 'GBP' | 'USD' | 'EUR' | 'AUD' | 'NZD' | 'CAD';
 
 export const CURRENCY_SYMBOL_MAP: Record<CurrencyCode, string> = {
+    GBP: '£',
     USD: '$',
     EUR: '€',
     AUD: 'A$',

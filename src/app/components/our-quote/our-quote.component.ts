@@ -15,6 +15,7 @@ export class OurQuoteComponent implements OnInit {
     public rfqData: RfqData;
     exportFileName = '';
     readonly currencyOptions: Array<{ code: CurrencyCode; label: string }> = [
+        { code: 'GBP', label: 'GBP (£)' },
         { code: 'EUR', label: 'EUR (€)' },
         { code: 'AUD', label: 'AUD (A$)' },
         { code: 'NZD', label: 'NZD (NZ$)' },
@@ -207,6 +208,7 @@ export class OurQuoteComponent implements OnInit {
         cleaned = cleaned.replace(/A\$/gi, '');
         cleaned = cleaned.replace(/C\$/gi, '');
         cleaned = cleaned.replace(/[€£$,]/g, '');
+        cleaned = cleaned.replace(/GBP/gi, '');
         cleaned = cleaned.replace(/USD/gi, '');
         cleaned = cleaned.replace(/NZD/gi, '');
         cleaned = cleaned.replace(/AUD/gi, '');

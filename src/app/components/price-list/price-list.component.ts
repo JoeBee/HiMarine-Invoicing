@@ -1165,6 +1165,8 @@ export class PriceListComponent implements OnInit, OnDestroy {
     private getCurrencyFormat(): string {
         // Return Excel number format string based on selected currency
         switch (this.selectedCurrency) {
+            case 'GBP':
+                return '£#,##0.00';
             case 'EUR':
                 return '"€"#,##0.00';
             case 'AUD':
