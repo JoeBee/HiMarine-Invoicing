@@ -114,7 +114,7 @@ export class CaptainsOrderComponent {
                     fileSize: file.size,
                     fileType: file.type,
                     processingStep: 'excel_processing',
-                    expectedTabs: ['COVER SHEET', 'PROVISIONS', 'FRESH PROVISIONS', 'BOND']
+                    allTabs: true
                 }
             );
         } finally {
@@ -132,10 +132,9 @@ export class CaptainsOrderComponent {
                     const workbook = XLSX.read(data, { type: 'binary' });
 
                     const result: ExcelData = {};
-                    const requiredTabs = ['COVER SHEET', 'PROVISIONS', 'FRESH PROVISIONS', 'BOND'];
 
-                    // Process each required tab
-                    requiredTabs.forEach(tabName => {
+                    // Process all tabs from the workbook
+                    workbook.SheetNames.forEach(tabName => {
                         const worksheet = workbook.Sheets[tabName];
                         if (worksheet) {
                             result[tabName] = this.processTabData(worksheet);
@@ -151,7 +150,7 @@ export class CaptainsOrderComponent {
                         {
                             fileName: file.name,
                             processingStep: 'read_excel_file',
-                            requiredTabs: ['COVER SHEET', 'PROVISIONS', 'FRESH PROVISIONS', 'BOND']
+                            allTabs: true
                         }
                     );
                     reject(error);
@@ -187,10 +186,9 @@ export class CaptainsOrderComponent {
                     const workbook = XLSX.read(data, { type: 'binary' });
 
                     const result: ExcelProcessedData = {};
-                    const requiredTabs = ['COVER SHEET', 'PROVISIONS', 'FRESH PROVISIONS', 'BOND'];
 
-                    // Process each required tab
-                    requiredTabs.forEach(tabName => {
+                    // Process all tabs from the workbook
+                    workbook.SheetNames.forEach(tabName => {
                         const worksheet = workbook.Sheets[tabName];
                         if (worksheet) {
                             result[tabName] = this.processTabDataWithItems(worksheet, tabName);
@@ -206,7 +204,7 @@ export class CaptainsOrderComponent {
                         {
                             fileName: file.name,
                             processingStep: 'read_excel_file_with_items',
-                            requiredTabs: ['COVER SHEET', 'PROVISIONS', 'FRESH PROVISIONS', 'BOND']
+                            allTabs: true
                         }
                     );
                     reject(error);
@@ -421,10 +419,16 @@ export class CaptainsOrderComponent {
         return 0;
     }
 
+    getSummaryTabs(): string[] {
+        if (!this.excelData) return [];
+        // Get all tabs except "COVER SHEET"
+        return Object.keys(this.excelData).filter(tab => tab !== 'COVER SHEET');
+    }
+
     getTotalRecords(): number {
         if (!this.excelData) return 0;
 
-        const tabs = ['PROVISIONS', 'FRESH PROVISIONS', 'BOND'];
+        const tabs = this.getSummaryTabs();
         return tabs.reduce((total, tab) => {
             return total + (this.excelData![tab]?.recordsWithTotal || 0);
         }, 0);
@@ -433,7 +437,7 @@ export class CaptainsOrderComponent {
     getGrandTotal(): number {
         if (!this.excelData) return 0;
 
-        const tabs = ['PROVISIONS', 'FRESH PROVISIONS', 'BOND'];
+        const tabs = this.getSummaryTabs();
         return tabs.reduce((total, tab) => {
             return total + (this.excelData![tab]?.sumOfTotals || 0);
         }, 0);
@@ -442,7 +446,7 @@ export class CaptainsOrderComponent {
     getPrimaryCurrency(): string {
         if (!this.excelData) return '£';
 
-        const tabs = ['PROVISIONS', 'FRESH PROVISIONS', 'BOND'];
+        const tabs = this.getSummaryTabs();
         const currencyCount: { [key: string]: number } = {};
         
         tabs.forEach(tab => {

@@ -38,10 +38,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let tab of ['PROVISIONS', 'FRESH PROVISIONS', 'BOND']">
-                            <td *ngIf="excelData[tab]" class="tab-name">{{ tab }}</td>
-                            <td *ngIf="excelData[tab]" class="records-count">{{ excelData[tab].recordsWithTotal }}</td>
-                            <td *ngIf="excelData[tab]" class="total-amount">{{ getTabCurrency(tab) }}{{
+                        <tr *ngFor="let tab of getSummaryTabs()">
+                            <td class="tab-name">{{ tab }}</td>
+                            <td class="records-count">{{ excelData[tab].recordsWithTotal }}</td>
+                            <td class="total-amount">{{ getTabCurrency(tab) }}{{
                                 excelData[tab].sumOfTotals |
                                 number:'1.2-2'
                                 }}</td>
@@ -64,4 +64,3 @@
         </div>
     </div>
 </div>
-
