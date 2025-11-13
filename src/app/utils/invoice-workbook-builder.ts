@@ -63,6 +63,7 @@ export interface InvoiceWorkbookOptions {
     appendAtoInvoiceNumber?: boolean;
     includeFees?: boolean;
     fileNameOverride?: string;
+    showUSD?: boolean;
 }
 
 export interface InvoiceWorkbookResult {
@@ -160,7 +161,8 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
         categoryOverride,
         appendAtoInvoiceNumber,
         includeFees = true,
-        fileNameOverride
+        fileNameOverride,
+        showUSD = false
     } = options;
 
     const items = data.items;
@@ -506,6 +508,7 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
     const primaryCurrencyFormat = getCurrencyExcelFormat(primaryCurrency);
 
     let totalsStartRow: number;
+    let grandTotalRow: number = 0; // Initialize to avoid TypeScript error
     if (shouldShowSubtotal) {
         const subtotalRow = tableStartRow + items.length + 2;
         const subtotalLabelCell = worksheet.getCell(`F${subtotalRow}`);
@@ -534,6 +537,7 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
         totalCell.numFmt = primaryCurrencyFormat;
 
         totalsStartRow = totalRow + 1;
+        grandTotalRow = totalRow; // Track the grand total row for when no subtotal
     }
 
     const feeLines: { label: string; value?: number; includeInSum?: boolean }[] = [];
@@ -576,6 +580,34 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
         worksheet.getCell(`G${totalsStartRow}`).font = { bold: true, size: 11, name: 'Calibri' };
         worksheet.getCell(`G${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
         worksheet.getCell(`G${totalsStartRow}`).numFmt = primaryCurrencyFormat;
+        grandTotalRow = totalsStartRow; // Track the grand total row for when subtotal exists
+    }
+
+    // Add USD total row if showUSD is enabled and currency is not already USD
+    if (showUSD && primaryCurrency && primaryCurrency !== '$') {
+        const usdRow = grandTotalRow + 1;
+        const usdLabelCell = worksheet.getCell(`F${usdRow}`);
+        usdLabelCell.value = 'TOTAL USD';
+        usdLabelCell.font = { bold: true, size: 11, name: 'Calibri' };
+        usdLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+
+        // Approximate exchange rates
+        const exchangeRates: { [key: string]: number } = {
+            '£': 1.27,
+            '€': 1.08,
+            'A$': 0.66,
+            'NZ$': 0.61,
+            'C$': 0.73
+        };
+        const rate = exchangeRates[primaryCurrency] || 1;
+        const usdFormula = `G${grandTotalRow}*${rate}`;
+        const usdValueCell = worksheet.getCell(`G${usdRow}`);
+        usdValueCell.value = { formula: usdFormula } as any;
+        usdValueCell.font = { bold: true, size: 11, name: 'Calibri' };
+        usdValueCell.alignment = { horizontal: 'right', vertical: 'middle' };
+        usdValueCell.numFmt = '$#,##0.00';
+        worksheet.getRow(usdRow).height = 15;
+        totalsStartRow = usdRow;
     }
 
     const termsStartRow = totalsStartRow + 1;

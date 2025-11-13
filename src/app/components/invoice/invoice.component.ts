@@ -83,6 +83,9 @@ export class InvoiceComponent implements OnInit {
 
     // Toggle switch for Split Invoices / One Invoice
     splitFileMode: boolean = false; // false = "Split invoices" (default), true = "One invoice"
+    
+    // Toggle switch for Show USD
+    showUSD: boolean = false; // Default to off
 
     // Country dropdown options
     countries = COUNTRIES;
@@ -477,7 +480,14 @@ export class InvoiceComponent implements OnInit {
     }
 
     getCurrencyLabel(currency: string): string {
-        switch (currency) {
+        if (!currency) {
+            return '';
+        }
+        
+        // Remove any duplicates or extra characters that might have been concatenated
+        const cleanCurrency = currency.trim();
+        
+        switch (cleanCurrency) {
             case 'NZ$':
                 return 'NZD';
             case 'A$':
@@ -491,8 +501,37 @@ export class InvoiceComponent implements OnInit {
             case '£':
                 return 'GBP';
             default:
+                // If currency contains both code and symbol, extract just the code
+                if (cleanCurrency.includes('NZD')) return 'NZD';
+                if (cleanCurrency.includes('AUD')) return 'AUD';
+                if (cleanCurrency.includes('CAD')) return 'CAD';
+                if (cleanCurrency.includes('EUR')) return 'EUR';
+                if (cleanCurrency.includes('USD')) return 'USD';
+                if (cleanCurrency.includes('GBP')) return 'GBP';
                 return 'GBP';
         }
+    }
+
+    convertToUSD(amount: number, fromCurrency: string): number {
+        if (!fromCurrency || fromCurrency === '$') {
+            return amount; // Already USD
+        }
+
+        // Approximate exchange rates (you may want to use an API for real-time rates)
+        const exchangeRates: { [key: string]: number } = {
+            '£': 1.27,   // GBP to USD
+            '€': 1.08,   // EUR to USD
+            'A$': 0.66,  // AUD to USD
+            'NZ$': 0.61, // NZD to USD
+            'C$': 0.73   // CAD to USD
+        };
+
+        const rate = exchangeRates[fromCurrency] || 1;
+        return amount * rate;
+    }
+
+    getTotalUSD(): number {
+        return this.convertToUSD(this.invoiceData.grandTotal, this.primaryCurrency);
     }
 
     getCurrencyExcelFormat(currency: string): string {
@@ -971,7 +1010,8 @@ export class InvoiceComponent implements OnInit {
             primaryCurrency: this.primaryCurrency,
             categoryOverride,
             appendAtoInvoiceNumber,
-            includeFees
+            includeFees,
+            showUSD: this.showUSD
         };
 
         try {

@@ -71,7 +71,7 @@
                 <div class="currency-section">
                     <div class="currency-toggle-group">
                         <label class="currency-toggle-switch">
-                            <input type="checkbox" class="toggle-input" [checked]="false">
+                            <input type="checkbox" class="toggle-input" [(ngModel)]="showUSD">
                             <span class="toggle-slider">
                                 <span>Show USD</span>
                             </span>
@@ -339,8 +339,9 @@
         <div class="totals-section">
             <div class="totals-right">
                 <div class="total-line">
-                    <span>TOTAL {{ getCurrencyLabel(primaryCurrency) }}</span>
-                    <span>{{ primaryCurrency }} {{ invoiceData.totalGBP | number:'1.2-2' }}</span>
+                    <span *ngIf="primaryCurrency">TOTAL {{ getCurrencyLabel(primaryCurrency) }}</span>
+                    <span *ngIf="primaryCurrency">{{ primaryCurrency }} {{ invoiceData.totalGBP | number:'1.2-2'
+                        }}</span>
                 </div>
                 <div class="total-line">
                     <span *ngIf="(invoiceData.discountPercent || 0) > 0">Discount ({{ invoiceData.discountPercent || 0
@@ -372,6 +373,10 @@
                 <div class="total-line grand-total">
                     <span></span>
                     <span>{{ primaryCurrency }} {{ invoiceData.grandTotal | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-line grand-total" *ngIf="showUSD && primaryCurrency && primaryCurrency !== '$'">
+                    <span>TOTAL USD</span>
+                    <span>$ {{ getTotalUSD() | number:'1.2-2' }}</span>
                 </div>
             </div>
         </div>
