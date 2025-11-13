@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DataService, ProcessedDataRow } from '../../services/data.service';
 import { LoggingService } from '../../services/logging.service';
 import { FRESH_PROVISIONS_LIST, NOT_FRESH } from '../../constants/fresh-provisions.constants';
+import { COUNTRIES } from '../../constants/countries.constants';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
@@ -57,22 +58,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
     selectedCountry: string = '';
 
     // Country names
-    countries = [
-        'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Armenia', 'Australia',
-        'Austria', 'Azerbaijan', 'Bahrain', 'Bangladesh', 'Belarus', 'Belgium',
-        'Bolivia', 'Brazil', 'Bulgaria', 'Cambodia', 'Canada', 'Chile', 'China',
-        'Colombia', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Ecuador',
-        'Egypt', 'Estonia', 'Finland', 'France', 'Georgia', 'Germany', 'Ghana',
-        'Greece', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq',
-        'Ireland', 'Israel', 'Italy', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya',
-        'Kuwait', 'Latvia', 'Lebanon', 'Lithuania', 'Luxembourg', 'Malaysia',
-        'Malta', 'Mexico', 'Morocco', 'Netherlands', 'New Zealand', 'Nigeria',
-        'Norway', 'Oman', 'Pakistan', 'Peru', 'Philippines', 'Poland', 'Portugal',
-        'Qatar', 'Romania', 'Russia', 'Saudi Arabia', 'Singapore', 'Slovakia',
-        'Slovenia', 'South Africa', 'South Korea', 'Spain', 'Sri Lanka', 'Sweden',
-        'Switzerland', 'Thailand', 'Turkey', 'UAE', 'Ukraine', 'United Kingdom',
-        'United States', 'Uruguay', 'Vietnam'
-    ];
+    countries = COUNTRIES;
 
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
@@ -448,7 +434,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
                                 // Only add new sheetView if no sheetView element exists at all
                                 // This prevents breaking XML structure when sheetView has child elements
-                                if (!modifiedXml.includes('view="pageBreakPreview"') && 
+                                if (!modifiedXml.includes('view="pageBreakPreview"') &&
                                     !modifiedXml.match(/<sheetView/)) {
                                     modifiedXml = modifiedXml.replace(
                                         '<sheetViews>',
@@ -487,7 +473,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
             // Use the export filename from input, or fallback to default if empty
             // If exportFileName is empty, use the computed default (what's shown in the input)
             let fileName = this.exportFileName.trim() || this.generateDefaultFileName();
-            
+
             // Add .xlsx extension if not already present
             if (!fileName.toLowerCase().endsWith('.xlsx')) {
                 fileName += '.xlsx';
@@ -886,7 +872,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 };
                 cell.alignment = { vertical: 'middle' };
             });
-            
+
             // Enable word-wrap for Description column (column 2)
             const descCell = worksheet.getCell(`B${rowNumber}`);
             descCell.alignment = { ...descCell.alignment, wrapText: true };
@@ -993,7 +979,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 };
                 cell.alignment = { vertical: 'middle' };
             });
-            
+
             // Enable word-wrap for Description column (column 2)
             const descCell = worksheet.getCell(`B${rowNumber}`);
             descCell.alignment = { ...descCell.alignment, wrapText: true };
@@ -1100,7 +1086,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 };
                 cell.alignment = { vertical: 'middle' };
             });
-            
+
             // Enable word-wrap for Description column (column 2)
             const descCell = worksheet.getCell(`B${rowNumber}`);
             descCell.alignment = { ...descCell.alignment, wrapText: true };
