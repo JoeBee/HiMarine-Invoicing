@@ -684,7 +684,6 @@ export class RfqStateService {
                     data: workbookData,
                     selectedBank,
                     primaryCurrency: tableCurrency,
-                    categoryOverride: table.tabName,
                     appendAtoInvoiceNumber: false,
                     includeFees: false,
                     fileNameOverride
@@ -896,7 +895,7 @@ export class RfqStateService {
             vessel: this.rfqData.vessel,
             country: this.rfqData.country,
             port: this.rfqData.port,
-            category: table.tabName || this.rfqData.category,
+            category: this.rfqData.category,
             invoiceDue: this.rfqData.invoiceDue,
             exportFileName: fileNameBase
         };
