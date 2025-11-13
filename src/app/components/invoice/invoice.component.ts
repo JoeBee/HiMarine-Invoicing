@@ -86,6 +86,9 @@ export class InvoiceComponent implements OnInit {
     
     // Toggle switch for Show USD
     showUSD: boolean = false; // Default to off
+    
+    // Exchange rate for USD conversion
+    exchangeRate: number = 1; // Default to 1 (1:1 conversion)
 
     // Country dropdown options
     countries = COUNTRIES;
@@ -477,6 +480,8 @@ export class InvoiceComponent implements OnInit {
         }
 
         this.primaryCurrency = mostCommonCurrency;
+        // Initialize exchange rate with default for the detected currency
+        this.initializeExchangeRate(mostCommonCurrency);
     }
 
     getCurrencyLabel(currency: string): string {
@@ -517,8 +522,19 @@ export class InvoiceComponent implements OnInit {
             return amount; // Already USD
         }
 
-        // Approximate exchange rates (you may want to use an API for real-time rates)
-        const exchangeRates: { [key: string]: number } = {
+        // Use the user-entered exchange rate
+        const rate = this.exchangeRate || 1;
+        return amount * rate;
+    }
+
+    private initializeExchangeRate(currency: string): void {
+        if (!currency || currency === '$') {
+            this.exchangeRate = 1;
+            return;
+        }
+
+        // Set default exchange rate based on currency (approximate rates)
+        const defaultRates: { [key: string]: number } = {
             '£': 1.27,   // GBP to USD
             '€': 1.08,   // EUR to USD
             'A$': 0.66,  // AUD to USD
@@ -526,8 +542,7 @@ export class InvoiceComponent implements OnInit {
             'C$': 0.73   // CAD to USD
         };
 
-        const rate = exchangeRates[fromCurrency] || 1;
-        return amount * rate;
+        this.exchangeRate = defaultRates[currency] || 1;
     }
 
     getTotalUSD(): number {
@@ -1011,7 +1026,8 @@ export class InvoiceComponent implements OnInit {
             categoryOverride,
             appendAtoInvoiceNumber,
             includeFees,
-            showUSD: this.showUSD
+            showUSD: this.showUSD,
+            exchangeRate: this.exchangeRate
         };
 
         try {

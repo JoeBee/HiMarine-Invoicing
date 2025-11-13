@@ -69,17 +69,34 @@
 
                 <!-- Currency Display and Toggle Section -->
                 <div class="currency-section">
-                    <div class="currency-toggle-group">
-                        <label class="currency-toggle-switch">
-                            <input type="checkbox" class="toggle-input" [(ngModel)]="showUSD">
-                            <span class="toggle-slider">
-                                <span>Show USD</span>
-                            </span>
-                        </label>
+                    <div class="currency-toggle-row">
+                        <div class="currency-toggle-group">
+                            <label class="currency-toggle-switch">
+                                <input type="checkbox" class="toggle-input" [(ngModel)]="showUSD">
+                                <span class="toggle-slider">
+                                    <span>Show USD</span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="currency-text">
+                            Current Currency: <span *ngIf="primaryCurrency && invoiceData.items.length > 0">{{
+                                primaryCurrency }}</span>
+                        </div>
                     </div>
-                    <div class="currency-text">
-                        Current Currency: <span *ngIf="primaryCurrency && invoiceData.items.length > 0">{{
-                            primaryCurrency }}</span>
+                    <div class="exchange-rate-group" *ngIf="showUSD">
+                        <div class="exchange-rate-input-row">
+                            <label class="exchange-rate-label">Exchange Rate:</label>
+                            <input type="number" step="0.01" [(ngModel)]="exchangeRate" class="exchange-rate-input"
+                                placeholder="e.g. 0.73">
+                            <div class="exchange-rate-description">
+                                <span *ngIf="primaryCurrency">
+                                    1 {{ primaryCurrency }} = {{ exchangeRate || 1 | number:'1.2-2' }} USD
+                                </span>
+                                <span *ngIf="!primaryCurrency">
+                                    Enter the exchange rate to convert from current currency to USD.
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

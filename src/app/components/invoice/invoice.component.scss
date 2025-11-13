@@ -53,77 +53,129 @@
             flex-direction: column;
             gap: 12px;
 
-            .currency-toggle-group {
-                .currency-toggle-switch {
-                    position: relative;
-                    display: inline-block;
-                    width: 120px;
-                    height: 32px;
-                    cursor: pointer;
+            .currency-toggle-row {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                flex-wrap: wrap;
 
-                    .toggle-input {
-                        opacity: 0;
-                        width: 0;
-                        height: 0;
-                    }
-
-                    .toggle-slider {
-                        position: absolute;
+                .currency-toggle-group {
+                    .currency-toggle-switch {
+                        position: relative;
+                        display: inline-block;
+                        width: 120px;
+                        height: 32px;
                         cursor: pointer;
-                        top: 0;
-                        left: 0;
-                        right: 0;
-                        bottom: 0;
-                        background-color: #ccc;
-                        transition: 0.3s;
-                        border-radius: 32px;
-                        display: flex;
-                        align-items: center;
-                        padding: 0 12px;
 
-                        span {
-                            z-index: 2;
-                            font-weight: 600;
-                            font-size: 14px;
-                            color: #333;
+                        .toggle-input {
+                            opacity: 0;
+                            width: 0;
+                            height: 0;
                         }
 
-                        &::before {
+                        .toggle-slider {
                             position: absolute;
-                            content: "";
-                            height: 24px;
-                            width: 24px;
-                            left: 4px;
-                            bottom: 4px;
-                            background-color: white;
+                            cursor: pointer;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background-color: #ccc;
                             transition: 0.3s;
-                            border-radius: 50%;
-                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                            border-radius: 32px;
+                            display: flex;
+                            align-items: center;
+                            padding: 0 12px;
+
+                            span {
+                                z-index: 2;
+                                font-weight: 600;
+                                font-size: 14px;
+                                color: #333;
+                            }
+
+                            &::before {
+                                position: absolute;
+                                content: "";
+                                height: 24px;
+                                width: 24px;
+                                left: 4px;
+                                bottom: 4px;
+                                background-color: white;
+                                transition: 0.3s;
+                                border-radius: 50%;
+                                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                            }
+                        }
+
+                        .toggle-input:checked + .toggle-slider {
+                            background-color: #4CAF50;
+
+                            &::before {
+                                transform: translateX(88px);
+                            }
+
+                            span {
+                                color: white;
+                            }
+                        }
+
+                        .toggle-input:focus + .toggle-slider {
+                            box-shadow: 0 0 1px #4CAF50;
                         }
                     }
+                }
 
-                    .toggle-input:checked + .toggle-slider {
-                        background-color: #4CAF50;
-
-                        &::before {
-                            transform: translateX(88px);
-                        }
-
-                        span {
-                            color: white;
-                        }
-                    }
-
-                    .toggle-input:focus + .toggle-slider {
-                        box-shadow: 0 0 1px #4CAF50;
-                    }
+                .currency-text {
+                    font-size: 16px;
+                    font-weight: 500;
+                    color: #000;
+                    flex: 1;
                 }
             }
 
-            .currency-text {
-                font-size: 16px;
-                font-weight: 500;
-                color: #000;
+            .exchange-rate-group {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                margin-top: 8px;
+
+                .exchange-rate-input-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    flex-wrap: wrap;
+                }
+
+                .exchange-rate-label {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #000;
+                    white-space: nowrap;
+                }
+
+                .exchange-rate-input {
+                    padding: 8px 12px;
+                    border: 1px solid #ccc;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    width: 75px;
+                    background-color: #fff;
+
+                    &:focus {
+                        outline: none;
+                        border-color: #007bff;
+                        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+                    }
+                }
+
+                .exchange-rate-description {
+                    font-size: 12px;
+                    color: #666;
+                    font-style: italic;
+                    line-height: 1.4;
+                    flex: 1;
+                }
             }
         }
 

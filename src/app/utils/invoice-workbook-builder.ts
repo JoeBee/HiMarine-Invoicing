@@ -64,6 +64,7 @@ export interface InvoiceWorkbookOptions {
     includeFees?: boolean;
     fileNameOverride?: string;
     showUSD?: boolean;
+    exchangeRate?: number;
 }
 
 export interface InvoiceWorkbookResult {
@@ -162,7 +163,8 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
         appendAtoInvoiceNumber,
         includeFees = true,
         fileNameOverride,
-        showUSD = false
+        showUSD = false,
+        exchangeRate = 1
     } = options;
 
     const items = data.items;
@@ -591,15 +593,8 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
         usdLabelCell.font = { bold: true, size: 11, name: 'Calibri' };
         usdLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
-        // Approximate exchange rates
-        const exchangeRates: { [key: string]: number } = {
-            '£': 1.27,
-            '€': 1.08,
-            'A$': 0.66,
-            'NZ$': 0.61,
-            'C$': 0.73
-        };
-        const rate = exchangeRates[primaryCurrency] || 1;
+        // Use the provided exchange rate
+        const rate = exchangeRate || 1;
         const usdFormula = `G${grandTotalRow}*${rate}`;
         const usdValueCell = worksheet.getCell(`G${usdRow}`);
         usdValueCell.value = { formula: usdFormula } as any;
