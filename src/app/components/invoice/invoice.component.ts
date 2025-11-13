@@ -79,7 +79,7 @@ export class InvoiceComponent implements OnInit {
     processedData: ProcessedDataRow[] = [];
     hasDataToInvoice = false;
     selectedBank: string = ''; // Default to empty (no selection)
-    primaryCurrency: string = '£'; // Default to GBP, will be updated from Excel file
+    primaryCurrency: string = ''; // Will be updated from Excel file
 
     // Toggle switch for Split Invoices / One Invoice
     splitFileMode: boolean = false; // false = "Split invoices" (default), true = "One invoice"
@@ -452,7 +452,7 @@ export class InvoiceComponent implements OnInit {
 
     private detectPrimaryCurrency(): void {
         if (this.invoiceData.items.length === 0) {
-            this.primaryCurrency = '£';
+            this.primaryCurrency = '';
             return;
         }
 

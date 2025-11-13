@@ -21,6 +21,13 @@
         gap: 20px;
         margin-bottom: 30px;
 
+        .left-column-container {
+            flex: 0 0 40%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
         .bank-selection-section {
             flex: 0 0 40%;
             padding: 20px;
@@ -32,6 +39,90 @@
                 font-size: 18px;
                 font-weight: bold;
                 margin: 0 0 15px 0;
+                color: #000;
+            }
+        }
+
+        .currency-section {
+            flex: 1 1 auto;
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+
+            .currency-toggle-group {
+                .currency-toggle-switch {
+                    position: relative;
+                    display: inline-block;
+                    width: 120px;
+                    height: 32px;
+                    cursor: pointer;
+
+                    .toggle-input {
+                        opacity: 0;
+                        width: 0;
+                        height: 0;
+                    }
+
+                    .toggle-slider {
+                        position: absolute;
+                        cursor: pointer;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background-color: #ccc;
+                        transition: 0.3s;
+                        border-radius: 32px;
+                        display: flex;
+                        align-items: center;
+                        padding: 0 12px;
+
+                        span {
+                            z-index: 2;
+                            font-weight: 600;
+                            font-size: 14px;
+                            color: #333;
+                        }
+
+                        &::before {
+                            position: absolute;
+                            content: "";
+                            height: 24px;
+                            width: 24px;
+                            left: 4px;
+                            bottom: 4px;
+                            background-color: white;
+                            transition: 0.3s;
+                            border-radius: 50%;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                        }
+                    }
+
+                    .toggle-input:checked + .toggle-slider {
+                        background-color: #4CAF50;
+
+                        &::before {
+                            transform: translateX(88px);
+                        }
+
+                        span {
+                            color: white;
+                        }
+                    }
+
+                    .toggle-input:focus + .toggle-slider {
+                        box-shadow: 0 0 1px #4CAF50;
+                    }
+                }
+            }
+
+            .currency-text {
+                font-size: 16px;
+                font-weight: 500;
                 color: #000;
             }
         }

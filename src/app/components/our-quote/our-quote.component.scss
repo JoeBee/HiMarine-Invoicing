@@ -853,9 +853,8 @@
                                 width: 90px;
                             }
 
-                            .top-left-input,
-                            .column-select {
-                                width: 100%;
+                            .top-left-input {
+                                width: 60px;
                                 padding: 6px 8px;
                                 border: 1px solid #ced4da;
                                 border-radius: 4px;
@@ -870,7 +869,19 @@
                             }
 
                             .column-select {
+                                width: 100%;
+                                padding: 6px 8px;
+                                border: 1px solid #ced4da;
+                                border-radius: 4px;
+                                font-size: 14px;
                                 background-color: #ffffff;
+                                transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+                                &:focus {
+                                    outline: none;
+                                    border-color: #0066cc;
+                                    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+                                }
                             }
 
                             .composite-select-group {

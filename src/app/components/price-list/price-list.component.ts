@@ -876,6 +876,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
             // Enable word-wrap for Description column (column 2)
             const descCell = worksheet.getCell(`B${rowNumber}`);
             descCell.alignment = { ...descCell.alignment, wrapText: true };
+
+            // Enable word-wrap for Remark column (column 3)
+            const remarkCell = worksheet.getCell(`C${rowNumber}`);
+            remarkCell.alignment = { ...remarkCell.alignment, wrapText: true };
         });
 
         // Set column widths
@@ -983,6 +987,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
             // Enable word-wrap for Description column (column 2)
             const descCell = worksheet.getCell(`B${rowNumber}`);
             descCell.alignment = { ...descCell.alignment, wrapText: true };
+
+            // Enable word-wrap for Remark column (column 3)
+            const remarkCell = worksheet.getCell(`C${rowNumber}`);
+            remarkCell.alignment = { ...remarkCell.alignment, wrapText: true };
         });
 
         // Set column widths
@@ -1090,6 +1098,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
             // Enable word-wrap for Description column (column 2)
             const descCell = worksheet.getCell(`B${rowNumber}`);
             descCell.alignment = { ...descCell.alignment, wrapText: true };
+
+            // Enable word-wrap for Remark column (column 3)
+            const remarkCell = worksheet.getCell(`C${rowNumber}`);
+            remarkCell.alignment = { ...remarkCell.alignment, wrapText: true };
         });
 
         // Set column widths
