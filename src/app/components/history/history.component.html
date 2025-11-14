@@ -104,6 +104,28 @@
                                     <div class="ip-header-label">IP Address</div>
                                 </div>
                             </th>
+                            <th>
+                                <div class="ip-filter-header">
+                                    <label for="timezoneFilter" class="sr-only">Filter by Timezone</label>
+                                    <select id="timezoneFilter" [(ngModel)]="selectedTimezone"
+                                        (change)="onFilterChange()" class="ip-filter-dropdown">
+                                        <option value="">All Timezones</option>
+                                        <option *ngFor="let tz of timezones" [value]="tz">{{ tz }}</option>
+                                    </select>
+                                    <div class="ip-header-label">Timezone</div>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="ip-filter-header">
+                                    <label for="languageFilter" class="sr-only">Filter by Language</label>
+                                    <select id="languageFilter" [(ngModel)]="selectedLanguage"
+                                        (change)="onFilterChange()" class="ip-filter-dropdown">
+                                        <option value="">All Languages</option>
+                                        <option *ngFor="let lang of languages" [value]="lang">{{ lang }}</option>
+                                    </select>
+                                    <div class="ip-header-label">Language</div>
+                                </div>
+                            </th>
                             <th>Details</th>
                         </tr>
                     </thead>
@@ -122,6 +144,16 @@
                             <td class="ip-address">
                                 <span class="ip-badge" [title]="log.ipAddress">{{ formatIpAddress(log.ipAddress)
                                     }}</span>
+                            </td>
+                            <td class="timezone">
+                                <span class="timezone-badge" [title]="log.timezone || 'Unknown'">
+                                    {{ formatTimezone(log.timezone) }}
+                                </span>
+                            </td>
+                            <td class="language">
+                                <span class="language-badge" [title]="log.language || 'Unknown'">
+                                    {{ formatLanguage(log.language) }}
+                                </span>
                             </td>
                             <td class="details">
                                 <div class="details-content" *ngIf="log.details">

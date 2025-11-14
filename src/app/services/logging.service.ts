@@ -18,6 +18,8 @@ export interface LogEntry {
     url: string;
     userAgent: string;
     ipAddress?: string;
+    timezone?: string;
+    language?: string;
 }
 
 @Injectable({
@@ -94,6 +96,17 @@ export class LoggingService {
         details: any,
         component: string
     ): LogEntry {
+        // Capture timezone
+        let timezone: string | undefined;
+        try {
+            timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        } catch (e) {
+            timezone = 'Unknown';
+        }
+
+        // Capture language
+        const language = navigator.language || 'Unknown';
+
         return {
             timestamp: new Date(),
             level,
@@ -104,7 +117,9 @@ export class LoggingService {
             component,
             url: window.location.href,
             userAgent: navigator.userAgent,
-            ipAddress: this.cachedIpAddress || 'Unknown'
+            ipAddress: this.cachedIpAddress || 'Unknown',
+            timezone: timezone,
+            language: language
         };
     }
 
@@ -326,7 +341,9 @@ export class LoggingService {
                     component: data['component'],
                     url: data['url'],
                     userAgent: data['userAgent'],
-                    ipAddress: data['ipAddress']
+                    ipAddress: data['ipAddress'],
+                    timezone: data['timezone'],
+                    language: data['language']
                 });
             });
 
@@ -372,7 +389,9 @@ export class LoggingService {
                     component: data['component'],
                     url: data['url'],
                     userAgent: data['userAgent'],
-                    ipAddress: data['ipAddress']
+                    ipAddress: data['ipAddress'],
+                    timezone: data['timezone'],
+                    language: data['language']
                 });
             });
 
@@ -420,7 +439,9 @@ export class LoggingService {
                     component: data['component'],
                     url: data['url'],
                     userAgent: data['userAgent'],
-                    ipAddress: data['ipAddress']
+                    ipAddress: data['ipAddress'],
+                    timezone: data['timezone'],
+                    language: data['language']
                 });
             });
 

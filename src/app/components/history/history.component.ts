@@ -21,6 +21,8 @@ export class HistoryComponent implements OnInit {
     selectedLevel = '';
     selectedComponent = '';
     selectedIpAddress = '';
+    selectedTimezone = '';
+    selectedLanguage = '';
     searchText = '';
     dateRange = {
         start: '',
@@ -32,6 +34,8 @@ export class HistoryComponent implements OnInit {
     levels: string[] = ['info', 'warn', 'error', 'debug'];
     components: string[] = [];
     ipAddresses: string[] = [];
+    timezones: string[] = [];
+    languages: string[] = [];
 
     // Pagination
     currentPage = 1;
@@ -105,6 +109,46 @@ export class HistoryComponent implements OnInit {
                 return a[0].localeCompare(b[0]);
             })
             .map(entry => entry[0]);
+
+        // Extract unique timezones, ordered by most recent first
+        const timezoneMap = new Map<string, Date>();
+        this.logs.forEach(log => {
+            if (log.timezone && log.timezone !== 'Unknown') {
+                const existingDate = timezoneMap.get(log.timezone);
+                if (!existingDate || log.timestamp > existingDate) {
+                    timezoneMap.set(log.timezone, log.timestamp);
+                }
+            }
+        });
+
+        this.timezones = Array.from(timezoneMap.entries())
+            .sort((a, b) => {
+                if (b[1].getTime() !== a[1].getTime()) {
+                    return b[1].getTime() - a[1].getTime();
+                }
+                return a[0].localeCompare(b[0]);
+            })
+            .map(entry => entry[0]);
+
+        // Extract unique languages, ordered by most recent first
+        const languageMap = new Map<string, Date>();
+        this.logs.forEach(log => {
+            if (log.language && log.language !== 'Unknown') {
+                const existingDate = languageMap.get(log.language);
+                if (!existingDate || log.timestamp > existingDate) {
+                    languageMap.set(log.language, log.timestamp);
+                }
+            }
+        });
+
+        this.languages = Array.from(languageMap.entries())
+            .sort((a, b) => {
+                if (b[1].getTime() !== a[1].getTime()) {
+                    return b[1].getTime() - a[1].getTime();
+                }
+                return a[0].localeCompare(b[0]);
+            })
+            .map(entry => entry[0]);
     }
 
     onFilterChange(): void {
@@ -133,6 +177,16 @@ export class HistoryComponent implements OnInit {
         // Filter by IP address
         if (this.selectedIpAddress) {
             filtered = filtered.filter(log => log.ipAddress === this.selectedIpAddress);
+        }
+
+        // Filter by timezone
+        if (this.selectedTimezone) {
+            filtered = filtered.filter(log => log.timezone === this.selectedTimezone);
+        }
+
+        // Filter by language
+        if (this.selectedLanguage) {
+            filtered = filtered.filter(log => log.language === this.selectedLanguage);
         }
 
         // Filter by search text
@@ -166,6 +220,8 @@ export class HistoryComponent implements OnInit {
         this.selectedLevel = '';
         this.selectedComponent = '';
         this.selectedIpAddress = '';
+        this.selectedTimezone = '';
+        this.selectedLanguage = '';
         this.searchText = '';
         this.dateRange = { start: '', end: '' };
         this.applyFilters();
@@ -294,7 +350,7 @@ export class HistoryComponent implements OnInit {
 
     exportLogs(): void {
         // Create CSV content
-        const headers = ['Timestamp', 'Level', 'Category', 'Component', 'Action', 'IP Address', 'Details'];
+        const headers = ['Timestamp', 'Level', 'Category', 'Component', 'Action', 'IP Address', 'Timezone', 'Language', 'Details'];
         const csvContent = [
             headers.join(','),
             ...this.filteredLogs.map(log => [
@@ -304,6 +360,8 @@ export class HistoryComponent implements OnInit {
                 log.component,
                 this.formatAction(log.action, log.category, log.details),
                 log.ipAddress || 'Unknown',
+                log.timezone || 'Unknown',
+                log.language || 'Unknown',
                 `"${this.formatDetails(log.details).replace(/"/g, '""')}"`
             ].join(','))
         ].join('\n');
@@ -323,6 +381,26 @@ export class HistoryComponent implements OnInit {
             return '🌐 Unknown';
         }
         return `🌐 ${ipAddress}`;
+    }
+
+    formatTimezone(timezone?: string): string {
+        if (!timezone || timezone === 'Unknown') {
+            return '🕐 Unknown';
+        }
+        // Format timezone to be more readable (e.g., "America/New_York" -> "New York")
+        const parts = timezone.split('/');
+        if (parts.length > 1) {
+            return `🕐 ${parts[parts.length - 1].replace(/_/g, ' ')}`;
+        }
+        return `🕐 ${timezone}`;
+    }
+
+    formatLanguage(language?: string): string {
+        if (!language || language === 'Unknown') {
+            return '🌍 Unknown';
+        }
+        // Format language code (e.g., "en-US" -> "🇺🇸 en-US" or just show the language)
+        return `🌍 ${language}`;
     }
 }
 

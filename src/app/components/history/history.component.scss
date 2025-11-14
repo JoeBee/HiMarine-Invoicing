@@ -294,6 +294,48 @@
                     }
                 }
 
+                &.timezone {
+                    font-size: 0.85rem;
+                    min-width: 140px;
+                    white-space: nowrap;
+
+                    .timezone-badge {
+                        display: inline-block;
+                        padding: 2px 6px;
+                        background-color: #fff3e0;
+                        border: 1px solid #ffcc80;
+                        border-radius: 12px;
+                        color: #e65100;
+                        font-size: 0.8rem;
+                        cursor: default;
+
+                        &:hover {
+                            background-color: #ffe0b2;
+                        }
+                    }
+                }
+
+                &.language {
+                    font-size: 0.85rem;
+                    min-width: 100px;
+                    white-space: nowrap;
+
+                    .language-badge {
+                        display: inline-block;
+                        padding: 2px 6px;
+                        background-color: #f3e5f5;
+                        border: 1px solid #ce93d8;
+                        border-radius: 12px;
+                        color: #6a1b9a;
+                        font-size: 0.8rem;
+                        cursor: default;
+
+                        &:hover {
+                            background-color: #e1bee7;
+                        }
+                    }
+                }
+
                 &.details {
                     max-width: 300px;
                     min-width: 200px;
