@@ -10,13 +10,13 @@ import { CommonModule } from '@angular/common';
 })
 export class InformationModalComponent {
     @Output() close = new EventEmitter<void>();
-    activeTab: 'rfq' | 'suppliers' | 'invoicing' = 'rfq';
+    activeTab: 'rfq' | 'suppliers' | 'invoicing' | 'history' = 'rfq';
 
     closeModal(): void {
         this.close.emit();
     }
 
-    selectTab(tab: 'rfq' | 'suppliers' | 'invoicing'): void {
+    selectTab(tab: 'rfq' | 'suppliers' | 'invoicing' | 'history'): void {
         this.activeTab = tab;
     }
 }

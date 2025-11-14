@@ -132,7 +132,7 @@
 
         // RFQ tab - Dark Green theme
         &:first-child {
-            color: #2e7d32;
+            color: #1b5e20;
 
             &:hover {
                 color: #1b5e20;
@@ -141,14 +141,15 @@
 
             &.active {
                 color: #ffffff;
-                background-color: #2e7d32;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                background-color: #1b5e20;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                font-weight: 600;
             }
         }
 
         // Suppliers tab - Red theme
         &:nth-child(2) {
-            color: #d32f2f;
+            color: #b71c1c;
 
             &:hover {
                 color: #b71c1c;
@@ -156,15 +157,16 @@
             }
 
             &.active {
-                color: #b71c1c;
-                background-color: #ffebee;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                color: #ffffff;
+                background-color: #b71c1c;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                font-weight: 600;
             }
         }
 
         // Invoicing tab - Blue theme
         &:nth-child(3) {
-            color: #1976d2;
+            color: #0d47a1;
 
             &:hover {
                 color: #0d47a1;
@@ -172,9 +174,27 @@
             }
 
             &.active {
-                color: #0d47a1;
-                background-color: #e3f2fd;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                color: #ffffff;
+                background-color: #0d47a1;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                font-weight: 600;
+            }
+        }
+
+        // History tab - Purple theme
+        &:nth-child(4) {
+            color: #4a148c;
+
+            &:hover {
+                color: #4a148c;
+                background-color: #f3e5f5;
+            }
+
+            &.active {
+                color: #ffffff;
+                background-color: #4a148c;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                font-weight: 600;
             }
         }
     }
@@ -186,6 +206,32 @@
 
 .tab-panel {
     animation: fadeIn 0.3s ease;
+    padding: 20px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+// Apply background colors to tab panels based on active tab
+.tab-content {
+    // RFQ tab active - Light green background
+    &.tab-rfq .tab-panel {
+        background-color: rgba(232, 245, 233, 0.4);
+    }
+
+    // Suppliers tab active - Light red background
+    &.tab-suppliers .tab-panel {
+        background-color: rgba(255, 235, 238, 0.4);
+    }
+
+    // Invoicing tab active - Light blue background
+    &.tab-invoicing .tab-panel {
+        background-color: rgba(227, 242, 253, 0.4);
+    }
+
+    // History tab active - Light purple background
+    &.tab-history .tab-panel {
+        background-color: rgba(243, 229, 245, 0.4);
+    }
 }
 
 @keyframes fadeIn {

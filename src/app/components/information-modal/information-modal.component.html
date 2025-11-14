@@ -14,10 +14,13 @@
             <button class="info-tab" [class.active]="activeTab === 'invoicing'" (click)="selectTab('invoicing')">
                 📄 Invoicing
             </button>
+            <button class="info-tab" [class.active]="activeTab === 'history'" (click)="selectTab('history')">
+                📊 History
+            </button>
         </nav>
 
         <!-- Tab Content -->
-        <div class="tab-content">
+        <div class="tab-content" [class.tab-rfq]="activeTab === 'rfq'" [class.tab-suppliers]="activeTab === 'suppliers'" [class.tab-invoicing]="activeTab === 'invoicing'" [class.tab-history]="activeTab === 'history'">
             <!-- RFQ Tab -->
             <div *ngIf="activeTab === 'rfq'" class="tab-panel">
                 <h3>📋 Request for Quotation (RFQ)</h3>
@@ -31,21 +34,23 @@
                     <li><strong>File Analysis:</strong> The system automatically detects:
                         <ul>
                             <li>File name (without extension)</li>
-                            <li>Tab names within each Excel file</li>
-                            <li>Top left cell where the data table starts</li>
-                            <li>Product column (searches for "product", "description", "item", "name")</li>
-                            <li>Quantity column (searches for "qty", "quantity")</li>
-                            <li>Unit column (searches for "unit", "units")</li>
-                            <li>Price column (optional - searches for "price", "cost", "amount")</li>
-                            <li>Remark column (optional - searches for "remark", "comment", "notes")</li>
+                            <li>Tab names within each Excel file (including hidden tabs)</li>
+                            <li>Top left cell where the data table starts (can be manually adjusted)</li>
+                            <li>Product column - Auto-mapped when header matches "Product Name", "Description", or "Equipment Description" (case-insensitive)</li>
+                            <li>Quantity column - Auto-mapped when header matches "Requested Qty", "Quantity", or "Qty" (case-insensitive)</li>
+                            <li>Unit column - Auto-mapped when header matches "Unit Type", "Unit", "UOM", or "UN" (case-insensitive). Supports composite selections (primary/secondary/tertiary)</li>
+                            <li>Price column (optional) - Auto-mapped when header matches "Price" (case-insensitive)</li>
+                            <li>Remark column (optional) - Auto-mapped when header matches "Product No", "Product No.", "Remark", "Remarks", or "Impa" (case-insensitive). Supports composite selections (primary/secondary/tertiary)</li>
                             <li>Number of data rows found</li>
                         </ul>
                     </li>
-                    <li><strong>Tab Management:</strong> Include or exclude specific tabs from processing using
-                        checkboxes</li>
-                    <li><strong>Column Mapping:</strong> View and verify detected columns for each tab</li>
-                    <li><strong>File Preview:</strong> Click on any filename to open the original Excel file in a new
-                        tab</li>
+                    <li><strong>Column Auto-Mapping:</strong> Click the ℹ icon next to column headers to see auto-mapping rules and matching criteria</li>
+                    <li><strong>Top Left Cell Adjustment:</strong> Manually set or adjust the top left cell reference (e.g., A1, A16) with dropdown suggestions</li>
+                    <li><strong>Composite Column Mapping:</strong> Unit and Remark columns support combining multiple columns using primary, secondary, and tertiary dropdowns</li>
+                    <li><strong>Tab Management:</strong> Include or exclude specific tabs from processing using checkboxes</li>
+                    <li><strong>Column Mapping:</strong> View, verify, and manually adjust detected columns for each tab using dropdown menus</li>
+                    <li><strong>Tab Preview:</strong> Click "View" button to preview tab data with highlighted mapped columns</li>
+                    <li><strong>File Preview:</strong> Click on any filename to open the original Excel file in a new tab</li>
                     <li><strong>Status Indicators:</strong> View processing status for each file and tab</li>
                     <li><strong>Clear All Files:</strong> Remove all uploaded files and processed data with confirmation
                         dialog</li>
@@ -53,14 +58,16 @@
 
                 <h4>Our Quote</h4>
                 <ul>
-                    <li><strong>Quote Generation:</strong> Create professional quotes based on processed Captain's
-                        Request data</li>
-                    <li><strong>Company Selection:</strong> Choose between different company branding options</li>
-                    <li><strong>Data Review:</strong> Review all processed items from Captain's Request</li>
+                    <li><strong>Quote Generation:</strong> Create professional quotes based on processed Captain's Request data</li>
+                    <li><strong>Company Selection:</strong> Choose between HI US, HI UK, or EOS company branding (affects theme colors, logos, and bank details)</li>
+                    <li><strong>Currency Selection:</strong> Select from GBP (£), EUR (€), AUD (A$), NZD (NZ$), USD ($), or CAD (C$). All prices are formatted according to selected currency</li>
+                    <li><strong>Export Filename:</strong> Customize export filename with separate .xlsx label. Filename auto-updates based on company, vessel, port, and category selections</li>
+                    <li><strong>Country & Port Selection:</strong> Choose country from dropdown with automatic port suggestions. Port field supports text input with autocomplete suggestions</li>
+                    <li><strong>Company Branding:</strong> Dynamic company logos (top and bottom images) are automatically displayed when proposal tables exist</li>
+                    <li><strong>Data Review:</strong> Review all processed items from Captain's Request organized by file and tab in collapsible sections</li>
                     <li><strong>Item Selection:</strong> Use checkboxes to include/exclude items from quotes</li>
-                    <li><strong>Quote Export:</strong> Generate comprehensive quote documents in Excel format</li>
-                    <li><strong>Professional Formatting:</strong> Company headers, branding, and professional layout
-                        included in exports</li>
+                    <li><strong>Quote Export:</strong> Generate comprehensive quote documents in Excel format with professional formatting</li>
+                    <li><strong>Professional Formatting:</strong> Company headers, branding, bank details, and professional layout included in exports</li>
                 </ul>
             </div>
 
@@ -105,9 +112,12 @@
                 <ul>
                     <li><strong>Data Review:</strong> Review all processed data from uploaded files</li>
                     <li><strong>Item Selection:</strong> Use checkboxes to include/exclude items from exports</li>
-                    <li><strong>Bulk Selection:</strong> Use "Select All" checkbox for bulk operations on filtered
-                        results</li>
-                    <li><strong>Company Selection:</strong> Choose EOS or Hi Marine company branding for exports</li>
+                    <li><strong>Bulk Selection:</strong> Use "Select All" checkbox for bulk operations on filtered results</li>
+                    <li><strong>Company Selection:</strong> Choose EOS or Hi Marine company branding for exports (affects theme colors, logos, and formatting)</li>
+                    <li><strong>Currency Selection:</strong> Select from GBP (£), EUR (€), AUD (A$), NZD (NZ$), USD ($), or CAD (C$). All prices are formatted according to selected currency</li>
+                    <li><strong>Country Selection:</strong> Choose country from dropdown for export documents</li>
+                    <li><strong>Export Filename:</strong> Customize export filename with separate .xlsx label for flexible width input</li>
+                    <li><strong>Company Branding:</strong> Dynamic company logos (top and bottom images) are automatically displayed when processed files exist</li>
                     <li><strong>Advanced Filtering:</strong>
                         <ul>
                             <li>Filter by file name (dropdown with all uploaded files)</li>
@@ -117,8 +127,7 @@
                         </ul>
                     </li>
                     <li><strong>Column Sorting:</strong> Click any column header to sort (ascending/descending)</li>
-                    <li><strong>Row Expansion:</strong> Click any row to view complete original Excel data in original
-                        format</li>
+                    <li><strong>Row Expansion:</strong> Click any row to view complete original Excel data in original format</li>
                     <li><strong>Excel Export:</strong> Generate comprehensive Excel workbook with:
                         <ul>
                             <li>Cover sheet with totals by category and company branding</li>
@@ -174,12 +183,11 @@
                                 regardless of category</li>
                         </ul>
                     </li>
-                    <li><strong>Company Selection:</strong> Choose between UK, US, EOS, or Blank company/bank details
-                    </li>
-                    <li><strong>Dynamic Content:</strong> Company details, bank information, billing information, and invoice
-                        information all auto-populate based on selection</li>
-                    <li><strong>Invoice Items:</strong> Items populated from Captain's Order with currency support (USD,
-                        EUR, GBP)</li>
+                    <li><strong>Company Selection:</strong> Choose between HM US, HM UK, or EOS company/bank details (affects theme colors, logos, bank details, and formatting)</li>
+                    <li><strong>Currency Display:</strong> Primary currency is automatically detected from uploaded files. Toggle "Show USD" to display USD amounts alongside primary currency with customizable exchange rate</li>
+                    <li><strong>Dynamic Content:</strong> Company details, bank information, billing information, and invoice information all auto-populate based on company selection</li>
+                    <li><strong>Export Filename:</strong> Customize export filename with separate .xlsx label. Filename auto-updates based on company, invoice number, and date</li>
+                    <li><strong>Invoice Items:</strong> Items populated from Captain's Order with multi-currency support (USD, EUR, GBP, AUD, NZD, CAD)</li>
                     <li><strong>Fees & Discounts:</strong> Configure:
                         <ul>
                             <li>Delivery fee</li>
@@ -204,6 +212,44 @@
                         and date</li>
                     <li><strong>Professional Formatting:</strong> Company headers, bank details, and branding included
                         in exports</li>
+                </ul>
+            </div>
+
+            <!-- History Tab -->
+            <div *ngIf="activeTab === 'history'" class="tab-panel">
+                <h3>📊 History Tab</h3>
+
+                <h4>Application Logs</h4>
+                <ul>
+                    <li><strong>Log Viewing:</strong> View comprehensive application activity logs with detailed information about all user actions, file operations, data processing, exports, and system events</li>
+                    <li><strong>Advanced Filtering:</strong>
+                        <ul>
+                            <li>Filter by category: user_action, file_upload, data_processing, export, error, system</li>
+                            <li>Filter by level: info, warn, error, debug</li>
+                            <li>Filter by component (automatically populated from logs)</li>
+                            <li>Filter by IP address (shows most recent IPs first)</li>
+                            <li>Search across actions, details, and component names</li>
+                            <li>Filter by date range (from/to dates)</li>
+                            <li>Clear all filters with one click</li>
+                        </ul>
+                    </li>
+                    <li><strong>Pagination:</strong> Browse logs in pages (50 items per page) with navigation controls and page jump functionality</li>
+                    <li><strong>Log Details:</strong> Each log entry displays:
+                        <ul>
+                            <li>Timestamp with full date and time</li>
+                            <li>Level badge (INFO, WARN, ERROR, DEBUG)</li>
+                            <li>Category with icon (👤 user action, 📁 file upload, ⚙️ data processing, 📤 export, ❌ error, 🔧 system)</li>
+                            <li>Component name</li>
+                            <li>Formatted action description</li>
+                            <li>IP address (🌐 badge)</li>
+                            <li>Detailed information in key-value format</li>
+                        </ul>
+                    </li>
+                    <li><strong>Refresh Logs:</strong> Click "Refresh" button to reload latest logs from database</li>
+                    <li><strong>Export Logs:</strong> Export filtered logs to CSV format for external analysis. Filename includes current date</li>
+                    <li><strong>Audit Trail:</strong> Complete audit trail of all application activities for troubleshooting and compliance</li>
+                    <li><strong>Error Tracking:</strong> Easily identify and filter error-level logs for debugging</li>
+                    <li><strong>User Activity Monitoring:</strong> Track all user actions including button clicks, form submissions, file uploads, and navigation</li>
                 </ul>
             </div>
         </div>
