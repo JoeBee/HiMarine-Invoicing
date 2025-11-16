@@ -110,6 +110,8 @@ export class AppComponent implements OnInit {
         if (value === this.SECRET_WORD) {
             this.showHistoryTab = true;
             localStorage.setItem(this.STORAGE_KEY, 'true');
+            // Dispatch custom event to notify other components (like information modal)
+            window.dispatchEvent(new Event('historyAccessChanged'));
             // Log successful secret word entry
             this.loggingService.logUserAction(
                 'secret_word_entered',
@@ -135,6 +137,8 @@ export class AppComponent implements OnInit {
         this.showHistoryTab = false;
         // Clear localStorage
         localStorage.removeItem(this.STORAGE_KEY);
+        // Dispatch custom event to notify other components (like information modal)
+        window.dispatchEvent(new Event('historyAccessChanged'));
         // Clear password input
         this.passwordInput = '';
         this.showPassword = false;

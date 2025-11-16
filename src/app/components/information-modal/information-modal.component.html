@@ -14,7 +14,7 @@
             <button class="info-tab" [class.active]="activeTab === 'invoicing'" (click)="selectTab('invoicing')">
                 📄 Invoicing
             </button>
-            <button class="info-tab" [class.active]="activeTab === 'history'" (click)="selectTab('history')">
+            <button *ngIf="hasHistoryAccess" class="info-tab" [class.active]="activeTab === 'history'" (click)="selectTab('history')">
                 📊 History
             </button>
         </nav>
