@@ -3,11 +3,12 @@
     /* Very light green background - more distinctly green */
     min-height: calc(100vh - 120px);
     margin: -40px -20px;
-    padding: 60px 40px;
+    padding: 60px 20px;
 
     .content-wrapper {
-        max-width: 1400px;
+        max-width: 100%;
         margin: 0 auto;
+        width: 100%;
     }
 }
 
@@ -125,12 +126,15 @@
         border-radius: 8px;
         background-color: white;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        width: 100%;
     }
 
     .logs-table {
         width: 100%;
+        min-width: 100%;
         border-collapse: collapse;
         font-size: 0.9rem;
+        table-layout: auto;
 
         thead {
             background-color: #f8f9fa;
@@ -259,17 +263,23 @@
                     min-width: 120px;
                 }
 
-                &.component {
-                    font-family: monospace;
-                    font-size: 0.85rem;
-                    color: #666;
-                    min-width: 150px;
-                }
-
                 &.action {
                     font-weight: 500;
                     color: #333;
-                    min-width: 150px;
+                    min-width: 200px;
+                    
+                    .action-component {
+                        font-family: monospace;
+                        font-size: 0.85rem;
+                        color: #666;
+                        margin-bottom: 4px;
+                        font-weight: 400;
+                    }
+                    
+                    .action-detail {
+                        font-weight: 500;
+                        color: #333;
+                    }
                 }
 
                 &.ip-address {
@@ -337,8 +347,9 @@
                 }
 
                 &.details {
-                    max-width: 300px;
-                    min-width: 200px;
+                    max-width: none;
+                    min-width: 300px;
+                    width: auto;
 
                     .details-content {
                         max-height: 100px;

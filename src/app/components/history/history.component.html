@@ -89,9 +89,7 @@
                     <thead>
                         <tr>
                             <th>Timestamp</th>
-                            <th>Level</th>
                             <th>Category</th>
-                            <th>Component</th>
                             <th>Action</th>
                             <th>
                                 <div class="ip-filter-header">
@@ -126,21 +124,32 @@
                                     <div class="ip-header-label">Language</div>
                                 </div>
                             </th>
+                            <th>
+                                <div class="ip-filter-header">
+                                    <label for="adminFilter" class="sr-only">Filter by Admin</label>
+                                    <select id="adminFilter" [(ngModel)]="selectedAdmin"
+                                        (change)="onFilterChange()" class="ip-filter-dropdown">
+                                        <option value="">All</option>
+                                        <option value="true">true</option>
+                                        <option value="false">false</option>
+                                    </select>
+                                    <div class="ip-header-label">Admin</div>
+                                </div>
+                            </th>
                             <th>Details</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr *ngFor="let log of paginatedLogs" [class]="getLevelClass(log.level)">
                             <td class="timestamp">{{ formatTimestamp(log.timestamp) }}</td>
-                            <td class="level">
-                                <span class="level-badge">{{ log.level.toUpperCase() }}</span>
-                            </td>
                             <td class="category">
                                 <span class="category-icon">{{ getCategoryIcon(log.category) }}</span>
                                 {{ log.category.replace('_', ' ').toUpperCase() }}
                             </td>
-                            <td class="component">{{ log.component }}</td>
-                            <td class="action">{{ formatAction(log.action, log.category, log.details) }}</td>
+                            <td class="action">
+                                <div class="action-component">{{ log.component }}</div>
+                                <div class="action-detail">{{ formatAction(log.action, log.category, log.details) }}</div>
+                            </td>
                             <td class="ip-address">
                                 <span class="ip-badge" [title]="log.ipAddress">{{ formatIpAddress(log.ipAddress)
                                     }}</span>
@@ -155,6 +164,7 @@
                                     {{ formatLanguage(log.language) }}
                                 </span>
                             </td>
+                            <td class="admin">{{ log.isAdmin ? 'true' : 'false' }}</td>
                             <td class="details">
                                 <div class="details-content" *ngIf="log.details">
                                     <div class="key-value-pairs">{{ formatDetails(log.details) }}</div>

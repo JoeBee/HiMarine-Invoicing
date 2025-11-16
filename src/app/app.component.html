@@ -6,8 +6,11 @@
                 (RFQ)</a>
             <a (click)="onMainTabClick('suppliers')" [class.active]="activeMainTab === 'suppliers'">🏢 Suppliers</a>
             <a (click)="onMainTabClick('invoicing')" [class.active]="activeMainTab === 'invoicing'">📄 Invoicing</a>
-            <a (click)="onMainTabClick('history')" [class.active]="activeMainTab === 'history'">&#x23F3; History</a>
+            <a *ngIf="showHistoryTab" (click)="onMainTabClick('history')" [class.active]="activeMainTab === 'history'">&#x23F3; History</a>
         </nav>
+        <div class="info-icon" (click)="openInfoModal()">
+            &#9432;
+        </div>
 
         <!-- Sub Navigation Row - RFQ -->
         <nav class="nav-tabs sub-nav" *ngIf="activeMainTab === 'rfq'">
@@ -28,8 +31,41 @@
         </nav>
     </header>
 
-    <div class="info-icon" (click)="openInfoModal()">
-        &#9432;
+    <div class="password-input-container">
+        <div class="password-input-wrapper">
+            <input 
+                [type]="showPassword ? 'text' : 'password'" 
+                class="password-input" 
+                [(ngModel)]="passwordInput" 
+                (input)="onPasswordInput($event)"
+                [readonly]="showHistoryTab"
+                placeholder=""
+                autocomplete="off"
+            />
+            <button 
+                *ngIf="!showHistoryTab"
+                type="button" 
+                class="password-toggle" 
+                (mousedown)="showPassword = true"
+                (mouseup)="showPassword = false"
+                (mouseleave)="showPassword = false"
+                (touchstart)="showPassword = true"
+                (touchend)="showPassword = false"
+                aria-label="Show password"
+            >
+                <span>👁</span>
+            </button>
+        </div>
+        <button 
+            *ngIf="showHistoryTab"
+            type="button" 
+            class="logout-button" 
+            (click)="logout()"
+            aria-label="Logout"
+            title="Logout"
+        >
+            🚪
+        </button>
     </div>
 
     <app-information-modal *ngIf="showInfoModal" (close)="closeInfoModal()"></app-information-modal>

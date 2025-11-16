@@ -23,6 +23,7 @@ export class HistoryComponent implements OnInit {
     selectedIpAddress = '';
     selectedTimezone = '';
     selectedLanguage = '';
+    selectedAdmin = '';
     searchText = '';
     dateRange = {
         start: '',
@@ -189,6 +190,12 @@ export class HistoryComponent implements OnInit {
             filtered = filtered.filter(log => log.language === this.selectedLanguage);
         }
 
+        // Filter by admin
+        if (this.selectedAdmin) {
+            const isAdminValue = this.selectedAdmin === 'true';
+            filtered = filtered.filter(log => log.isAdmin === isAdminValue);
+        }
+
         // Filter by search text
         if (this.searchText.trim()) {
             const searchLower = this.searchText.toLowerCase();
@@ -222,6 +229,7 @@ export class HistoryComponent implements OnInit {
         this.selectedIpAddress = '';
         this.selectedTimezone = '';
         this.selectedLanguage = '';
+        this.selectedAdmin = '';
         this.searchText = '';
         this.dateRange = { start: '', end: '' };
         this.applyFilters();
@@ -350,18 +358,17 @@ export class HistoryComponent implements OnInit {
 
     exportLogs(): void {
         // Create CSV content
-        const headers = ['Timestamp', 'Level', 'Category', 'Component', 'Action', 'IP Address', 'Timezone', 'Language', 'Details'];
+        const headers = ['Timestamp', 'Category', 'Action', 'IP Address', 'Timezone', 'Language', 'Admin', 'Details'];
         const csvContent = [
             headers.join(','),
             ...this.filteredLogs.map(log => [
                 this.formatTimestamp(log.timestamp),
-                log.level,
                 log.category,
-                log.component,
-                this.formatAction(log.action, log.category, log.details),
+                `"${log.component} - ${this.formatAction(log.action, log.category, log.details).replace(/"/g, '""')}"`,
                 log.ipAddress || 'Unknown',
                 log.timezone || 'Unknown',
                 log.language || 'Unknown',
+                log.isAdmin ? 'true' : 'false',
                 `"${this.formatDetails(log.details).replace(/"/g, '""')}"`
             ].join(','))
         ].join('\n');

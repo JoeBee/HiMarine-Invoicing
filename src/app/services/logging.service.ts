@@ -20,6 +20,7 @@ export interface LogEntry {
     ipAddress?: string;
     timezone?: string;
     language?: string;
+    isAdmin?: boolean;
 }
 
 @Injectable({
@@ -107,6 +108,10 @@ export class LoggingService {
         // Capture language
         const language = navigator.language || 'Unknown';
 
+        // Check if user is admin (has secret word saved)
+        const STORAGE_KEY = 'history_access_granted';
+        const isAdmin = localStorage.getItem(STORAGE_KEY) === 'true';
+
         return {
             timestamp: new Date(),
             level,
@@ -119,7 +124,8 @@ export class LoggingService {
             userAgent: navigator.userAgent,
             ipAddress: this.cachedIpAddress || 'Unknown',
             timezone: timezone,
-            language: language
+            language: language,
+            isAdmin: isAdmin
         };
     }
 
@@ -343,7 +349,8 @@ export class LoggingService {
                     userAgent: data['userAgent'],
                     ipAddress: data['ipAddress'],
                     timezone: data['timezone'],
-                    language: data['language']
+                    language: data['language'],
+                    isAdmin: data['isAdmin'] !== undefined ? data['isAdmin'] : false
                 });
             });
 
@@ -391,7 +398,8 @@ export class LoggingService {
                     userAgent: data['userAgent'],
                     ipAddress: data['ipAddress'],
                     timezone: data['timezone'],
-                    language: data['language']
+                    language: data['language'],
+                    isAdmin: data['isAdmin'] !== undefined ? data['isAdmin'] : false
                 });
             });
 
@@ -441,7 +449,8 @@ export class LoggingService {
                     userAgent: data['userAgent'],
                     ipAddress: data['ipAddress'],
                     timezone: data['timezone'],
-                    language: data['language']
+                    language: data['language'],
+                    isAdmin: data['isAdmin'] !== undefined ? data['isAdmin'] : false
                 });
             });
 
