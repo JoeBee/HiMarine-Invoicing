@@ -412,19 +412,21 @@
         }
     }
 
-    .sortable-header {
-        cursor: pointer;
-        user-select: none;
-        transition: background-color 0.2s ease;
+    // Style for table headers (no longer sortable)
+    th {
+        user-select: text; // Allow text selection on all headers
         position: relative;
         background-color: #0066cc !important;
 
-        &:hover {
-            background-color: #1a7ce8 !important;
+        // Ensure buttons remain non-selectable
+        button {
+            user-select: none;
         }
 
-        &:active {
-            background-color: #e9ecef;
+        // Style for selected text
+        &::selection {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: inherit;
         }
     }
 
