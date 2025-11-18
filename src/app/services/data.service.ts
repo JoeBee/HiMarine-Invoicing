@@ -137,7 +137,9 @@ export class DataService {
                             else if (cellValue.includes('description') ||
                                 cellValue.includes('descrption') ||
                                 cellValue.includes('product') ||
-                                cellValue.includes('item')) {
+                                cellValue.includes('item') ||
+                                cellValue.includes('product description') ||
+                                cellValue.includes('product description (en)')) {
 
                                 // console.log("cellValue", cellValue);
 
@@ -158,7 +160,8 @@ export class DataService {
 
                                         if (headerValue.includes('description') || headerValue.includes('descrption') ||
                                             headerValue.includes('item') || headerValue.includes('product') ||
-                                            headerValue.includes('name')) {
+                                            headerValue.includes('name') || headerValue.includes('product description') ||
+                                            headerValue.includes('product description (en)')) {
                                             descriptionColumn = XLSX.utils.encode_col(searchCol);
                                             descriptionHeader = headerText;
                                         }
@@ -167,7 +170,8 @@ export class DataService {
                                             headerValue.includes('cost') ||
                                             headerValue.includes('unit aud') ||
                                             headerValue.includes('amount') ||
-                                            headerValue.includes('value')) && headerValue.length < 25) {
+                                            headerValue.includes('value') ||
+                                            headerValue.includes('precio')) && headerValue.length < 25) {
                                             priceColumn = XLSX.utils.encode_col(searchCol);
                                             priceHeader = headerText;
                                         }
@@ -175,13 +179,18 @@ export class DataService {
                                         if (headerValue === 'unit' ||
                                             headerValue === 'units' ||
                                             headerValue === 'uom' ||
-                                            headerValue === 'uoms') {
+                                            headerValue === 'uoms' ||
+                                            headerValue === 'u.m.' ||
+                                            headerValue === 'um' ||
+                                            headerValue === 'u.o.m.' ||
+                                            headerValue === 'u m') {
                                             unitColumn = XLSX.utils.encode_col(searchCol);
                                             unitHeader = headerText;
                                         }
 
                                         if (headerValue.includes('remark') ||
-                                            headerValue.includes('comment')) {
+                                            headerValue.includes('comment') ||
+                                            headerValue.includes('comentarios')) {
                                             remarksColumn = XLSX.utils.encode_col(searchCol);
                                             remarksHeader = headerText;
                                         }

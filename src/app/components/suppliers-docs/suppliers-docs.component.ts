@@ -57,7 +57,9 @@ export class SuppliersDocsComponent implements OnInit {
                 '"descrption"',
                 '"product"',
                 '"item"',
-                '"name"'
+                '"name"',
+                '"product description"',
+                '"product description (en)"'
             ],
             footnote: 'Matching uses case-insensitive partial matching (includes).'
         },
@@ -69,7 +71,8 @@ export class SuppliersDocsComponent implements OnInit {
                 '"cost"',
                 '"unit aud"',
                 '"amount"',
-                '"value"'
+                '"value"',
+                '"precio"'
             ],
             footnote: 'Matching uses case-insensitive partial matching (includes) and requires header length < 25 characters.'
         },
@@ -80,7 +83,11 @@ export class SuppliersDocsComponent implements OnInit {
                 '"unit"',
                 '"units"',
                 '"uom"',
-                '"uoms"'
+                '"uoms"',
+                '"u.m."',
+                '"um"',
+                '"u.o.m."',
+                '"u m"'
             ],
             footnote: 'Matching is case-insensitive exact match (===) after trimming.'
         },
@@ -89,7 +96,8 @@ export class SuppliersDocsComponent implements OnInit {
             description: 'We auto-select the Remarks column when an Excel header includes one of these values:',
             items: [
                 '"remark"',
-                '"comment"'
+                '"comment"',
+                '"comentarios"'
             ],
             footnote: 'Matching uses case-insensitive partial matching (includes).'
         }
