@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LoggingService, LogEntry } from '../../services/logging.service';
@@ -10,7 +10,7 @@ import { LoggingService, LogEntry } from '../../services/logging.service';
     templateUrl: './history.component.html',
     styleUrls: ['./history.component.scss']
 })
-export class HistoryComponent implements OnInit {
+export class HistoryComponent implements OnInit, OnDestroy {
     logs: LogEntry[] = [];
     filteredLogs: LogEntry[] = [];
     isLoading = false;
@@ -43,10 +43,25 @@ export class HistoryComponent implements OnInit {
     itemsPerPage = 50;
     totalPages = 1;
 
+    // User IP address
+    userIpAddress: string = 'Loading...';
+    private ipUpdateInterval: any;
+
     constructor(private loggingService: LoggingService) { }
 
     ngOnInit(): void {
         this.loadLogs();
+        
+        // Get user IP address
+        this.updateUserIpAddress();
+        // Update IP address periodically in case it's still loading
+        this.ipUpdateInterval = setInterval(() => {
+            this.updateUserIpAddress();
+        }, 2000);
+    }
+
+    private updateUserIpAddress(): void {
+        this.userIpAddress = this.loggingService.getIpAddress();
     }
 
     private async loadLogs(): Promise<void> {
@@ -408,6 +423,13 @@ export class HistoryComponent implements OnInit {
         }
         // Format language code (e.g., "en-US" -> "🇺🇸 en-US" or just show the language)
         return `🌍 ${language}`;
+    }
+
+    ngOnDestroy(): void {
+        // Clear IP update interval
+        if (this.ipUpdateInterval) {
+            clearInterval(this.ipUpdateInterval);
+        }
     }
 }
 

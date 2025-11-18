@@ -171,6 +171,11 @@ export class LoggingService {
         }
     }
 
+    // Public method to get the current IP address
+    getIpAddress(): string {
+        return this.cachedIpAddress || 'Loading...';
+    }
+
     // Public logging methods
     logUserAction(action: string, details: any, component: string): void {
         this.refreshIpAddressIfNeeded();

@@ -72,7 +72,11 @@
                     <input type="date" id="endDate" [(ngModel)]="dateRange.end" (change)="onFilterChange()">
                 </div>
 
-                <div class="filter-group">
+                <div class="filter-group clear-filters-container">
+                    <div class="ip-display-box">
+                        <span class="ip-label">My IP:</span>
+                        <span class="ip-value">{{ userIpAddress }}</span>
+                    </div>
                     <button class="btn btn-secondary" (click)="clearFilters()">Clear Filters</button>
                 </div>
             </div>
