@@ -661,6 +661,12 @@
                         font-size: 14px;
                     }
                 }
+
+                .imo-field {
+                    .editable-field {
+                        background-color: #e6e6b3; // Slightly darker shade
+                    }
+                }
             }
         }
     }
