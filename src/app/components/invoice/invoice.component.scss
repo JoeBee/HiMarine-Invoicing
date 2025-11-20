@@ -18,7 +18,7 @@
 
     .selection-fees-section {
         display: flex;
-        gap: 20px;
+        gap: 5px;
         margin-bottom: 30px;
 
         .left-column-container {
@@ -229,7 +229,8 @@
             .fees-grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 2px; // reduced spacing between items
+                column-gap: 0; // no gap between columns
+                row-gap: 2px; // reduced spacing between rows
 
                 .fee-field {
                     display: flex;
@@ -245,21 +246,21 @@
                     }
 
                     .editable-field {
-                        padding: 6px 8px;
+                        padding: 5px 6px;
                         border: 1px solid #ccc;
                         background-color: #ffffcc;
-                        font-size: 14px;
-                        border-radius: 4px;
-                        width: 80px;
+                        font-size: 11px;
+                        border-radius: 3px;
+                        width: 60px;
                         flex-shrink: 0;
                     }
 
                     // Right column fields - move left and align
                     &:nth-child(2n) {
-                        margin-left: -35px; // Move right column fields left
+                        margin-left: -52px; // Move right column fields closer
 
                         .editable-field {
-                            width: 80px; // Ensure consistent width for alignment
+                            width: 60px; // Ensure consistent width for alignment
                         }
                     }
 
@@ -269,7 +270,7 @@
                         border: 1px solid #d0d0d0;
                         border-radius: 4px;
                         background-color: #f5f5f5;
-                        margin-left: -35px; // Align with other right column fields
+                        margin-left: -52px; // Align with other right column fields
 
                         .discount-input {
                             background-color: #fafafa;
