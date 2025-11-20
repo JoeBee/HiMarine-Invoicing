@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { DataService, ProcessedDataRow, ExcelProcessedData, ExcelItemData } from '../../services/data.service';
 import { LoggingService } from '../../services/logging.service';
 import * as XLSX from 'xlsx';
@@ -21,7 +22,19 @@ interface InvoiceItem {
     currency: string;
 }
 
+interface ImoMapping {
+    imo: string;
+    vessel: string;
+    vesselName: string;
+    vesselName2: string;
+    vesselAddress: string;
+    vesselAddress2: string;
+    vesselCity: string;
+    vesselCountry: string;
+}
+
 interface InvoiceData {
+    imo: string;
     invoiceNumber: string;
     invoiceDate: string;
     vessel: string;
@@ -99,7 +112,11 @@ export class InvoiceComponent implements OnInit {
     // Country to ports mapping
     countryPorts: { [key: string]: string[] } = COUNTRY_PORTS;
 
+    // IMO mappings
+    imoMappings: ImoMapping[] = [];
+
     invoiceData: InvoiceData = {
+        imo: '',
         invoiceNumber: '',
         invoiceDate: this.getTodayDate(),
         vessel: '',
@@ -146,7 +163,11 @@ export class InvoiceComponent implements OnInit {
         exportFileName: ''
     };
 
-    constructor(private dataService: DataService, private loggingService: LoggingService) { }
+    constructor(
+        private dataService: DataService,
+        private loggingService: LoggingService,
+        private http: HttpClient
+    ) { }
 
     private getTodayDate(): string {
         const today = new Date();
@@ -225,6 +246,38 @@ export class InvoiceComponent implements OnInit {
     onInvoiceDetailChange(): void {
         // Update filename when invoice details change
         this.generateAutoFileName();
+    }
+
+    private loadImoMappings(): void {
+        this.http.get<ImoMapping[]>('/assets/constants/imo-mappings.json').subscribe({
+            next: (mappings) => {
+                this.imoMappings = mappings;
+            },
+            error: (error) => {
+                console.error('Failed to load IMO mappings:', error);
+            }
+        });
+    }
+
+    onImoChange(): void {
+        if (!this.invoiceData.imo || this.imoMappings.length === 0) {
+            return;
+        }
+
+        const mapping = this.imoMappings.find(m => m.imo === this.invoiceData.imo);
+        if (mapping) {
+            // Populate fields - overwrite existing data
+            this.invoiceData.vessel = mapping.vessel;
+            this.invoiceData.vesselName = mapping.vesselName;
+            this.invoiceData.vesselName2 = mapping.vesselName2;
+            this.invoiceData.vesselAddress = mapping.vesselAddress;
+            this.invoiceData.vesselAddress2 = mapping.vesselAddress2;
+            this.invoiceData.vesselCity = mapping.vesselCity;
+            this.invoiceData.vesselCountry = mapping.vesselCountry;
+            
+            // Trigger change handlers
+            this.onInvoiceDetailChange();
+        }
     }
 
     onCompanySelectionChange(): void {
@@ -371,6 +424,7 @@ export class InvoiceComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.loadImoMappings();
         // Subscribe to Excel data from captains-order component
         this.dataService.excelData$.subscribe(data => {
             if (data) {
