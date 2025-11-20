@@ -270,7 +270,14 @@
                     <div class="invoice-details">
                         <div class="invoice-field imo-field">
                             <label>IMO:</label>
-                            <input type="text" [(ngModel)]="invoiceData.imo" (ngModelChange)="onImoChange()" class="editable-field">
+                            <!-- Text input with datalist for suggestions -->
+                            <input type="text" [(ngModel)]="invoiceData.imo" (ngModelChange)="onImoChange()"
+                                class="editable-field" placeholder="Enter or select IMO number"
+                                [attr.list]="availableImos.length > 0 ? 'imo-suggestions' : null">
+                            <!-- Datalist for IMO suggestions -->
+                            <datalist *ngIf="availableImos.length > 0" id="imo-suggestions">
+                                <option *ngFor="let imo of availableImos" [value]="imo">
+                            </datalist>
                         </div>
                         <div class="invoice-field">
                             <label>No:</label>

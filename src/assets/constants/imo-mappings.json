@@ -18,6 +18,45 @@
     "vesselAddress2": "companyAddress2222",
     "vesselCity": "companyCity222",
     "vesselCountry": "companyCountry222"
+  },
+  {
+    "imo": "9909663",
+    "vessel": "NORSE ANTWERP",
+    "vesselName": "Araw Shipping Agency, Inc.",
+    "vesselName2": "Oceanlink Maritime, Inc.",
+    "vesselAddress": "G/F Eastern Shipping Lines Building",
+    "vesselAddress2": "Anda Circle, Port Area",
+    "vesselCity": "Manila",
+    "vesselCountry": "Philippines"
+  },
+  {
+    "imo": "1030844",
+    "vessel": "ITHAKI I",
+    "vesselName": "C/O LASKARIDIS MARITIME S.A.",
+    "vesselName2": "",
+    "vesselAddress": "DILIGIANNI TH. 9, KIFISSIA",
+    "vesselAddress2": "",
+    "vesselCity": "ATHENS",
+    "vesselCountry": "GREECE"
+  },
+  {
+    "imo": "9687576",
+    "vessel": "CISNES",
+    "vesselName": "Hapag-Lloyd AG",
+    "vesselName2": "M/V Cisnes",
+    "vesselAddress": "Ballindamm 25, 20095 Hamburg",
+    "vesselAddress2": "c/o Anglo Eastern (Germany) Gmb, Raboisen 28, 20095 Hamburg, VAT-No.: DE8",
+    "vesselCity": "Hamburg",
+    "vesselCountry": "Germany"
+  },
+  {
+    "imo": "9379870",
+    "vessel": "MAR DE CALIFORNIA",
+    "vesselName": "LINEA MARITIMA DEL PACIFICO, S.A.P.I. DE C.V.",
+    "vesselName2": "R.F.C. LMP1502041R4",
+    "vesselAddress": "RIO SAN JOAQUIN, 436/1009, Ampliación Granada, 11529",
+    "vesselAddress2": "Miguel Hidalgo",
+    "vesselCity": "Ciudad de México",
+    "vesselCountry": "México"
   }
 ]
-

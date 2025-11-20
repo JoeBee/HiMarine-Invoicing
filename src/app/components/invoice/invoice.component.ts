@@ -114,6 +114,9 @@ export class InvoiceComponent implements OnInit {
 
     // IMO mappings
     imoMappings: ImoMapping[] = [];
+    
+    // Available IMO numbers (sorted)
+    availableImos: string[] = [];
 
     invoiceData: InvoiceData = {
         imo: '',
@@ -252,6 +255,10 @@ export class InvoiceComponent implements OnInit {
         this.http.get<ImoMapping[]>('/assets/constants/imo-mappings.json').subscribe({
             next: (mappings) => {
                 this.imoMappings = mappings;
+                // Extract and sort IMO numbers
+                this.availableImos = mappings
+                    .map(m => m.imo)
+                    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
             },
             error: (error) => {
                 console.error('Failed to load IMO mappings:', error);
