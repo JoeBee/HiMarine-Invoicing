@@ -229,18 +229,18 @@
             .fees-grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 8px; // reduced spacing between items
+                gap: 2px; // reduced spacing between items
 
                 .fee-field {
                     display: flex;
                     align-items: center;
-                    gap: 6px; // slightly tighter spacing inside each row
+                    gap: 0px; // minimal spacing inside each row
 
                     label {
                         font-weight: bold;
                         font-size: 14px;
                         color: #000;
-                        min-width: 120px;
+                        min-width: 95px;
                         flex-shrink: 0;
                     }
 
@@ -256,7 +256,7 @@
 
                     // Right column fields - move left and align
                     &:nth-child(2n) {
-                        margin-left: -15px; // Move right column fields left
+                        margin-left: -35px; // Move right column fields left
 
                         .editable-field {
                             width: 80px; // Ensure consistent width for alignment
@@ -269,7 +269,7 @@
                         border: 1px solid #d0d0d0;
                         border-radius: 4px;
                         background-color: #f5f5f5;
-                        margin-left: -15px; // Align with other right column fields
+                        margin-left: -35px; // Align with other right column fields
 
                         .discount-input {
                             background-color: #fafafa;
@@ -663,8 +663,42 @@
                 }
 
                 .imo-field {
-                    .editable-field {
-                        background-color: #e6e6b3; // Slightly darker shade
+                    .imo-input-wrapper {
+                        position: relative;
+                        flex: 1;
+                        display: flex;
+                        align-items: center;
+
+                        .editable-field {
+                            background-color: #e6e6b3; // Slightly darker shade
+                            padding-right: 30px; // Make room for clear button
+                        }
+
+                        .imo-clear-btn {
+                            position: absolute;
+                            right: 8px;
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                            font-size: 20px;
+                            line-height: 1;
+                            color: #666;
+                            padding: 0;
+                            width: 20px;
+                            height: 20px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            z-index: 1;
+
+                            &:hover {
+                                color: #000;
+                            }
+
+                            &:focus {
+                                outline: none;
+                            }
+                        }
                     }
                 }
             }

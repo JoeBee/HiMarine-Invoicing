@@ -287,6 +287,27 @@ export class InvoiceComponent implements OnInit {
         }
     }
 
+    onImoKeyPress(event: KeyboardEvent): void {
+        // Allow only numbers (0-9) and backspace, delete, tab, escape, enter, and arrow keys
+        const charCode = event.which ? event.which : event.keyCode;
+        if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+            event.preventDefault();
+        }
+    }
+
+    clearImo(): void {
+        this.invoiceData.imo = '';
+        // Optionally clear the populated fields when IMO is cleared
+        // Uncomment the following lines if you want to clear related fields when IMO is cleared
+        // this.invoiceData.vessel = '';
+        // this.invoiceData.vesselName = '';
+        // this.invoiceData.vesselName2 = '';
+        // this.invoiceData.vesselAddress = '';
+        // this.invoiceData.vesselAddress2 = '';
+        // this.invoiceData.vesselCity = '';
+        // this.invoiceData.vesselCountry = '';
+    }
+
     onCompanySelectionChange(): void {
         // Clear all bank details first
         this.clearBankDetails();
