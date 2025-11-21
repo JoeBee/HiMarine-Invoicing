@@ -97,7 +97,8 @@ export class SuppliersDocsComponent implements OnInit {
             items: [
                 '"remark"',
                 '"comment"',
-                '"comentarios"'
+                '"comentarios"',
+                '"presentation"'
             ],
             footnote: 'Matching uses case-insensitive partial matching (includes).'
         }

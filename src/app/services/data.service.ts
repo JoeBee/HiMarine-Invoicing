@@ -138,6 +138,7 @@ export class DataService {
                                 cellValue.includes('descrption') ||
                                 cellValue.includes('product') ||
                                 cellValue.includes('item') ||
+                                cellValue.includes('name') ||
                                 cellValue.includes('product description') ||
                                 cellValue.includes('product description (en)')) {
 
@@ -190,7 +191,8 @@ export class DataService {
 
                                         if (headerValue.includes('remark') ||
                                             headerValue.includes('comment') ||
-                                            headerValue.includes('comentarios')) {
+                                            headerValue.includes('comentarios') ||
+                                            headerValue.includes('presentation')) {
                                             remarksColumn = XLSX.utils.encode_col(searchCol);
                                             remarksHeader = headerText;
                                         }

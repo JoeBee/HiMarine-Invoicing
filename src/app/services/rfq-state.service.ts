@@ -460,6 +460,7 @@ export class RfqStateService {
         }
 
         let rowCount = 0;
+        let consecutiveEmptyRows = 0;
 
         if (descriptionColumn !== -1) {
             for (let dataRow = headerRow + 1; dataRow <= range.e.r; dataRow++) {
@@ -468,8 +469,12 @@ export class RfqStateService {
                 const hasDescription = descCell && descCell.v !== null && descCell.v !== undefined && String(descCell.v).trim() !== '';
                 if (hasDescription) {
                     rowCount++;
+                    consecutiveEmptyRows = 0;
                 } else {
-                    break;
+                    consecutiveEmptyRows++;
+                    if (consecutiveEmptyRows >= 3) {
+                        break;
+                    }
                 }
             }
         } else {
@@ -485,8 +490,12 @@ export class RfqStateService {
                 }
                 if (hasData) {
                     rowCount++;
+                    consecutiveEmptyRows = 0;
                 } else {
-                    break;
+                    consecutiveEmptyRows++;
+                    if (consecutiveEmptyRows >= 3) {
+                        break;
+                    }
                 }
             }
         }
@@ -975,6 +984,7 @@ export class RfqStateService {
 
                 const tableItems: ProposalItem[] = [];
                 let position = 1;
+                let consecutiveEmptyRows = 0;
 
                 for (let row = headerRow + 1; row <= range.e.r; row++) {
                     const description = this.getCellString(worksheet, row, productCol);
@@ -988,8 +998,14 @@ export class RfqStateService {
 
                     const hasAnyValue = description !== '' || qty !== '' || unit !== '' || remark !== '' || price !== '';
                     if (!hasAnyValue) {
-                        break;
+                        consecutiveEmptyRows++;
+                        if (consecutiveEmptyRows >= 3) {
+                            break;
+                        }
+                        continue;
                     }
+
+                    consecutiveEmptyRows = 0;
 
                     if (description === '') {
                         continue;
@@ -1375,6 +1391,7 @@ export class RfqStateService {
         const startCol = cellRef.c;
         const maxRows = Math.min(tab.rowCount, 4);
         const rows: string[][] = [];
+        let consecutiveEmptyRows = 0;
 
         for (let offset = 1; offset <= range.e.r - headerRow && rows.length < maxRows; offset++) {
             const currentRow = headerRow + offset;
@@ -1398,7 +1415,12 @@ export class RfqStateService {
             }
 
             if (!hasData && rowData.every(value => value.trim() === '')) {
-                break;
+                consecutiveEmptyRows++;
+                if (consecutiveEmptyRows >= 3) {
+                    break;
+                }
+            } else {
+                consecutiveEmptyRows = 0;
             }
 
             rows.push(rowData);
