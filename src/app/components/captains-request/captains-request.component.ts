@@ -20,6 +20,8 @@ export class RfqCaptainsRequestComponent {
     columnInfoDialogDescription = '';
     columnInfoDialogItems: string[] = [];
     columnInfoDialogFootnote: string = '';
+    imageModalVisible = false;
+    imageModalUrl = '';
 
     private readonly columnInfoConfig: Record<'product' | 'qty' | 'unit' | 'price' | 'remark', {
         title: string;
@@ -155,6 +157,16 @@ export class RfqCaptainsRequestComponent {
         this.columnInfoDialogDescription = '';
         this.columnInfoDialogItems = [];
         this.columnInfoDialogFootnote = '';
+    }
+
+    openImageModal(imageUrl: string): void {
+        this.imageModalUrl = imageUrl;
+        this.imageModalVisible = true;
+    }
+
+    closeImageModal(): void {
+        this.imageModalVisible = false;
+        this.imageModalUrl = '';
     }
 }
 

@@ -38,10 +38,8 @@
                     <thead>
                         <tr>
                             <th>File Name</th>
-                            <th>Include</th>
                             <th>Tab Name</th>
-                            <th>Top Left</th>
-                            <th>#Rows</th>
+                            <th style="text-align: center;">TOP LEFT / #ROWS</th>
                             <th class="mapped-column-header">
                                 <button type="button" class="column-info-button"
                                     (click)="openColumnInfoDialog('product')">
@@ -56,8 +54,7 @@
                                 </button>
                             </th>
                             <th class="mapped-column-header">
-                                <button type="button" class="column-info-button"
-                                    (click)="openColumnInfoDialog('unit')">
+                                <button type="button" class="column-info-button" (click)="openColumnInfoDialog('unit')">
                                     <span>Unit*</span>
                                     <span class="column-info-icon" aria-hidden="true">ℹ</span>
                                 </button>
@@ -76,7 +73,8 @@
                                     <span class="column-info-icon" aria-hidden="true">ℹ</span>
                                 </button>
                             </th>
-                            <th>Status</th>
+                            <th class="images-header">Images</th>
+                            <th class="status-header"></th>
                             <th class="remove-column-header">Remove</th>
                         </tr>
                     </thead>
@@ -90,10 +88,6 @@
                                         (click)="rfqState.openFile(analysis)">
                                         {{ analysis.fileName }}
                                     </td>
-                                    <td class="exclude-cell">
-                                        <input type="checkbox" [(ngModel)]="tab.included"
-                                            (change)="rfqState.onIncludeChange(tab)" class="exclude-checkbox">
-                                    </td>
                                     <td class="tab-name-cell" [class.hidden-tab]="tab.isHidden">
                                         <div class="tab-name-text">
                                             {{ tab.tabName }}
@@ -105,21 +99,24 @@
                                             View
                                         </button>
                                     </td>
-                                    <td class="top-left-cell">
-                                        <input type="text" [(ngModel)]="tab.topLeftCell"
-                                            (input)="rfqState.onTopLeftCellChange($event, tab)"
-                                            (blur)="rfqState.validateTopLeftCell(tab)"
-                                            (focus)="rfqState.onTopLeftCellFocus($event, fileIndex, tabIndex)"
-                                            [attr.list]="(!tab.topLeftCell || tab.topLeftCell.trim() === '') ? ('topLeftList-' + fileIndex + '-' + tabIndex) : null"
-                                            [disabled]="!tab.included" class="top-left-input" placeholder="e.g., A1"
-                                            maxlength="3" pattern="[A-Za-z][0-9]{1,2}">
-                                        <datalist *ngIf="!tab.topLeftCell || tab.topLeftCell.trim() === ''"
-                                            [attr.id]="'topLeftList-' + fileIndex + '-' + tabIndex">
-                                            <option *ngFor="let cell of rfqState.getTopLeftCellOptionsLimited()"
-                                                [value]="cell">{{ cell }}</option>
-                                        </datalist>
+                                    <td class="top-left-cell" style="text-align: center;">
+                                        <div
+                                            style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
+                                            <input type="text" [(ngModel)]="tab.topLeftCell"
+                                                (input)="rfqState.onTopLeftCellChange($event, tab)"
+                                                (blur)="rfqState.validateTopLeftCell(tab)"
+                                                (focus)="rfqState.onTopLeftCellFocus($event, fileIndex, tabIndex)"
+                                                [attr.list]="(!tab.topLeftCell || tab.topLeftCell.trim() === '') ? ('topLeftList-' + fileIndex + '-' + tabIndex) : null"
+                                                [disabled]="!tab.included" class="top-left-input" placeholder="e.g., A1"
+                                                maxlength="3" pattern="[A-Za-z][0-9]{1,2}">
+                                            <datalist *ngIf="!tab.topLeftCell || tab.topLeftCell.trim() === ''"
+                                                [attr.id]="'topLeftList-' + fileIndex + '-' + tabIndex">
+                                                <option *ngFor="let cell of rfqState.getTopLeftCellOptionsLimited()"
+                                                    [value]="cell">{{ cell }}</option>
+                                            </datalist>
+                                            <span class="row-count">{{ tab.rowCount }}</span>
+                                        </div>
                                     </td>
-                                    <td class="row-count">{{ tab.rowCount }}</td>
                                     <td class="product-cell mapped-column-cell">
                                         <select [(ngModel)]="tab.product"
                                             (change)="rfqState.onColumnChange(analysis, tab, 'product')"
@@ -208,6 +205,19 @@
                                             </select>
                                         </div>
                                     </td>
+                                    <td class="images-cell" style="text-align: center; padding: 8px;">
+                                        <div *ngIf="tab.images && tab.images.length > 0"
+                                            style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center;">
+                                            <img *ngFor="let imageUrl of tab.images" [src]="imageUrl" alt="Excel image"
+                                                style="max-width: 60px; max-height: 60px; object-fit: contain; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                                                (click)="openImageModal(imageUrl)" title="Click to view full size">
+                                        </div>
+                                        <span *ngIf="tab.fileType"
+                                            style="color: #666; font-size: 12px; font-weight: 600;">{{ tab.fileType
+                                            }}</span>
+                                        <span *ngIf="!tab.fileType && (!tab.images || tab.images.length === 0)"
+                                            style="color: #999; font-size: 12px;">—</span>
+                                    </td>
                                     <td class="status-cell">
                                         <ng-container *ngIf="rfqState.isTabReady(tab); else statusIncomplete">
                                             <span class="status-icon ready"
@@ -226,7 +236,7 @@
                                     </td>
                                 </tr>
                                 <tr *ngIf="isLast" class="workbook-divider-row">
-                                    <td class="workbook-divider-cell" colspan="10"
+                                    <td class="workbook-divider-cell" colspan="9"
                                         style="padding: 0; border-bottom: 1px solid #9aa3ab; height: 0;"></td>
                                 </tr>
                             </ng-container>
@@ -303,6 +313,20 @@
                     <button type="button" class="confirm-remove-secondary" (click)="cancelRemoveFile()">Cancel</button>
                     <button type="button" class="confirm-remove-primary" (click)="confirmRemoveFile()">Remove</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="imageModalVisible" class="image-modal-container">
+        <div class="image-modal-backdrop" (click)="closeImageModal()"></div>
+        <div class="image-modal-content" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+            <div class="image-modal-header">
+                <button type="button" class="image-modal-close" (click)="closeImageModal()"
+                    aria-label="Close image modal">×</button>
+            </div>
+            <div class="image-modal-body">
+                <img [src]="imageModalUrl" alt="Excel image"
+                    style="max-width: 100%; max-height: 90vh; object-fit: contain;">
             </div>
         </div>
     </div>

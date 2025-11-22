@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
 import { LoggingService } from './logging.service';
 import { buildInvoiceStyleWorkbook, InvoiceWorkbookBank, InvoiceWorkbookData, InvoiceWorkbookItem } from '../utils/invoice-workbook-builder';
 import { COUNTRIES, COUNTRY_PORTS } from '../constants/countries.constants';
@@ -25,6 +26,8 @@ export interface TabInfo {
     included: boolean;
     previewHeaders: string[];
     previewRows: string[][];
+    images: string[]; // Array of data URLs for images found in this worksheet
+    fileType?: string; // File type (e.g., 'XLS', 'XLSX') when images cannot be extracted
 }
 
 export interface FileAnalysis {
@@ -241,11 +244,11 @@ export class RfqStateService {
         }
     }
 
-    private analyzeExcelFile(file: File): Promise<FileAnalysis> {
+    private async analyzeExcelFile(file: File): Promise<FileAnalysis> {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
 
-            reader.onload = (e: any) => {
+            reader.onload = async (e: any) => {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {
@@ -275,6 +278,12 @@ export class RfqStateService {
                         );
                         throw new Error('Invalid workbook structure - workbook, Sheets, or SheetNames missing');
                     }
+
+                    // Extract images from Excel file (only works for XLSX format)
+                    // Check file signature: XLSX files start with PK (ZIP signature)
+                    const isXlsx = this.isXlsxFormat(data);
+                    const fileType = this.getFileType(file.name, isXlsx);
+                    const imagesBySheet = await this.extractImagesFromExcel(data, workbook.SheetNames, isXlsx);
 
                     const tabInfos: TabInfo[] = [];
 
@@ -317,7 +326,7 @@ export class RfqStateService {
                         workbook.SheetNames.forEach(sheetName => {
                             const worksheet = workbook.Sheets[sheetName];
                             if (worksheet) {
-                                const tabInfo = this.analyzeWorksheet(sheetName, worksheet, hiddenSheets.has(sheetName), file, workbook);
+                                const tabInfo = this.analyzeWorksheet(sheetName, worksheet, hiddenSheets.has(sheetName), file, workbook, imagesBySheet[sheetName] || [], fileType);
                                 tabInfos.push(tabInfo);
                             }
                         });
@@ -325,7 +334,7 @@ export class RfqStateService {
                         workbook.SheetNames.forEach(sheetName => {
                             const worksheet = workbook.Sheets[sheetName];
                             if (worksheet) {
-                                const tabInfo = this.analyzeWorksheet(sheetName, worksheet, hiddenSheets.has(sheetName), file, workbook);
+                                const tabInfo = this.analyzeWorksheet(sheetName, worksheet, hiddenSheets.has(sheetName), file, workbook, imagesBySheet[sheetName] || [], fileType);
                                 tabInfos.push(tabInfo);
                             }
                         });
@@ -350,7 +359,7 @@ export class RfqStateService {
         });
     }
 
-    private analyzeWorksheet(sheetName: string, worksheet: XLSX.WorkSheet, isHidden: boolean, file: File, workbook: XLSX.WorkBook): TabInfo {
+    private analyzeWorksheet(sheetName: string, worksheet: XLSX.WorkSheet, isHidden: boolean, file: File, workbook: XLSX.WorkBook, images: string[] = [], fileType?: string): TabInfo {
         const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
 
         let firstDataCell = this.findFirstDataCell(worksheet, range);
@@ -395,7 +404,9 @@ export class RfqStateService {
             columnHeaders,
             included: true,
             previewHeaders: [],
-            previewRows: []
+            previewRows: [],
+            images: images,
+            fileType: fileType
         };
 
         if (columnHeaders.length > 0) {
@@ -605,6 +616,138 @@ export class RfqStateService {
             };
             reader.onerror = () => reject(new Error('Failed to read file'));
             reader.readAsArrayBuffer(file);
+        });
+    }
+
+    private async extractImagesFromExcel(fileData: Uint8Array, sheetNames: string[], isXlsx: boolean = true): Promise<Record<string, string[]>> {
+        const imagesBySheet: Record<string, string[]> = {};
+        
+        // Initialize empty arrays for all sheets
+        sheetNames.forEach(sheetName => {
+            imagesBySheet[sheetName] = [];
+        });
+
+        // XLS files are binary format, not ZIP archives, so we can't extract images using JSZip
+        if (!isXlsx) {
+            this.loggingService.logUserAction('xls_image_extraction_skipped', {
+                reason: 'XLS files use binary format, image extraction not supported'
+            }, 'RfqStateService');
+            return imagesBySheet;
+        }
+
+        try {
+            // Load the Excel file as a ZIP archive (only works for XLSX/XLSM files)
+            const zip = await JSZip.loadAsync(fileData);
+            
+            // Extract all images from xl/media/ folder
+            const mediaFilePromises: Array<Promise<{ name: string; data: Blob }>> = [];
+            const allPaths: string[] = [];
+            
+            // Iterate through all files in the ZIP using Object.keys
+            Object.keys(zip.files).forEach(relativePath => {
+                const file = zip.files[relativePath];
+                allPaths.push(relativePath);
+                if (!file.dir && relativePath.startsWith('xl/media/')) {
+                    const fileName = relativePath.replace('xl/media/', '');
+                    // Check if it's an image file
+                    if (fileName.match(/\.(png|jpg|jpeg|gif|bmp|webp)$/i)) {
+                        mediaFilePromises.push(
+                            file.async('blob').then(blob => ({ name: fileName, data: blob }))
+                        );
+                    }
+                }
+            });
+
+            // Log for debugging
+            const mediaPaths = allPaths.filter(p => p.startsWith('xl/media/'));
+            this.loggingService.logUserAction('image_extraction_debug', {
+                totalFiles: allPaths.length,
+                mediaFiles: mediaPaths.length,
+                mediaPaths: mediaPaths.slice(0, 10), // Log first 10
+                imagePromises: mediaFilePromises.length
+            }, 'RfqStateService');
+
+            // Wait for all image blobs to be loaded
+            if (mediaFilePromises.length > 0) {
+                const loadedMediaFiles = await Promise.all(mediaFilePromises);
+                
+                this.loggingService.logUserAction('images_loaded', {
+                    count: loadedMediaFiles.length
+                }, 'RfqStateService');
+                
+                // Convert blobs to data URLs
+                for (const mediaFile of loadedMediaFiles) {
+                    try {
+                        const dataUrl = await this.blobToDataUrl(mediaFile.data);
+                        
+                        // For now, assign images to all sheets
+                        // A more accurate implementation would parse worksheet XML to match images to specific sheets
+                        sheetNames.forEach(sheetName => {
+                            imagesBySheet[sheetName].push(dataUrl);
+                        });
+                    } catch (blobError) {
+                        this.loggingService.logError(
+                            blobError as Error,
+                            'blob_to_dataurl_error',
+                            'RfqStateService',
+                            { fileName: mediaFile.name }
+                        );
+                    }
+                }
+            } else {
+                this.loggingService.logUserAction('no_images_found', {
+                    checkedPaths: mediaPaths.length
+                }, 'RfqStateService');
+            }
+            
+        } catch (error) {
+            // If image extraction fails, just continue without images
+            this.loggingService.logError(
+                error as Error,
+                'image_extraction_error',
+                'RfqStateService',
+                { errorMessage: (error as Error).message, stack: (error as Error).stack }
+            );
+        }
+
+        return imagesBySheet;
+    }
+
+    private isXlsxFormat(data: Uint8Array): boolean {
+        // XLSX files are ZIP archives and start with PK signature (0x50 0x4B)
+        // XLS files are binary BIFF format and start with different bytes
+        if (data.length < 4) {
+            return false;
+        }
+        // Check for ZIP signature: PK (0x50 0x4B) at the start
+        return data[0] === 0x50 && data[1] === 0x4B;
+    }
+
+    private getFileType(fileName: string, isXlsx: boolean): string | undefined {
+        // If it's XLSX format, images can be extracted, so no fileType needed
+        if (isXlsx) {
+            return undefined;
+        }
+        
+        // Determine file type from extension
+        const extension = fileName.toLowerCase().split('.').pop();
+        if (extension === 'xls') {
+            return 'XLS';
+        } else if (extension === 'xlsm') {
+            // XLSM might be detected as XLSX if it's actually ZIP format
+            return undefined;
+        }
+        
+        // For any other format where images can't be extracted
+        return extension ? extension.toUpperCase() : 'UNKNOWN';
+    }
+
+    private blobToDataUrl(blob: Blob): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
         });
     }
 
