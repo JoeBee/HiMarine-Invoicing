@@ -300,6 +300,14 @@ export class HistoryComponent implements OnInit, OnDestroy {
         return new Date(timestamp).toLocaleString();
     }
 
+    formatTimestampDate(timestamp: Date): string {
+        return new Date(timestamp).toLocaleDateString();
+    }
+
+    formatTimestampTime(timestamp: Date): string {
+        return new Date(timestamp).toLocaleTimeString();
+    }
+
     formatDetails(details: any): string {
         if (typeof details === 'string') {
             return details;

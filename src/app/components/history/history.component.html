@@ -122,7 +122,7 @@
                                     <label for="languageFilter" class="sr-only">Filter by Language</label>
                                     <select id="languageFilter" [(ngModel)]="selectedLanguage"
                                         (change)="onFilterChange()" class="ip-filter-dropdown">
-                                        <option value="">All Languages</option>
+                                        <option value="">All</option>
                                         <option *ngFor="let lang of languages" [value]="lang">{{ lang }}</option>
                                     </select>
                                     <div class="ip-header-label">Language</div>
@@ -145,7 +145,10 @@
                     </thead>
                     <tbody>
                         <tr *ngFor="let log of paginatedLogs" [class]="getLevelClass(log.level)">
-                            <td class="timestamp">{{ formatTimestamp(log.timestamp) }}</td>
+                            <td class="timestamp">
+                                <div class="timestamp-date">{{ formatTimestampDate(log.timestamp) }}</div>
+                                <div class="timestamp-time">{{ formatTimestampTime(log.timestamp) }}</div>
+                            </td>
                             <td class="category">
                                 <span class="category-icon">{{ getCategoryIcon(log.category) }}</span>
                                 {{ log.category.replace('_', ' ').toUpperCase() }}
