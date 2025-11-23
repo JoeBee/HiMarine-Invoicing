@@ -1657,14 +1657,22 @@ export class RfqStateService {
     private autoSelectColumns(columnHeaders: string[]): { product: string; qty: string; unit: string; remark: string; price: string } {
         const result = { product: '', qty: '', unit: '', remark: '', price: '' };
 
+        // Helper function to remove all punctuation from a string
+        const removePunctuation = (str: string): string => {
+            return str.replace(/[^\w\s]/g, '');
+        };
+
+        // Normalize headers: lowercase + trim + remove punctuation
         const headerMap = new Map<string, string>();
         columnHeaders.forEach(header => {
-            headerMap.set(header.toLowerCase().trim(), header);
+            const normalized = removePunctuation(header.toLowerCase().trim());
+            headerMap.set(normalized, header);
         });
 
         const productOptions = ['Product Name', 'Description', 'Equipment Description'];
         for (const option of productOptions) {
-            const found = headerMap.get(option.toLowerCase());
+            const normalizedOption = removePunctuation(option.toLowerCase());
+            const found = headerMap.get(normalizedOption);
             if (found) {
                 result.product = found;
                 break;
@@ -1673,7 +1681,8 @@ export class RfqStateService {
 
         const qtyOptions = ['Requested Qty', 'Quantity', 'Qty'];
         for (const option of qtyOptions) {
-            const found = headerMap.get(option.toLowerCase());
+            const normalizedOption = removePunctuation(option.toLowerCase());
+            const found = headerMap.get(normalizedOption);
             if (found) {
                 result.qty = found;
                 break;
@@ -1682,7 +1691,8 @@ export class RfqStateService {
 
         const unitOptions = ['Unit Type', 'Unit', 'UOM', 'UN'];
         for (const option of unitOptions) {
-            const found = headerMap.get(option.toLowerCase());
+            const normalizedOption = removePunctuation(option.toLowerCase());
+            const found = headerMap.get(normalizedOption);
             if (found) {
                 result.unit = found;
                 break;
@@ -1691,7 +1701,8 @@ export class RfqStateService {
 
         const remarkOptions = ['Product No', 'Product No.', 'Remark', 'Remarks', 'Impa'];
         for (const option of remarkOptions) {
-            const found = headerMap.get(option.toLowerCase());
+            const normalizedOption = removePunctuation(option.toLowerCase());
+            const found = headerMap.get(normalizedOption);
             if (found) {
                 result.remark = found;
                 break;
@@ -1700,7 +1711,8 @@ export class RfqStateService {
 
         const priceOptions = ['Price'];
         for (const option of priceOptions) {
-            const found = headerMap.get(option.toLowerCase());
+            const normalizedOption = removePunctuation(option.toLowerCase());
+            const found = headerMap.get(normalizedOption);
             if (found) {
                 result.price = found;
                 break;
