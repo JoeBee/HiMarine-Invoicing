@@ -1669,7 +1669,7 @@ export class RfqStateService {
             headerMap.set(normalized, header);
         });
 
-        const productOptions = ['Product Name', 'Description', 'Equipment Description'];
+        const productOptions = ['Product Name', 'Description', 'Equipment Description', 'Item', 'Items'];
         for (const option of productOptions) {
             const normalizedOption = removePunctuation(option.toLowerCase());
             const found = headerMap.get(normalizedOption);

@@ -35,7 +35,9 @@ export class RfqCaptainsRequestComponent {
             items: [
                 '"Product Name"',
                 '"Description"',
-                '"Equipment Description"'
+                '"Equipment Description"',
+                '"Item"',
+                '"Items"'
             ],
             footnote: 'Matching is case-insensitive and ignores leading/trailing spaces.'
         },
