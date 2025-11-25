@@ -14,27 +14,29 @@
             </p>
             <p class="error-details">
                 Supplier Quotation files: {{ supplierQuotationFiles.length }} file(s)
-                <span *ngFor="let file of supplierQuotationFiles"> - {{ file.fileName }} ({{ file.rowCount }} rows)</span>
+                <span *ngFor="let file of supplierQuotationFiles"> - {{ file.fileName }} ({{ file.rowCount }}
+                    rows)</span>
             </p>
         </div>
 
         <div *ngIf="!isLoading && rowCountsMatch && invoiceData.length > 0" class="comparison-table-container">
-            <h2>Comparison Table</h2>
             <div class="table-wrapper">
                 <table class="comparison-table">
                     <thead>
                         <tr>
                             <th [attr.colspan]="invoiceHeaders.length" class="invoice-column">Invoice</th>
-                            <th *ngFor="let file of supplierQuotationFiles; let i = index" 
+                            <th *ngFor="let file of supplierQuotationFiles; let i = index"
                                 [attr.colspan]="getSupplierQuotationHeaderLength(i)"
-                                class="supplier-column">
+                                [class]="i % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">
                                 {{ file.fileName }}
                             </th>
                         </tr>
                         <tr>
                             <th *ngFor="let header of invoiceHeaders" class="invoice-column">{{ header }}</th>
-                            <ng-container *ngFor="let headers of supplierQuotationHeaders">
-                                <th *ngFor="let header of headers" class="supplier-column">{{ header }}</th>
+                            <ng-container *ngFor="let headers of supplierQuotationHeaders; let fileIndex = index">
+                                <th *ngFor="let header of headers"
+                                    [class]="fileIndex % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">{{ header
+                                    }}</th>
                             </ng-container>
                         </tr>
                     </thead>
@@ -44,7 +46,8 @@
                                 {{ getCellValue(invoiceRow, header) }}
                             </td>
                             <ng-container *ngFor="let fileHeaders of supplierQuotationHeaders; let fileIndex = index">
-                                <td *ngFor="let header of fileHeaders" class="supplier-column">
+                                <td *ngFor="let header of fileHeaders"
+                                    [class]="fileIndex % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">
                                     {{ getSupplierQuotationValue(fileIndex, rowIndex, header) }}
                                 </td>
                             </ng-container>
@@ -59,4 +62,3 @@
         </div>
     </div>
 </div>
-

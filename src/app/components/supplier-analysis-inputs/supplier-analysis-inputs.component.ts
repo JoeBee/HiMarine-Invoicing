@@ -490,7 +490,14 @@ export class SupplierAnalysisInputsComponent implements OnInit {
 
     getAllFiles(): SupplierAnalysisFileInfo[] {
         // Always return Invoice files first, then Supplier Quotation files
-        return [...this.invoiceFiles, ...this.supplierQuotationFiles];
+        // Sort explicitly to ensure Invoice files always appear first
+        const allFiles = [...this.invoiceFiles, ...this.supplierQuotationFiles];
+        return allFiles.sort((a, b) => {
+            // Invoice files come first (return -1), Supplier Quotations come after (return 1)
+            if (a.category === 'Invoice' && b.category === 'Supplier Quotations') return -1;
+            if (a.category === 'Supplier Quotations' && b.category === 'Invoice') return 1;
+            return 0; // Same category, maintain order
+        });
     }
 
     getRowCountsMatch(): boolean {

@@ -69,8 +69,22 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 this.supplierQuotationHeaders = [];
                 for (const file of this.supplierQuotationFiles) {
                     const result = await this.supplierAnalysisService.extractDataFromFile(file);
-                    this.supplierQuotationData.push(result.rows);
-                    this.supplierQuotationHeaders.push(result.headers);
+                    // Filter out "POS." columns from headers
+                    const filteredHeaders = result.headers.filter(header => 
+                        !header.trim().toUpperCase().startsWith('POS.')
+                    );
+                    this.supplierQuotationHeaders.push(filteredHeaders);
+                    // Filter out "POS." columns from data rows
+                    const filteredRows = result.rows.map(row => {
+                        const filteredRow: ExcelRowData = {};
+                        filteredHeaders.forEach(header => {
+                            if (row[header] !== undefined) {
+                                filteredRow[header] = row[header];
+                            }
+                        });
+                        return filteredRow;
+                    });
+                    this.supplierQuotationData.push(filteredRows);
                 }
 
                 this.loggingService.logDataProcessing('supplier_analysis_data_loaded', {
