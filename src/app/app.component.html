@@ -6,6 +6,7 @@
                 (RFQ)</a>
             <a (click)="onMainTabClick('suppliers')" [class.active]="activeMainTab === 'suppliers'">🏢 Suppliers</a>
             <a (click)="onMainTabClick('invoicing')" [class.active]="activeMainTab === 'invoicing'">📄 Invoicing</a>
+            <a *ngIf="showSupplierAnalysisTab" (click)="onMainTabClick('supplier-analysis')" [class.active]="activeMainTab === 'supplier-analysis'">📊 Supplier Analysis</a>
             <a *ngIf="showHistoryTab" (click)="onMainTabClick('history')" [class.active]="activeMainTab === 'history'">&#x23F3; History</a>
         </nav>
         <div class="info-icon" (click)="openInfoModal()">
@@ -28,6 +29,12 @@
         <nav class="nav-tabs sub-nav" *ngIf="activeMainTab === 'invoicing'">
             <a routerLink="/invoicing/captains-order" routerLinkActive="active">Captain's Order</a>
             <a routerLink="/invoicing/invoice" routerLinkActive="active">Invoice</a>
+        </nav>
+
+        <!-- Sub Navigation Row - Supplier Analysis -->
+        <nav class="nav-tabs sub-nav" *ngIf="activeMainTab === 'supplier-analysis'">
+            <a routerLink="/supplier-analysis/inputs" routerLinkActive="active">Inputs</a>
+            <a routerLink="/supplier-analysis/analysis" routerLinkActive="active">Analysis</a>
         </nav>
     </header>
 

@@ -54,6 +54,19 @@ export const routes: Routes = [
     {
         path: 'rfq/proposal',
         loadComponent: () => import('./components/our-quote/our-quote.component').then(m => m.OurQuoteComponent)
+    },
+    {
+        path: 'supplier-analysis',
+        redirectTo: '/supplier-analysis/inputs',
+        pathMatch: 'full'
+    },
+    {
+        path: 'supplier-analysis/inputs',
+        loadComponent: () => import('./components/supplier-analysis-inputs/supplier-analysis-inputs.component').then(m => m.SupplierAnalysisInputsComponent)
+    },
+    {
+        path: 'supplier-analysis/analysis',
+        loadComponent: () => import('./components/supplier-analysis-analysis/supplier-analysis-analysis.component').then(m => m.SupplierAnalysisAnalysisComponent)
     }
 ];
 

@@ -467,5 +467,181 @@ export class DataService {
     getSeparateFreshProvisions(): boolean {
         return this.separateFreshProvisionsSubject.value;
     }
+
+    async updateFileTopLeftCell(fileName: string, topLeftCell: string): Promise<void> {
+        const currentFiles = this.supplierFilesSubject.value;
+        const fileIndex = currentFiles.findIndex(f => f.fileName === fileName);
+        
+        if (fileIndex === -1) {
+            return;
+        }
+
+        const fileInfo = currentFiles[fileIndex];
+        
+        // Re-analyze the file with the new top left cell
+        const updatedFileInfo = await this.analyzeFileWithTopLeft(fileInfo.file, topLeftCell, fileInfo.category);
+        
+        // Update the file in the array
+        const updatedFiles = [...currentFiles];
+        updatedFiles[fileIndex] = updatedFileInfo;
+        
+        this.supplierFilesSubject.next(updatedFiles);
+        
+        // Reprocess files to update data
+        await this.processSupplierFiles();
+    }
+
+    private async analyzeFileWithTopLeft(file: File, topLeftCell: string, category?: string): Promise<SupplierFileInfo> {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+
+            reader.onload = (e: any) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
+                let topLeftCellRef: XLSX.CellAddress;
+                
+                try {
+                    topLeftCellRef = XLSX.utils.decode_cell(topLeftCell);
+                } catch {
+                    topLeftCellRef = XLSX.utils.decode_cell('A1');
+                }
+
+                let descriptionColumn = 'NOT FOUND';
+                let priceColumn = 'NOT FOUND';
+                let unitColumn = 'NOT FOUND';
+                let remarksColumn = 'NOT FOUND';
+                let descriptionHeader = '';
+                let priceHeader = '';
+                let unitHeader = '';
+                let remarksHeader = '';
+                let rowCount = 0;
+
+                // Extract headers from the specified top left cell
+                for (let col = range.s.c; col <= range.e.c; col++) {
+                    const headerAddress = XLSX.utils.encode_cell({ r: topLeftCellRef.r, c: col });
+                    const headerCell = worksheet[headerAddress];
+
+                    if (headerCell && headerCell.v) {
+                        const headerValue = String(headerCell.v).toLowerCase().trim();
+                        const headerText = String(headerCell.v);
+
+                        if (headerValue.includes('description') || headerValue.includes('descrption') ||
+                            headerValue.includes('item') || headerValue.includes('product') ||
+                            headerValue.includes('name') || headerValue.includes('product description') ||
+                            headerValue.includes('product description (en)')) {
+                            descriptionColumn = XLSX.utils.encode_col(col);
+                            descriptionHeader = headerText;
+                        }
+
+                        if ((headerValue.includes('price') ||
+                            headerValue.includes('cost') ||
+                            headerValue.includes('unit aud') ||
+                            headerValue.includes('amount') ||
+                            headerValue.includes('value') ||
+                            headerValue.includes('precio')) && headerValue.length < 25) {
+                            priceColumn = XLSX.utils.encode_col(col);
+                            priceHeader = headerText;
+                        }
+
+                        if (headerValue === 'unit' ||
+                            headerValue === 'units' ||
+                            headerValue === 'uom' ||
+                            headerValue === 'uoms' ||
+                            headerValue === 'u.m.' ||
+                            headerValue === 'um' ||
+                            headerValue === 'u.o.m.' ||
+                            headerValue === 'u m') {
+                            unitColumn = XLSX.utils.encode_col(col);
+                            unitHeader = headerText;
+                        }
+
+                        if (headerValue.includes('remark') ||
+                            headerValue.includes('comment') ||
+                            headerValue.includes('comentarios') ||
+                            headerValue.includes('presentation')) {
+                            remarksColumn = XLSX.utils.encode_col(col);
+                            remarksHeader = headerText;
+                        }
+                    }
+                }
+
+                // If columns were not found, set them to "NOT FOUND"
+                if (descriptionColumn === 'NOT FOUND') {
+                    descriptionHeader = 'NOT FOUND';
+                }
+                if (priceColumn === 'NOT FOUND') {
+                    priceHeader = 'NOT FOUND';
+                }
+                if (unitColumn === 'NOT FOUND') {
+                    unitHeader = 'NOT FOUND';
+                }
+                if (remarksColumn === 'NOT FOUND') {
+                    remarksHeader = 'NOT FOUND';
+                }
+
+                // Count rows
+                if (descriptionColumn !== 'NOT FOUND' && priceColumn !== 'NOT FOUND') {
+                    const descColIndex = XLSX.utils.decode_col(descriptionColumn);
+                    const priceColIndex = XLSX.utils.decode_col(priceColumn);
+
+                    for (let dataRow = topLeftCellRef.r + 1; dataRow <= range.e.r; dataRow++) {
+                        const descAddress = XLSX.utils.encode_cell({ r: dataRow, c: descColIndex });
+                        const priceAddress = XLSX.utils.encode_cell({ r: dataRow, c: priceColIndex });
+
+                        const descCell = worksheet[descAddress];
+                        const priceCell = worksheet[priceAddress];
+
+                        if (descCell && descCell.v && priceCell && priceCell.v) {
+                            rowCount++;
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    // Count rows based on any data
+                    for (let dataRow = topLeftCellRef.r + 1; dataRow <= range.e.r; dataRow++) {
+                        let hasData = false;
+                        for (let col = range.s.c; col <= range.e.c; col++) {
+                            const cellAddress = XLSX.utils.encode_cell({ r: dataRow, c: col });
+                            const cell = worksheet[cellAddress];
+                            if (cell && cell.v !== null && cell.v !== undefined && String(cell.v).trim() !== '') {
+                                hasData = true;
+                                break;
+                            }
+                        }
+                        if (hasData) {
+                            rowCount++;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
+                const fileName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+
+                resolve({
+                    fileName,
+                    topLeftCell,
+                    descriptionColumn,
+                    priceColumn,
+                    unitColumn,
+                    remarksColumn,
+                    descriptionHeader,
+                    priceHeader,
+                    unitHeader,
+                    remarksHeader,
+                    rowCount,
+                    file,
+                    category
+                });
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+    }
 }
 

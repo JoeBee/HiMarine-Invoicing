@@ -61,8 +61,8 @@
                     <th>
                         Category
                     </th>
-                    <th>
-                        Top Left Cell
+                    <th style="text-align: center;">
+                        TOP LEFT / #ROWS
                     </th>
                     <th class="column-header-description">
                         <div style="display: flex; align-items: center; gap: 6px;">
@@ -105,7 +105,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let file of supplierFiles">
+                <tr *ngFor="let file of supplierFiles; let i = index">
                     <td class="file-name-cell">
                         <span class="clickable-filename" (click)="openFile(file)">{{ file.fileName }}</span>
                         <button type="button" class="view-button" (click)="viewFilePreview(file)"
@@ -114,7 +114,21 @@
                         </button>
                     </td>
                     <td>{{ file.category || 'N/A' }}</td>
-                    <td [class.not-found]="file.topLeftCell === 'NOT FOUND'">{{ file.topLeftCell }}</td>
+                    <td class="top-left-cell" style="text-align: center;">
+                        <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
+                            <input type="text" [(ngModel)]="file.topLeftCell"
+                                (input)="onTopLeftCellChange($event, file)"
+                                (blur)="validateTopLeftCell(file)"
+                                [attr.list]="(!file.topLeftCell || file.topLeftCell.trim() === '' || file.topLeftCell === 'NOT FOUND') ? ('topLeftList-' + i) : null"
+                                class="top-left-input" placeholder="e.g., A1"
+                                maxlength="3" pattern="[A-Za-z][0-9]{1,2}">
+                            <datalist *ngIf="!file.topLeftCell || file.topLeftCell.trim() === '' || file.topLeftCell === 'NOT FOUND'"
+                                [attr.id]="'topLeftList-' + i">
+                                <option *ngFor="let cell of getTopLeftCellOptions()" [value]="cell">{{ cell }}</option>
+                            </datalist>
+                            <span class="row-count">{{ file.rowCount }}</span>
+                        </div>
+                    </td>
                     <td class="column-description" [class.not-found]="file.descriptionColumn === 'NOT FOUND'">{{
                         file.descriptionHeader || file.descriptionColumn }}</td>
                     <td class="column-price" [class.not-found]="file.priceColumn === 'NOT FOUND'">{{ file.priceHeader

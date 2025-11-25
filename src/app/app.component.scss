@@ -10,6 +10,20 @@ header {
     position: sticky;
     top: 0;
     z-index: 100;
+    position: relative; // Ensure info-icon positioning is relative to header
+    
+    // Add padding on the right to prevent overlap with password input on smaller screens
+    @media (max-width: 1200px) {
+        padding-right: 200px;
+    }
+
+    @media (max-width: 768px) {
+        padding-right: 180px;
+    }
+
+    @media (max-width: 480px) {
+        padding-right: 160px;
+    }
 }
 
 .nav-tabs {
@@ -89,6 +103,21 @@ header {
         &.active {
             color: #0d47a1;
             background-color: #e3f2fd;
+        }
+    }
+
+    // Supplier Analysis tab - Purple theme
+    a:nth-child(4) {
+        color: #7b1fa2;
+
+        &:hover {
+            color: #4a148c;
+            background-color: #f3e5f5;
+        }
+
+        &.active {
+            color: #4a148c;
+            background-color: #f3e5f5;
         }
     }
 
@@ -180,6 +209,23 @@ header {
             color: #0d47a1;
             background-color: #e3f2fd;
             border-bottom-color: #1976d2;
+        }
+    }
+
+    // Supplier Analysis sub-tabs - Purple theme
+    a[routerLink="/supplier-analysis/inputs"],
+    a[routerLink="/supplier-analysis/analysis"] {
+        color: #7b1fa2;
+
+        &:hover {
+            color: #4a148c;
+            background-color: #f3e5f5;
+        }
+
+        &.active {
+            color: #4a148c;
+            background-color: #f3e5f5;
+            border-bottom-color: #7b1fa2;
         }
     }
 }

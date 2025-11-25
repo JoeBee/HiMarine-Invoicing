@@ -18,6 +18,7 @@ export class AppComponent implements OnInit {
     showInfoModal = false;
     activeMainTab = '';
     showHistoryTab = false;
+    showSupplierAnalysisTab = false;
     passwordInput = '';
     showPassword = false;
     private readonly SECRET_WORD = 'drakemaye';
@@ -40,6 +41,7 @@ export class AppComponent implements OnInit {
         const hasAccess = localStorage.getItem(this.STORAGE_KEY);
         if (hasAccess === 'true') {
             this.showHistoryTab = true;
+            this.showSupplierAnalysisTab = true;
             // Fill password input with masked characters (use text type to show asterisks)
             this.passwordInput = '*'.repeat(this.SECRET_WORD.length);
             this.showPassword = true; // Use text type to show asterisks
@@ -58,8 +60,10 @@ export class AppComponent implements OnInit {
 
         if (tab === 'suppliers') {
             this.router.navigate(['/suppliers/supplier-docs']);
-        } else if (tab === 'invoicing') {
+        } else         if (tab === 'invoicing') {
             this.router.navigate(['/invoicing/captains-order']);
+        } else if (tab === 'supplier-analysis') {
+            this.router.navigate(['/supplier-analysis/inputs']);
         } else if (tab === 'rfq') {
             this.router.navigate(['/rfq/captains-request']);
         } else if (tab === 'history') {
@@ -73,6 +77,9 @@ export class AppComponent implements OnInit {
         }
         if (url.startsWith('/invoicing')) {
             return 'invoicing';
+        }
+        if (url.startsWith('/supplier-analysis')) {
+            return 'supplier-analysis';
         }
         if (url.startsWith('/rfq')) {
             return 'rfq';
@@ -106,9 +113,11 @@ export class AppComponent implements OnInit {
             return;
         }
 
-        // Check if the entered value matches the secret word (case sensitive)
-        if (value === this.SECRET_WORD) {
+        // Check if the entered value matches the secret word (case insensitive - accepts "DRAKEMAYE" or "drakemaye")
+        const normalizedValue = value.toLowerCase();
+        if (normalizedValue === this.SECRET_WORD) {
             this.showHistoryTab = true;
+            this.showSupplierAnalysisTab = true;
             localStorage.setItem(this.STORAGE_KEY, 'true');
             // Dispatch custom event to notify other components (like information modal)
             window.dispatchEvent(new Event('historyAccessChanged'));
@@ -133,8 +142,9 @@ export class AppComponent implements OnInit {
     }
 
     logout(): void {
-        // Hide the History tab
+        // Hide the History and Supplier Analysis tabs
         this.showHistoryTab = false;
+        this.showSupplierAnalysisTab = false;
         // Clear localStorage
         localStorage.removeItem(this.STORAGE_KEY);
         // Dispatch custom event to notify other components (like information modal)
@@ -142,8 +152,8 @@ export class AppComponent implements OnInit {
         // Clear password input
         this.passwordInput = '';
         this.showPassword = false;
-        // Navigate away from history if currently on that page
-        if (this.activeMainTab === 'history') {
+        // Navigate away from history or supplier-analysis if currently on those pages
+        if (this.activeMainTab === 'history' || this.activeMainTab === 'supplier-analysis') {
             this.router.navigate(['/rfq/captains-request']);
         }
         // Log the logout action

@@ -107,6 +107,30 @@ table {
     align-items: center;
     gap: 8px;
     z-index: 1000;
+    min-width: 180px; // Ensure minimum width to prevent overlap
+
+    // Responsive adjustments
+    @media (max-width: 1200px) {
+        right: 10px;
+        min-width: 160px;
+    }
+
+    @media (max-width: 768px) {
+        top: 10px;
+        right: 10px;
+        min-width: 140px;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    @media (max-width: 480px) {
+        min-width: 130px;
+        
+        .password-input {
+            width: 110px;
+            font-size: 12px;
+        }
+    }
 }
 
 .password-input-wrapper {
@@ -221,6 +245,38 @@ table {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
     z-index: 1000;
+
+    // Responsive adjustments to prevent overlap with password input
+    @media (max-width: 1400px) {
+        right: calc(50% - min(700px, 50vw) - 60px);
+    }
+
+    @media (max-width: 1200px) {
+        right: 220px; // Position to the left of password input (which is at right: 10px with min-width 160px + gap)
+    }
+
+    @media (max-width: 900px) {
+        right: 200px; // Adjust for medium screens
+    }
+
+    @media (max-width: 768px) {
+        top: 10px;
+        right: 170px; // Position to the left of password input (which is at right: 10px with min-width 140px + gap)
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+    }
+
+    @media (max-width: 600px) {
+        right: 160px; // Further adjustment for smaller screens
+    }
+
+    @media (max-width: 480px) {
+        right: 150px; // Further adjustment for very small screens
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+    }
 
     &:hover {
         background-color: #0052a3;

@@ -1,0 +1,279 @@
+.supplier-analysis-inputs-container {
+    background-color: #f3e5f5;
+    min-height: calc(100vh - 120px);
+    margin: -40px -20px;
+    padding: 30px 40px 60px 40px;
+
+    .content-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    h1 {
+        color: #7b1fa2;
+        margin-bottom: 20px;
+        margin-top: 0;
+        font-size: 32px;
+    }
+
+    h2 {
+        color: #333;
+        margin-bottom: 20px;
+        margin-top: 40px;
+        font-size: 24px;
+    }
+
+    .instructions-section {
+        background-color: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+        ul {
+            margin: 0;
+            padding-left: 20px;
+            list-style-type: disc;
+
+            li {
+                margin-bottom: 8px;
+                color: #333;
+                font-size: 14px;
+                line-height: 1.6;
+
+                &:last-child {
+                    margin-bottom: 0;
+                }
+
+                strong {
+                    color: #7b1fa2;
+                    font-weight: 600;
+                }
+            }
+        }
+    }
+
+    .drop-zones-container {
+        display: flex;
+        gap: 30px;
+        margin-bottom: 20px;
+        width: 100%;
+        padding: 0;
+        flex-wrap: wrap;
+
+        .drop-zone-column {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .drop-zone {
+            width: 100%;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #f9f9f9;
+
+            &:hover {
+                border-color: #7b1fa2;
+                background-color: #f3e5f5;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(123, 31, 162, 0.15);
+            }
+
+            &.drag-over {
+                border-color: #7b1fa2;
+                background-color: #e1bee7;
+                transform: scale(1.02);
+                box-shadow: 0 6px 20px rgba(123, 31, 162, 0.25);
+            }
+
+            .icon {
+                font-size: 48px;
+                margin-bottom: 16px;
+                color: #7b1fa2;
+            }
+
+            p {
+                margin: 8px 0;
+                color: #333;
+
+                &:first-of-type {
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #7b1fa2;
+                }
+            }
+
+            .dropzone-subtext {
+                font-size: 14px;
+                color: #666;
+                margin: 4px 0;
+
+                strong {
+                    color: #7b1fa2;
+                    font-weight: 600;
+                }
+            }
+        }
+    }
+
+    .processing-message {
+        text-align: center;
+        padding: 20px;
+        background-color: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        margin-bottom: 20px;
+
+        p {
+            color: #856404;
+            font-weight: 500;
+            margin: 0;
+        }
+    }
+
+    .files-table {
+        margin-top: 30px;
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+            thead {
+                background-color: #7b1fa2;
+
+                th {
+                    padding: 12px 16px;
+                    text-align: left;
+                    color: #ffffff;
+                    font-weight: 600;
+                    font-size: 14px;
+                }
+            }
+
+            tbody {
+                tr {
+                    border-bottom: 1px solid #e0e0e0;
+
+                    &:hover {
+                        background-color: #f3e5f5;
+                    }
+
+                    &:last-child {
+                        border-bottom: none;
+                    }
+
+                    td {
+                        padding: 12px 16px;
+                        color: #333;
+                        font-size: 14px;
+                    }
+                }
+            }
+
+            .clickable-filename {
+                cursor: pointer;
+                color: #7b1fa2;
+                text-decoration: underline;
+                transition: all 0.2s ease;
+
+                &:hover {
+                    color: #4a148c;
+                    background-color: #f3e5f5;
+                    text-decoration: none;
+                }
+
+                &:active {
+                    color: #6a1b9a;
+                    background-color: #e1bee7;
+                }
+            }
+
+            .top-left-cell {
+                text-align: center;
+                vertical-align: middle;
+
+                .top-left-input {
+                    width: 60px;
+                    padding: 4px 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    text-align: center;
+                    transition: border-color 0.2s ease;
+
+                    &:focus {
+                        outline: none;
+                        border-color: #7b1fa2;
+                        box-shadow: 0 0 0 2px rgba(123, 31, 162, 0.1);
+                    }
+
+                    &:hover {
+                        border-color: #7b1fa2;
+                    }
+                }
+
+                .row-count {
+                    font-size: 12px;
+                    color: #666;
+                    font-weight: 500;
+                    margin-top: 2px;
+                }
+            }
+
+            .clickable-filename {
+                cursor: pointer;
+                color: #7b1fa2;
+                text-decoration: underline;
+                transition: all 0.2s ease;
+
+                &:hover {
+                    color: #4a148c;
+                    background-color: #f3e5f5;
+                    text-decoration: none;
+                }
+
+                &:active {
+                    color: #6a1b9a;
+                    background-color: #e1bee7;
+                }
+            }
+        }
+
+        .remove-button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+
+            &:hover {
+                background-color: #c82333;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 10px rgba(220, 53, 69, 0.25);
+            }
+
+            &:active {
+                transform: translateY(0);
+                box-shadow: none;
+            }
+        }
+    }
+}
+

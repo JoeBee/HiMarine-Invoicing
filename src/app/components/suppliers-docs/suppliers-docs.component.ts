@@ -669,4 +669,76 @@ export class SuppliersDocsComponent implements OnInit {
         return { headers, rows };
     }
 
+    getTopLeftCellOptions(): string[] {
+        const options: string[] = [];
+        for (let col = 0; col < 8; col++) {
+            for (let row = 1; row <= 20; row++) {
+                const cellRef = XLSX.utils.encode_cell({ r: row - 1, c: col });
+                options.push(cellRef);
+            }
+        }
+        return options;
+    }
+
+    onTopLeftCellChange(event: Event, fileInfo: SupplierFileInfo): void {
+        const input = event.target as HTMLInputElement;
+        let value = input.value.toUpperCase();
+
+        const regex = /^[A-Z][0-9]{1,2}$/;
+        if (value && !regex.test(value)) {
+            value = value.replace(/[^A-Z0-9]/g, '');
+            if (value && !/^[A-Z]/.test(value)) {
+                value = '';
+            }
+            const match = value.match(/^([A-Z])([0-9]{0,2})/);
+            if (match) {
+                value = match[0];
+            } else if (value.length > 0 && /^[A-Z]/.test(value)) {
+                value = value.charAt(0);
+            }
+        }
+
+        input.value = value;
+        fileInfo.topLeftCell = value;
+
+        if (value && value.trim() !== '' && value !== 'NOT FOUND') {
+            input.removeAttribute('list');
+            void this.reanalyzeFileWithTopLeft(fileInfo, value);
+        } else {
+            fileInfo.rowCount = 0;
+            fileInfo.descriptionColumn = 'NOT FOUND';
+            fileInfo.priceColumn = 'NOT FOUND';
+            fileInfo.unitColumn = 'NOT FOUND';
+            fileInfo.remarksColumn = 'NOT FOUND';
+            fileInfo.descriptionHeader = 'NOT FOUND';
+            fileInfo.priceHeader = 'NOT FOUND';
+            fileInfo.unitHeader = 'NOT FOUND';
+            fileInfo.remarksHeader = 'NOT FOUND';
+        }
+    }
+
+    validateTopLeftCell(fileInfo: SupplierFileInfo): void {
+        const regex = /^[A-Z][0-9]{1,2}$/;
+        if (fileInfo.topLeftCell && fileInfo.topLeftCell !== 'NOT FOUND' && !regex.test(fileInfo.topLeftCell)) {
+            fileInfo.topLeftCell = 'NOT FOUND';
+            fileInfo.rowCount = 0;
+        }
+    }
+
+    private async reanalyzeFileWithTopLeft(fileInfo: SupplierFileInfo, topLeftCell: string): Promise<void> {
+        try {
+            await this.dataService.updateFileTopLeftCell(fileInfo.fileName, topLeftCell);
+            
+            this.loggingService.logUserAction('top_left_cell_changed', {
+                fileName: fileInfo.fileName,
+                newTopLeftCell: topLeftCell
+            }, 'SuppliersDocsComponent');
+        } catch (error) {
+            this.loggingService.logError(error as Error, 'reanalyze_file_error', 'SuppliersDocsComponent', {
+                fileName: fileInfo.fileName,
+                topLeftCell: topLeftCell
+            });
+        }
+    }
+
 }
