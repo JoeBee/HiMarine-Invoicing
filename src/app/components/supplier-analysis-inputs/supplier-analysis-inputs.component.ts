@@ -30,8 +30,8 @@ export class SupplierAnalysisInputsComponent implements OnInit {
     hoveredDropzone: string | null = null;
     hoveredDropzone2: string | null = null;
     instructionsExpanded = false;
-    tableExpanded = true;
-    tableExpanded2 = true;
+    tableExpanded = false;
+    tableExpanded2 = false;
 
     constructor(
         private loggingService: LoggingService,
@@ -44,6 +44,12 @@ export class SupplierAnalysisInputsComponent implements OnInit {
         if (existingFiles.length > 0) {
             this.invoiceFiles = existingFiles.filter(f => f.category === 'Invoice');
             this.supplierQuotationFiles = existingFiles.filter(f => f.category === 'Supplier Quotations');
+        }
+        
+        const existingFiles2 = this.supplierAnalysisService.getFiles2();
+        if (existingFiles2.length > 0) {
+            this.invoiceFiles2 = existingFiles2.filter(f => f.category === 'Invoice');
+            this.supplierQuotationFiles2 = existingFiles2.filter(f => f.category === 'Supplier Quotations');
         }
     }
 
@@ -166,9 +172,19 @@ export class SupplierAnalysisInputsComponent implements OnInit {
                         set: set
                     }, 'SupplierAnalysisInputsComponent');
 
-                    // Update service with all files (only set 1 goes to service)
+                    // Update service with all files
                     if (set === 1) {
                         this.updateServiceFiles();
+                        // Expand table if there's a mismatch
+                        if (this.hasAnyMismatch(1)) {
+                            this.tableExpanded = true;
+                        }
+                    } else if (set === 2) {
+                        this.updateServiceFiles2();
+                        // Expand table if there's a mismatch
+                        if (this.hasAnyMismatch(2)) {
+                            this.tableExpanded2 = true;
+                        }
                     }
             } catch (error) {
                 this.loggingService.logError(error as Error, 'file_processing', 'SupplierAnalysisInputsComponent', {
@@ -522,6 +538,11 @@ export class SupplierAnalysisInputsComponent implements OnInit {
             } else {
                 this.supplierQuotationFiles2 = this.supplierQuotationFiles2.filter(f => f.fileName !== fileName);
             }
+            this.updateServiceFiles2();
+            // Expand table if there's a mismatch after removal
+            if (this.hasAnyMismatch(2)) {
+                this.tableExpanded2 = true;
+            }
         } else {
             if (category === 'Invoice') {
                 this.invoiceFiles = this.invoiceFiles.filter(f => f.fileName !== fileName);
@@ -529,6 +550,10 @@ export class SupplierAnalysisInputsComponent implements OnInit {
                 this.supplierQuotationFiles = this.supplierQuotationFiles.filter(f => f.fileName !== fileName);
             }
             this.updateServiceFiles();
+            // Expand table if there's a mismatch after removal
+            if (this.hasAnyMismatch(1)) {
+                this.tableExpanded = true;
+            }
         }
     }
 
@@ -539,6 +564,7 @@ export class SupplierAnalysisInputsComponent implements OnInit {
         if (set === 2) {
             this.invoiceFiles2 = [];
             this.supplierQuotationFiles2 = [];
+            this.updateServiceFiles2();
         } else {
             this.invoiceFiles = [];
             this.supplierQuotationFiles = [];
@@ -564,10 +590,23 @@ export class SupplierAnalysisInputsComponent implements OnInit {
             return file.rowCount === invoiceRowCount;
         }
     }
+    
+    hasAnyMismatch(set: number = 1): boolean {
+        if (set === 2) {
+            return this.getAllFiles2().some(file => !this.hasMatchingRowCount(file, 2));
+        } else {
+            return this.getAllFiles().some(file => !this.hasMatchingRowCount(file, 1));
+        }
+    }
 
     private updateServiceFiles(): void {
         const allFiles = this.getAllFiles();
         this.supplierAnalysisService.setFiles(allFiles);
+    }
+    
+    private updateServiceFiles2(): void {
+        const allFiles = this.getAllFiles2();
+        this.supplierAnalysisService.setFiles2(allFiles);
     }
 
     getAllFiles(): SupplierAnalysisFileInfo[] {

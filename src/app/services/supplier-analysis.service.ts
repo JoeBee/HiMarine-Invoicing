@@ -20,6 +20,9 @@ export interface SupplierAnalysisData {
 export class SupplierAnalysisService {
     private filesSubject = new BehaviorSubject<SupplierAnalysisFileInfo[]>([]);
     files$: Observable<SupplierAnalysisFileInfo[]> = this.filesSubject.asObservable();
+    
+    private files2Subject = new BehaviorSubject<SupplierAnalysisFileInfo[]>([]);
+    files2$: Observable<SupplierAnalysisFileInfo[]> = this.files2Subject.asObservable();
 
     setFiles(files: SupplierAnalysisFileInfo[]): void {
         this.filesSubject.next(files);
@@ -27,6 +30,14 @@ export class SupplierAnalysisService {
 
     getFiles(): SupplierAnalysisFileInfo[] {
         return this.filesSubject.value;
+    }
+    
+    setFiles2(files: SupplierAnalysisFileInfo[]): void {
+        this.files2Subject.next(files);
+    }
+
+    getFiles2(): SupplierAnalysisFileInfo[] {
+        return this.files2Subject.value;
     }
 
     async extractDataFromFile(fileInfo: SupplierAnalysisFileInfo): Promise<{ headers: string[]; rows: ExcelRowData[] }> {

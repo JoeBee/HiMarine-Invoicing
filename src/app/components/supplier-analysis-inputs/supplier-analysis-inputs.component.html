@@ -110,9 +110,9 @@
         <div *ngIf="getAllFiles().length > 0" class="files-table-section">
             <div class="files-table-header" (click)="toggleTable(1)">
                 <h2>Uploaded Files</h2>
-                <span class="expand-icon" [class.expanded]="tableExpanded">▼</span>
+                <span class="expand-icon" [class.expanded]="tableExpanded || hasAnyMismatch(1)">▼</span>
             </div>
-            <div class="files-table" [class.expanded]="tableExpanded">
+            <div class="files-table" [class.expanded]="tableExpanded || hasAnyMismatch(1)">
                 <table>
                     <thead>
                         <tr>
@@ -171,9 +171,9 @@
         <div *ngIf="getAllFiles2().length > 0" class="files-table-section">
             <div class="files-table-header" (click)="toggleTable(2)">
                 <h2>Uploaded Files</h2>
-                <span class="expand-icon" [class.expanded]="tableExpanded2">▼</span>
+                <span class="expand-icon" [class.expanded]="tableExpanded2 || hasAnyMismatch(2)">▼</span>
             </div>
-            <div class="files-table" [class.expanded]="tableExpanded2">
+            <div class="files-table" [class.expanded]="tableExpanded2 || hasAnyMismatch(2)">
                 <table>
                     <thead>
                         <tr>
