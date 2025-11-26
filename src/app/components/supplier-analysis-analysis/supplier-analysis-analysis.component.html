@@ -38,7 +38,12 @@
                 <table class="comparison-table">
                     <thead>
                         <tr>
-                            <th [attr.colspan]="invoiceHeaders.length" class="invoice-column">Invoice</th>
+                            <th [attr.colspan]="invoiceHeaders.length" class="invoice-column">
+                                <div class="invoice-header-container">
+                                    <input type="text" [(ngModel)]="invoiceLabel" class="invoice-label-input" />
+                                    <span>Invoice</span>
+                                </div>
+                            </th>
                             <th *ngFor="let file of supplierQuotationFiles; let i = index"
                                 [attr.colspan]="getSupplierQuotationHeaderLength(i)"
                                 [class]="i % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">

@@ -26,6 +26,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
     isLoading = false;
     rowCountsMatch = false;
     exportFileName: string = '';
+    invoiceLabel: string = '';
     private filesSubscription?: Subscription;
 
     constructor(
@@ -74,12 +75,14 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 this.supplierQuotationHeaders = [];
                 for (const file of this.supplierQuotationFiles) {
                     const result = await this.supplierAnalysisService.extractDataFromFile(file);
-                    // Filter out "POS." columns from headers
-                    const filteredHeaders = result.headers.filter(header => 
-                        !header.trim().toUpperCase().startsWith('POS.')
-                    );
+                    // Filter headers to only show 'Price' and 'Total' columns
+                    const filteredHeaders = result.headers.filter(header => {
+                        const headerLower = header.toLowerCase().trim();
+                        return headerLower === 'price' || headerLower === 'total' || 
+                               headerLower.includes('price') || headerLower.includes('total');
+                    });
                     this.supplierQuotationHeaders.push(filteredHeaders);
-                    // Filter out "POS." columns from data rows
+                    // Filter data rows to only include 'Price' and 'Total' columns
                     const filteredRows = result.rows.map(row => {
                         const filteredRow: ExcelRowData = {};
                         filteredHeaders.forEach(header => {
@@ -100,6 +103,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
                 // Set default export filename
                 this.updateExportFileName();
+                
+                // Set default invoice label (last word of invoice filename)
+                this.updateInvoiceLabel();
             } catch (error) {
                 this.loggingService.logError(error as Error, 'data_extraction_error', 'SupplierAnalysisAnalysisComponent');
             }
@@ -116,6 +122,19 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             this.exportFileName = `_OUTPUT ${nameWithoutExt}`;
         } else {
             this.exportFileName = '_OUTPUT Invoice';
+        }
+    }
+
+    updateInvoiceLabel(): void {
+        if (this.invoiceFiles.length > 0) {
+            const invoiceFileName = this.invoiceFiles[0].fileName;
+            // Remove extension if present
+            const nameWithoutExt = invoiceFileName.replace(/\.(xlsx|xls|xlsm)$/i, '');
+            // Split by spaces and get the last word
+            const words = nameWithoutExt.trim().split(/\s+/);
+            this.invoiceLabel = words.length > 0 ? words[words.length - 1] : nameWithoutExt;
+        } else {
+            this.invoiceLabel = '';
         }
     }
 
