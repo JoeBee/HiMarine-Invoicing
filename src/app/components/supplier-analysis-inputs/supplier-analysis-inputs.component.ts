@@ -27,6 +27,7 @@ export class SupplierAnalysisInputsComponent implements OnInit {
     isProcessing = false;
     hoveredDropzone: string | null = null;
     instructionsExpanded = false;
+    tableExpanded = true;
 
     constructor(
         private loggingService: LoggingService,
@@ -571,6 +572,10 @@ export class SupplierAnalysisInputsComponent implements OnInit {
 
     toggleInstructions(): void {
         this.instructionsExpanded = !this.instructionsExpanded;
+    }
+
+    toggleTable(): void {
+        this.tableExpanded = !this.tableExpanded;
     }
 }
 

@@ -23,38 +23,43 @@
             </div>
         </div>
 
-        <div class="drop-zones-container">
-            <div class="drop-zone-column">
-                <div class="drop-zone" [class.drag-over]="isDragging && hoveredDropzone === 'Invoice'"
-                    [class.files-uploaded]="hasInvoiceFiles() && hasSupplierQuotationFiles()"
-                    (dragover)="onDragOver($event, 'Invoice')" (dragleave)="onDragLeave($event)"
-                    (drop)="onDrop($event, 'Invoice')" (click)="triggerFileInput('Invoice')">
-                    <div class="icon">
-                        <span *ngIf="!hasInvoiceFiles()">📄</span>
-                        <strong *ngIf="hasInvoiceFiles()" class="invoice-last-word">{{ getInvoiceLastWord() }}</strong>
+        <div class="drop-zones-wrapper">
+            <div class="drop-zones-container">
+                <div class="drop-zone-column">
+                    <div class="drop-zone" [class.drag-over]="isDragging && hoveredDropzone === 'Invoice'"
+                        [class.files-uploaded]="hasInvoiceFiles() && hasSupplierQuotationFiles()"
+                        (dragover)="onDragOver($event, 'Invoice')" (dragleave)="onDragLeave($event)"
+                        (drop)="onDrop($event, 'Invoice')" (click)="triggerFileInput('Invoice')">
+                        <div class="icon">
+                            <span *ngIf="!hasInvoiceFiles()">📄</span>
+                            <strong *ngIf="hasInvoiceFiles()" class="invoice-last-word">{{ getInvoiceLastWord()
+                                }}</strong>
+                        </div>
+                        <p><strong>Invoice</strong></p>
+                        <p class="dropzone-subtext">Drop <strong>one</strong> Excel file here or click to browse</p>
                     </div>
-                    <p><strong>Invoice</strong></p>
-                    <p class="dropzone-subtext">Drop <strong>one</strong> Excel file here or click to browse</p>
+                    <input type="file" id="fileInput-Invoice" accept=".xlsx,.xls,.xlsm"
+                        (change)="onFileSelect($event, 'Invoice')" style="display: none;">
                 </div>
-                <input type="file" id="fileInput-Invoice" accept=".xlsx,.xls,.xlsm"
-                    (change)="onFileSelect($event, 'Invoice')" style="display: none;">
-            </div>
 
-            <div class="drop-zone-column">
-                <div class="drop-zone" [class.drag-over]="isDragging && hoveredDropzone === 'Supplier Quotations'"
-                    [class.files-uploaded]="hasInvoiceFiles() && hasSupplierQuotationFiles()"
-                    (dragover)="onDragOver($event, 'Supplier Quotations')" (dragleave)="onDragLeave($event)"
-                    (drop)="onDrop($event, 'Supplier Quotations')" (click)="triggerFileInput('Supplier Quotations')">
-                    <div class="icon">
-                        <span *ngIf="!hasSupplierQuotationFiles()">📋</span>
-                        <strong *ngIf="hasSupplierQuotationFiles()" class="supplier-count">{{
-                            getSupplierQuotationCount() }}</strong>
+                <div class="drop-zone-column">
+                    <div class="drop-zone" [class.drag-over]="isDragging && hoveredDropzone === 'Supplier Quotations'"
+                        [class.files-uploaded]="hasInvoiceFiles() && hasSupplierQuotationFiles()"
+                        (dragover)="onDragOver($event, 'Supplier Quotations')" (dragleave)="onDragLeave($event)"
+                        (drop)="onDrop($event, 'Supplier Quotations')"
+                        (click)="triggerFileInput('Supplier Quotations')">
+                        <div class="icon">
+                            <span *ngIf="!hasSupplierQuotationFiles()">📋</span>
+                            <strong *ngIf="hasSupplierQuotationFiles()" class="supplier-count">{{
+                                getSupplierQuotationCount() }}</strong>
+                        </div>
+                        <p><strong>Supplier Quotations</strong></p>
+                        <p class="dropzone-subtext">Drop <strong>multiple</strong> Excel files here or click to browse
+                        </p>
                     </div>
-                    <p><strong>Supplier Quotations</strong></p>
-                    <p class="dropzone-subtext">Drop <strong>multiple</strong> Excel files here or click to browse</p>
+                    <input type="file" id="fileInput-Supplier Quotations" multiple accept=".xlsx,.xls,.xlsm"
+                        (change)="onFileSelect($event, 'Supplier Quotations')" style="display: none;">
                 </div>
-                <input type="file" id="fileInput-Supplier Quotations" multiple accept=".xlsx,.xls,.xlsm"
-                    (change)="onFileSelect($event, 'Supplier Quotations')" style="display: none;">
             </div>
         </div>
 
@@ -62,59 +67,65 @@
             <p>Processing files...</p>
         </div>
 
-        <div *ngIf="getAllFiles().length > 0" class="files-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>File Name</th>
-                        <th>Category</th>
-                        <th style="text-align: center;">TOP LEFT</th>
-                        <th style="text-align: center;"># ROWS</th>
-                        <th>
-                            <button type="button" class="remove-all-button" (click)="removeAllFiles()">
-                                Remove All
-                            </button>
-                        </th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let file of getAllFiles(); let i = index"
-                        [class.invoice-row]="file.category === 'Invoice'"
-                        [class.mismatch-row]="file.category === 'Supplier Quotations' && !hasMatchingRowCount(file)">
-                        <td>
-                            <span class="clickable-filename" (click)="openFile(file)">{{ file.fileName }}</span>
-                        </td>
-                        <td>{{ file.category }}</td>
-                        <td class="top-left-cell" style="text-align: center;">
-                            <input type="text" [(ngModel)]="file.topLeftCell"
-                                (input)="onTopLeftCellChange($event, file)" (blur)="validateTopLeftCell(file)"
-                                [attr.list]="(!file.topLeftCell || file.topLeftCell.trim() === '' || file.topLeftCell === 'NOT FOUND') ? ('topLeftList-' + i) : null"
-                                class="top-left-input" placeholder="e.g., A1" maxlength="3"
-                                pattern="[A-Za-z][0-9]{1,2}">
-                            <datalist
-                                *ngIf="!file.topLeftCell || file.topLeftCell.trim() === '' || file.topLeftCell === 'NOT FOUND'"
-                                [attr.id]="'topLeftList-' + i">
-                                <option *ngFor="let cell of getTopLeftCellOptions()" [value]="cell">{{ cell }}
-                                </option>
-                            </datalist>
-                        </td>
-                        <td style="text-align: center;">
-                            <span class="row-count">{{ file.rowCount }}</span>
-                        </td>
-                        <td>
-                            <button type="button" class="remove-button"
-                                (click)="removeFile(file.fileName, file.category)">
-                                Remove
-                            </button>
-                        </td>
-                        <td class="mismatch-indicator">
-                            <span *ngIf="file.category === 'Supplier Quotations' && !hasMatchingRowCount(file)"
-                                class="red-x">✕</span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div *ngIf="getAllFiles().length > 0" class="files-table-section">
+            <div class="files-table-header" (click)="toggleTable()">
+                <h2>Uploaded Files</h2>
+                <span class="expand-icon" [class.expanded]="tableExpanded">▼</span>
+            </div>
+            <div class="files-table" [class.expanded]="tableExpanded">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Category</th>
+                            <th style="text-align: center;">TOP LEFT</th>
+                            <th style="text-align: center;"># ROWS</th>
+                            <th>
+                                <button type="button" class="remove-all-button" (click)="removeAllFiles()">
+                                    Remove All
+                                </button>
+                            </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let file of getAllFiles(); let i = index"
+                            [class.invoice-row]="file.category === 'Invoice'"
+                            [class.mismatch-row]="file.category === 'Supplier Quotations' && !hasMatchingRowCount(file)">
+                            <td>
+                                <span class="clickable-filename" (click)="openFile(file)">{{ file.fileName }}</span>
+                            </td>
+                            <td>{{ file.category }}</td>
+                            <td class="top-left-cell" style="text-align: center;">
+                                <input type="text" [(ngModel)]="file.topLeftCell"
+                                    (input)="onTopLeftCellChange($event, file)" (blur)="validateTopLeftCell(file)"
+                                    [attr.list]="(!file.topLeftCell || file.topLeftCell.trim() === '' || file.topLeftCell === 'NOT FOUND') ? ('topLeftList-' + i) : null"
+                                    class="top-left-input" placeholder="e.g., A1" maxlength="3"
+                                    pattern="[A-Za-z][0-9]{1,2}">
+                                <datalist
+                                    *ngIf="!file.topLeftCell || file.topLeftCell.trim() === '' || file.topLeftCell === 'NOT FOUND'"
+                                    [attr.id]="'topLeftList-' + i">
+                                    <option *ngFor="let cell of getTopLeftCellOptions()" [value]="cell">{{ cell }}
+                                    </option>
+                                </datalist>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="row-count">{{ file.rowCount }}</span>
+                            </td>
+                            <td>
+                                <button type="button" class="remove-button"
+                                    (click)="removeFile(file.fileName, file.category)">
+                                    Remove
+                                </button>
+                            </td>
+                            <td class="mismatch-indicator">
+                                <span *ngIf="file.category === 'Supplier Quotations' && !hasMatchingRowCount(file)"
+                                    class="red-x">✕</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
