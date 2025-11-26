@@ -4,10 +4,13 @@
 
         <div class="instructions-section">
             <ul>
-                <li><strong>Invoice:</strong> Upload <strong>one</strong> Excel file. If a file already exists, it will be replaced.</li>
-                <li><strong>Supplier Quotations:</strong> Upload <strong>multiple</strong> Excel files for comparison.</li>
+                <li><strong>Invoice:</strong> Upload <strong>one</strong> Excel file. If a file already exists, it will
+                    be replaced.</li>
+                <li><strong>Supplier Quotations:</strong> Upload <strong>multiple</strong> Excel files for comparison.
+                </li>
                 <li>All files must have matching row counts for analysis.</li>
-                <li>Each file's datatable must contain column headers: Pos, Description, Remark, Unit, Qty, Price, Total (punctuation and trailing 's' ignored).</li>
+                <li>Each file's datatable must contain column headers: Pos, Description, Remark, Unit, Qty, Price, Total
+                    (punctuation and trailing 's' ignored).</li>
             </ul>
         </div>
 
@@ -19,7 +22,6 @@
                     <div class="icon">📄</div>
                     <p><strong>Invoice</strong></p>
                     <p class="dropzone-subtext">Drop <strong>one</strong> Excel file here or click to browse</p>
-                    <p class="dropzone-subtext">Only .xlsx, .xls, and .xlsm files are accepted</p>
                 </div>
                 <input type="file" id="fileInput-Invoice" accept=".xlsx,.xls,.xlsm"
                     (change)="onFileSelect($event, 'Invoice')" style="display: none;">
@@ -32,7 +34,6 @@
                     <div class="icon">📋</div>
                     <p><strong>Supplier Quotations</strong></p>
                     <p class="dropzone-subtext">Drop <strong>multiple</strong> Excel files here or click to browse</p>
-                    <p class="dropzone-subtext">Only .xlsx, .xls, and .xlsm files are accepted</p>
                 </div>
                 <input type="file" id="fileInput-Supplier Quotations" multiple accept=".xlsx,.xls,.xlsm"
                     (change)="onFileSelect($event, 'Supplier Quotations')" style="display: none;">
@@ -44,7 +45,12 @@
         </div>
 
         <div *ngIf="getAllFiles().length > 0" class="files-table">
-            <h2>Uploaded Files</h2>
+            <div class="files-table-header">
+                <h2>Uploaded Files</h2>
+                <button type="button" class="remove-all-button" (click)="removeAllFiles()">
+                    Remove All
+                </button>
+            </div>
             <table>
                 <thead>
                     <tr>
@@ -52,10 +58,13 @@
                         <th>Category</th>
                         <th style="text-align: center;">TOP LEFT / #ROWS</th>
                         <th>Actions</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let file of getAllFiles(); let i = index" [class.invoice-row]="file.category === 'Invoice'">
+                    <tr *ngFor="let file of getAllFiles(); let i = index"
+                        [class.invoice-row]="file.category === 'Invoice'"
+                        [class.mismatch-row]="file.category === 'Supplier Quotations' && !hasMatchingRowCount(file)">
                         <td>
                             <span class="clickable-filename" (click)="openFile(file)">{{ file.fileName }}</span>
                         </td>
@@ -81,6 +90,10 @@
                                 (click)="removeFile(file.fileName, file.category)">
                                 Remove
                             </button>
+                        </td>
+                        <td class="mismatch-indicator">
+                            <span *ngIf="file.category === 'Supplier Quotations' && !hasMatchingRowCount(file)"
+                                class="red-x">✕</span>
                         </td>
                     </tr>
                 </tbody>

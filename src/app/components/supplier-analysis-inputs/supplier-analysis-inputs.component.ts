@@ -483,6 +483,24 @@ export class SupplierAnalysisInputsComponent implements OnInit {
         this.updateServiceFiles();
     }
 
+    removeAllFiles(): void {
+        this.loggingService.logButtonClick('remove_all_files', 'SupplierAnalysisInputsComponent');
+        this.invoiceFiles = [];
+        this.supplierQuotationFiles = [];
+        this.updateServiceFiles();
+    }
+
+    hasMatchingRowCount(file: SupplierAnalysisFileInfo): boolean {
+        if (file.category !== 'Supplier Quotations') {
+            return true;
+        }
+        if (this.invoiceFiles.length === 0) {
+            return true;
+        }
+        const invoiceRowCount = this.invoiceFiles[0].rowCount;
+        return file.rowCount === invoiceRowCount;
+    }
+
     private updateServiceFiles(): void {
         const allFiles = this.getAllFiles();
         this.supplierAnalysisService.setFiles(allFiles);
