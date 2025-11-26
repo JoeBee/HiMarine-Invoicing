@@ -27,6 +27,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
     rowCountsMatch = false;
     exportFileName: string = '';
     invoiceLabel: string = '';
+    tableExpanded: boolean = true;
     private filesSubscription?: Subscription;
 
     constructor(
@@ -67,7 +68,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 if (this.invoiceFiles.length > 0) {
                     const invoiceResult = await this.supplierAnalysisService.extractDataFromFile(this.invoiceFiles[0]);
                     this.invoiceData = invoiceResult.rows;
-                    this.invoiceHeaders = invoiceResult.headers;
+                    // Replace "Provisions" header with "Invoice"
+                    this.invoiceHeaders = invoiceResult.headers.map(header => 
+                        header === 'Provisions' ? 'Invoice' : header
+                    );
                 }
 
                 // Extract supplier quotation data (all files)
@@ -155,7 +159,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
     }
 
     getCellValue(row: ExcelRowData, header: string): any {
-        const value = row[header] !== undefined ? row[header] : '';
+        // Map "Invoice" header back to "Provisions" for data access
+        const dataKey = header === 'Invoice' ? 'Provisions' : header;
+        const value = row[dataKey] !== undefined ? row[dataKey] : '';
         // Format price and total columns to 2 decimal places
         if (this.isPriceOrTotalColumn(header)) {
             return this.formatToTwoDecimals(value);
@@ -196,6 +202,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
     getSupplierQuotationHeaderLength(index: number): number {
         return this.supplierQuotationHeaders[index]?.length || 1;
+    }
+
+    toggleTable(): void {
+        this.tableExpanded = !this.tableExpanded;
     }
 
     async exportToExcel(): Promise<void> {

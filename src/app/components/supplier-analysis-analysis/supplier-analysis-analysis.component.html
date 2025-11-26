@@ -3,9 +3,6 @@
         <h1>Supplier Analysis</h1>
 
         <div *ngIf="!isLoading && rowCountsMatch && invoiceData.length > 0" class="export-controls">
-            <div class="export-info">
-                <span>Records: {{ getRecordCount() }} | Files: {{ getFileCount() }}</span>
-            </div>
             <div class="export-input-group">
                 <label for="exportFileName">Export File Name:</label>
                 <input type="text" id="exportFileName" [(ngModel)]="exportFileName" class="export-filename-input" />
@@ -34,45 +31,60 @@
         </div>
 
         <div *ngIf="!isLoading && rowCountsMatch && invoiceData.length > 0" class="comparison-table-container">
-            <div class="table-wrapper">
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th [attr.colspan]="invoiceHeaders.length" class="invoice-column">
-                                <div class="invoice-header-container">
-                                    <input type="text" [(ngModel)]="invoiceLabel" class="invoice-label-input" />
-                                    <span>Invoice</span>
-                                </div>
-                            </th>
-                            <th *ngFor="let file of supplierQuotationFiles; let i = index"
-                                [attr.colspan]="getSupplierQuotationHeaderLength(i)"
-                                [class]="i % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">
-                                {{ file.fileName }}
-                            </th>
-                        </tr>
-                        <tr>
-                            <th *ngFor="let header of invoiceHeaders" class="invoice-column">{{ header }}</th>
-                            <ng-container *ngFor="let headers of supplierQuotationHeaders; let fileIndex = index">
-                                <th *ngFor="let header of headers"
-                                    [class]="fileIndex % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">{{ header
-                                    }}</th>
-                            </ng-container>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let invoiceRow of invoiceData; let rowIndex = index">
-                            <td *ngFor="let header of invoiceHeaders" class="invoice-column">
-                                {{ getCellValue(invoiceRow, header) }}
-                            </td>
-                            <ng-container *ngFor="let fileHeaders of supplierQuotationHeaders; let fileIndex = index">
-                                <td *ngFor="let header of fileHeaders"
-                                    [class]="fileIndex % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">
-                                    {{ getSupplierQuotationValue(fileIndex, rowIndex, header) }}
-                                </td>
-                            </ng-container>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="table-collapsible-section">
+                <div class="table-header" (click)="toggleTable()">
+                    <div class="table-header-info">
+                        <span>Records: {{ getRecordCount() }} | Files: {{ getFileCount() }}</span>
+                        <span class="invoice-label-display">
+                            Section:<input type="text" [(ngModel)]="invoiceLabel" class="invoice-label-input-inline" />
+                        </span>
+                    </div>
+                    <span class="expand-icon" [class.expanded]="tableExpanded">▼</span>
+                </div>
+                <div class="table-content" [class.expanded]="tableExpanded">
+                    <div class="table-wrapper">
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th [attr.colspan]="invoiceHeaders.length" class="invoice-column">
+                                        <div class="invoice-header-container">
+                                            <span>INVOICE</span>
+                                        </div>
+                                    </th>
+                                    <th *ngFor="let file of supplierQuotationFiles; let i = index"
+                                        [attr.colspan]="getSupplierQuotationHeaderLength(i)"
+                                        [class]="i % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">
+                                        {{ file.fileName }}
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <th *ngFor="let header of invoiceHeaders" class="invoice-column">{{ header }}</th>
+                                    <ng-container
+                                        *ngFor="let headers of supplierQuotationHeaders; let fileIndex = index">
+                                        <th *ngFor="let header of headers"
+                                            [class]="fileIndex % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">{{
+                                            header
+                                            }}</th>
+                                    </ng-container>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let invoiceRow of invoiceData; let rowIndex = index">
+                                    <td *ngFor="let header of invoiceHeaders" class="invoice-column">
+                                        {{ getCellValue(invoiceRow, header) }}
+                                    </td>
+                                    <ng-container
+                                        *ngFor="let fileHeaders of supplierQuotationHeaders; let fileIndex = index">
+                                        <td *ngFor="let header of fileHeaders"
+                                            [class]="fileIndex % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">
+                                            {{ getSupplierQuotationValue(fileIndex, rowIndex, header) }}
+                                        </td>
+                                    </ng-container>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 

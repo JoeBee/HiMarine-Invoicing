@@ -23,11 +23,15 @@ export interface SupplierAnalysisFileInfo {
 export class SupplierAnalysisInputsComponent implements OnInit {
     invoiceFiles: SupplierAnalysisFileInfo[] = [];
     supplierQuotationFiles: SupplierAnalysisFileInfo[] = [];
+    invoiceFiles2: SupplierAnalysisFileInfo[] = [];
+    supplierQuotationFiles2: SupplierAnalysisFileInfo[] = [];
     isDragging = false;
     isProcessing = false;
     hoveredDropzone: string | null = null;
+    hoveredDropzone2: string | null = null;
     instructionsExpanded = false;
     tableExpanded = true;
+    tableExpanded2 = true;
 
     constructor(
         private loggingService: LoggingService,
@@ -43,52 +47,66 @@ export class SupplierAnalysisInputsComponent implements OnInit {
         }
     }
 
-    onDragOver(event: DragEvent, category: string): void {
+    onDragOver(event: DragEvent, category: string, set: number = 1): void {
         event.preventDefault();
         event.stopPropagation();
         this.isDragging = true;
-        this.hoveredDropzone = category;
+        if (set === 2) {
+            this.hoveredDropzone2 = category;
+        } else {
+            this.hoveredDropzone = category;
+        }
     }
 
-    onDragLeave(event: DragEvent): void {
+    onDragLeave(event: DragEvent, set: number = 1): void {
         event.preventDefault();
         event.stopPropagation();
         this.isDragging = false;
-        this.hoveredDropzone = null;
+        if (set === 2) {
+            this.hoveredDropzone2 = null;
+        } else {
+            this.hoveredDropzone = null;
+        }
     }
 
-    async onDrop(event: DragEvent, category: 'Invoice' | 'Supplier Quotations'): Promise<void> {
+    async onDrop(event: DragEvent, category: 'Invoice' | 'Supplier Quotations', set: number = 1): Promise<void> {
         event.preventDefault();
         event.stopPropagation();
         this.isDragging = false;
-        this.hoveredDropzone = null;
+        if (set === 2) {
+            this.hoveredDropzone2 = null;
+        } else {
+            this.hoveredDropzone = null;
+        }
 
         const files = event.dataTransfer?.files;
         if (files) {
             this.loggingService.logUserAction('files_dropped', {
                 category: category,
                 filesCount: files.length,
-                fileNames: Array.from(files).map(f => f.name)
+                fileNames: Array.from(files).map(f => f.name),
+                set: set
             }, 'SupplierAnalysisInputsComponent');
 
-            await this.processFiles(files, category);
+            await this.processFiles(files, category, set);
         }
     }
 
-    onFileSelect(event: Event, category: 'Invoice' | 'Supplier Quotations'): void {
+    onFileSelect(event: Event, category: 'Invoice' | 'Supplier Quotations', set: number = 1): void {
         const input = event.target as HTMLInputElement;
         if (input.files) {
             this.loggingService.logUserAction('files_selected', {
                 category: category,
                 filesCount: input.files.length,
-                fileNames: Array.from(input.files).map(f => f.name)
+                fileNames: Array.from(input.files).map(f => f.name),
+                set: set
             }, 'SupplierAnalysisInputsComponent');
 
-            this.processFiles(input.files, category);
+            this.processFiles(input.files, category, set);
         }
     }
 
-    async processFiles(fileList: FileList, category: 'Invoice' | 'Supplier Quotations'): Promise<void> {
+    async processFiles(fileList: FileList, category: 'Invoice' | 'Supplier Quotations', set: number = 1): Promise<void> {
         this.isProcessing = true;
         const files = Array.from(fileList).filter(f =>
             f.name.toLowerCase().endsWith('.xlsx') || 
@@ -110,33 +128,53 @@ export class SupplierAnalysisInputsComponent implements OnInit {
             try {
                 // Invoice: only allow 1 file, replace existing
                 if (category === 'Invoice') {
-                    // Clear existing invoice files
-                    this.invoiceFiles = [];
-                    // Process only the first file
-                    if (files.length > 0) {
-                        const fileInfo = await this.analyzeFile(files[0], category);
-                        this.invoiceFiles.push(fileInfo);
+                    // Clear existing invoice files for the specified set
+                    if (set === 2) {
+                        this.invoiceFiles2 = [];
+                        // Process only the first file
+                        if (files.length > 0) {
+                            const fileInfo = await this.analyzeFile(files[0], category);
+                            this.invoiceFiles2.push(fileInfo);
+                        }
+                    } else {
+                        this.invoiceFiles = [];
+                        // Process only the first file
+                        if (files.length > 0) {
+                            const fileInfo = await this.analyzeFile(files[0], category);
+                            this.invoiceFiles.push(fileInfo);
+                        }
                     }
                 } else {
                     // Supplier Quotations: allow multiple files
-                    for (const file of files) {
-                        const fileInfo = await this.analyzeFile(file, category);
-                        this.supplierQuotationFiles.push(fileInfo);
+                    if (set === 2) {
+                        for (const file of files) {
+                            const fileInfo = await this.analyzeFile(file, category);
+                            this.supplierQuotationFiles2.push(fileInfo);
+                        }
+                    } else {
+                        for (const file of files) {
+                            const fileInfo = await this.analyzeFile(file, category);
+                            this.supplierQuotationFiles.push(fileInfo);
+                        }
                     }
                 }
 
                     this.loggingService.logDataProcessing('files_processed_successfully', {
                         fileCount: files.length,
                         category: category,
-                        fileNames: files.map(f => f.name)
+                        fileNames: files.map(f => f.name),
+                        set: set
                     }, 'SupplierAnalysisInputsComponent');
 
-                    // Update service with all files
-                    this.updateServiceFiles();
+                    // Update service with all files (only set 1 goes to service)
+                    if (set === 1) {
+                        this.updateServiceFiles();
+                    }
             } catch (error) {
                 this.loggingService.logError(error as Error, 'file_processing', 'SupplierAnalysisInputsComponent', {
                     fileCount: files.length,
-                    category: category
+                    category: category,
+                    set: set
                 });
             }
         }
@@ -292,12 +330,13 @@ export class SupplierAnalysisInputsComponent implements OnInit {
         return undefined;
     }
 
-    triggerFileInput(category: 'Invoice' | 'Supplier Quotations'): void {
+    triggerFileInput(category: 'Invoice' | 'Supplier Quotations', set: number = 1): void {
         this.loggingService.logButtonClick('file_input_triggered', 'SupplierAnalysisInputsComponent', {
-            category: category
+            category: category,
+            set: set
         });
 
-        const fileInput = document.getElementById(`fileInput-${category}`) as HTMLInputElement;
+        const fileInput = document.getElementById(`fileInput-${category}-${set}`) as HTMLInputElement;
         fileInput?.click();
     }
 
@@ -476,31 +515,54 @@ export class SupplierAnalysisInputsComponent implements OnInit {
         }
     }
 
-    removeFile(fileName: string, category: 'Invoice' | 'Supplier Quotations'): void {
-        if (category === 'Invoice') {
-            this.invoiceFiles = this.invoiceFiles.filter(f => f.fileName !== fileName);
+    removeFile(fileName: string, category: 'Invoice' | 'Supplier Quotations', set: number = 1): void {
+        if (set === 2) {
+            if (category === 'Invoice') {
+                this.invoiceFiles2 = this.invoiceFiles2.filter(f => f.fileName !== fileName);
+            } else {
+                this.supplierQuotationFiles2 = this.supplierQuotationFiles2.filter(f => f.fileName !== fileName);
+            }
         } else {
-            this.supplierQuotationFiles = this.supplierQuotationFiles.filter(f => f.fileName !== fileName);
+            if (category === 'Invoice') {
+                this.invoiceFiles = this.invoiceFiles.filter(f => f.fileName !== fileName);
+            } else {
+                this.supplierQuotationFiles = this.supplierQuotationFiles.filter(f => f.fileName !== fileName);
+            }
+            this.updateServiceFiles();
         }
-        this.updateServiceFiles();
     }
 
-    removeAllFiles(): void {
-        this.loggingService.logButtonClick('remove_all_files', 'SupplierAnalysisInputsComponent');
-        this.invoiceFiles = [];
-        this.supplierQuotationFiles = [];
-        this.updateServiceFiles();
+    removeAllFiles(set: number = 1): void {
+        this.loggingService.logButtonClick('remove_all_files', 'SupplierAnalysisInputsComponent', {
+            set: set
+        });
+        if (set === 2) {
+            this.invoiceFiles2 = [];
+            this.supplierQuotationFiles2 = [];
+        } else {
+            this.invoiceFiles = [];
+            this.supplierQuotationFiles = [];
+            this.updateServiceFiles();
+        }
     }
 
-    hasMatchingRowCount(file: SupplierAnalysisFileInfo): boolean {
+    hasMatchingRowCount(file: SupplierAnalysisFileInfo, set: number = 1): boolean {
         if (file.category !== 'Supplier Quotations') {
             return true;
         }
-        if (this.invoiceFiles.length === 0) {
-            return true;
+        if (set === 2) {
+            if (this.invoiceFiles2.length === 0) {
+                return true;
+            }
+            const invoiceRowCount = this.invoiceFiles2[0].rowCount;
+            return file.rowCount === invoiceRowCount;
+        } else {
+            if (this.invoiceFiles.length === 0) {
+                return true;
+            }
+            const invoiceRowCount = this.invoiceFiles[0].rowCount;
+            return file.rowCount === invoiceRowCount;
         }
-        const invoiceRowCount = this.invoiceFiles[0].rowCount;
-        return file.rowCount === invoiceRowCount;
     }
 
     private updateServiceFiles(): void {
@@ -574,8 +636,48 @@ export class SupplierAnalysisInputsComponent implements OnInit {
         this.instructionsExpanded = !this.instructionsExpanded;
     }
 
-    toggleTable(): void {
-        this.tableExpanded = !this.tableExpanded;
+    toggleTable(set: number = 1): void {
+        if (set === 2) {
+            this.tableExpanded2 = !this.tableExpanded2;
+        } else {
+            this.tableExpanded = !this.tableExpanded;
+        }
+    }
+
+    // Methods for set 2
+    hasInvoiceFiles2(): boolean {
+        return this.invoiceFiles2.length > 0;
+    }
+
+    hasSupplierQuotationFiles2(): boolean {
+        return this.supplierQuotationFiles2.length > 0;
+    }
+
+    getInvoiceLastWord2(): string {
+        if (this.invoiceFiles2.length === 0) {
+            return '';
+        }
+        const fileName = this.invoiceFiles2[0].fileName;
+        // Remove file extension
+        const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+        // Split by spaces, hyphens, underscores, and get the last word
+        const words = nameWithoutExt.split(/[\s\-_]+/);
+        return words[words.length - 1] || fileName;
+    }
+
+    getSupplierQuotationCount2(): number {
+        return this.supplierQuotationFiles2.length;
+    }
+
+    getAllFiles2(): SupplierAnalysisFileInfo[] {
+        // Always return Invoice files first, then Supplier Quotation files
+        const allFiles = [...this.invoiceFiles2, ...this.supplierQuotationFiles2];
+        return allFiles.sort((a, b) => {
+            // Invoice files come first (return -1), Supplier Quotations come after (return 1)
+            if (a.category === 'Invoice' && b.category === 'Supplier Quotations') return -1;
+            if (a.category === 'Supplier Quotations' && b.category === 'Invoice') return 1;
+            return 0; // Same category, maintain order
+        });
     }
 }
 
