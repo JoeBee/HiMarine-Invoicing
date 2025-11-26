@@ -26,6 +26,7 @@ export class SupplierAnalysisInputsComponent implements OnInit {
     isDragging = false;
     isProcessing = false;
     hoveredDropzone: string | null = null;
+    instructionsExpanded = false;
 
     constructor(
         private loggingService: LoggingService,
@@ -542,6 +543,34 @@ export class SupplierAnalysisInputsComponent implements OnInit {
         setTimeout(() => {
             URL.revokeObjectURL(url);
         }, 1000);
+    }
+
+    hasInvoiceFiles(): boolean {
+        return this.invoiceFiles.length > 0;
+    }
+
+    hasSupplierQuotationFiles(): boolean {
+        return this.supplierQuotationFiles.length > 0;
+    }
+
+    getInvoiceLastWord(): string {
+        if (this.invoiceFiles.length === 0) {
+            return '';
+        }
+        const fileName = this.invoiceFiles[0].fileName;
+        // Remove file extension
+        const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+        // Split by spaces, hyphens, underscores, and get the last word
+        const words = nameWithoutExt.split(/[\s\-_]+/);
+        return words[words.length - 1] || fileName;
+    }
+
+    getSupplierQuotationCount(): number {
+        return this.supplierQuotationFiles.length;
+    }
+
+    toggleInstructions(): void {
+        this.instructionsExpanded = !this.instructionsExpanded;
     }
 }
 
