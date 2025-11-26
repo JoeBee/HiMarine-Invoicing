@@ -105,14 +105,16 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 this.supplierQuotationHeaders = [];
                 for (const file of this.supplierQuotationFiles) {
                     const result = await this.supplierAnalysisService.extractDataFromFile(file);
-                    // Filter headers to only show 'Price' and 'Total' columns
+                    // Filter headers to show 'Description', 'Remark', 'Price', and 'Total' columns
                     const filteredHeaders = result.headers.filter(header => {
                         const headerLower = header.toLowerCase().trim();
-                        return headerLower === 'price' || headerLower === 'total' ||
+                        return headerLower === 'description' || headerLower === 'remark' ||
+                            headerLower === 'price' || headerLower === 'total' ||
+                            headerLower.includes('description') || headerLower.includes('remark') ||
                             headerLower.includes('price') || headerLower.includes('total');
                     });
                     this.supplierQuotationHeaders.push(filteredHeaders);
-                    // Filter data rows to only include 'Price' and 'Total' columns
+                    // Filter data rows to include 'Description', 'Remark', 'Price', and 'Total' columns
                     const filteredRows = result.rows.map(row => {
                         const filteredRow: ExcelRowData = {};
                         filteredHeaders.forEach(header => {
@@ -171,14 +173,16 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 this.supplierQuotationHeaders2 = [];
                 for (const file of this.supplierQuotationFiles2) {
                     const result = await this.supplierAnalysisService.extractDataFromFile(file);
-                    // Filter headers to only show 'Price' and 'Total' columns
+                    // Filter headers to show 'Description', 'Remark', 'Price', and 'Total' columns
                     const filteredHeaders = result.headers.filter(header => {
                         const headerLower = header.toLowerCase().trim();
-                        return headerLower === 'price' || headerLower === 'total' ||
+                        return headerLower === 'description' || headerLower === 'remark' ||
+                            headerLower === 'price' || headerLower === 'total' ||
+                            headerLower.includes('description') || headerLower.includes('remark') ||
                             headerLower.includes('price') || headerLower.includes('total');
                     });
                     this.supplierQuotationHeaders2.push(filteredHeaders);
-                    // Filter data rows to only include 'Price' and 'Total' columns
+                    // Filter data rows to include 'Description', 'Remark', 'Price', and 'Total' columns
                     const filteredRows = result.rows.map(row => {
                         const filteredRow: ExcelRowData = {};
                         filteredHeaders.forEach(header => {
@@ -343,6 +347,164 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             return value;
         }
         return '';
+    }
+
+    private normalizeValue(value: any): string {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        return String(value).trim();
+    }
+
+    private valuesDiffer(value1: any, value2: any): boolean {
+        const normalized1 = this.normalizeValue(value1);
+        const normalized2 = this.normalizeValue(value2);
+        return normalized1 !== normalized2;
+    }
+
+    private isDescriptionOrRemarkColumn(header: string): boolean {
+        const headerLower = header.toLowerCase().trim();
+        return headerLower === 'description' || headerLower === 'remark' ||
+            headerLower.includes('description') || headerLower.includes('remark');
+    }
+
+    private hasColumnDifferences(fileIndex: number, header: string, invoiceData: ExcelRowData[], invoiceHeaders: string[]): boolean {
+        if (!this.isDescriptionOrRemarkColumn(header)) {
+            return true; // Always include Price and Total columns
+        }
+
+        // Find matching invoice header
+        let invoiceHeader = header;
+        const headerLower = header.toLowerCase().trim();
+        for (const invHeader of invoiceHeaders) {
+            const invHeaderLower = invHeader.toLowerCase().trim();
+            if (invHeaderLower === headerLower ||
+                (headerLower.includes('description') && invHeaderLower.includes('description')) ||
+                (headerLower.includes('remark') && invHeaderLower.includes('remark'))) {
+                invoiceHeader = invHeader;
+                break;
+            }
+        }
+
+        // Check if any row has a difference
+        for (let rowIndex = 0; rowIndex < invoiceData.length; rowIndex++) {
+            const supplierValue = this.getSupplierQuotationValue(fileIndex, rowIndex, header);
+            const invoiceValue = this.getCellValue(invoiceData[rowIndex], invoiceHeader);
+            if (this.valuesDiffer(supplierValue, invoiceValue)) {
+                return true; // Found at least one difference
+            }
+        }
+
+        return false; // No differences found
+    }
+
+    private hasColumnDifferences2(fileIndex: number, header: string, invoiceData: ExcelRowData[], invoiceHeaders: string[]): boolean {
+        if (!this.isDescriptionOrRemarkColumn(header)) {
+            return true; // Always include Price and Total columns
+        }
+
+        // Find matching invoice header
+        let invoiceHeader = header;
+        const headerLower = header.toLowerCase().trim();
+        for (const invHeader of invoiceHeaders) {
+            const invHeaderLower = invHeader.toLowerCase().trim();
+            if (invHeaderLower === headerLower ||
+                (headerLower.includes('description') && invHeaderLower.includes('description')) ||
+                (headerLower.includes('remark') && invHeaderLower.includes('remark'))) {
+                invoiceHeader = invHeader;
+                break;
+            }
+        }
+
+        // Check if any row has a difference
+        for (let rowIndex = 0; rowIndex < invoiceData.length; rowIndex++) {
+            const supplierValue = this.getSupplierQuotationValue2(fileIndex, rowIndex, header);
+            const invoiceValue = this.getCellValue2(invoiceData[rowIndex], invoiceHeader);
+            if (this.valuesDiffer(supplierValue, invoiceValue)) {
+                return true; // Found at least one difference
+            }
+        }
+
+        return false; // No differences found
+    }
+
+    private getFilteredHeadersForExport(fileIndex: number, headers: string[], invoiceData: ExcelRowData[], invoiceHeaders: string[], useSet2: boolean = false): string[] {
+        return headers.filter(header => {
+            if (!this.isDescriptionOrRemarkColumn(header)) {
+                return true; // Always include Price and Total
+            }
+            return useSet2
+                ? this.hasColumnDifferences2(fileIndex, header, invoiceData, invoiceHeaders)
+                : this.hasColumnDifferences(fileIndex, header, invoiceData, invoiceHeaders);
+        });
+    }
+
+    shouldHighlightCell(fileIndex: number, rowIndex: number, header: string): boolean {
+        if (rowIndex >= this.invoiceData.length) {
+            return false;
+        }
+        
+        // Only highlight Description and Remark columns
+        const headerLower = header.toLowerCase().trim();
+        const isDescriptionOrRemark = headerLower === 'description' || headerLower === 'remark' ||
+            headerLower.includes('description') || headerLower.includes('remark');
+        
+        if (!isDescriptionOrRemark) {
+            return false;
+        }
+        
+        const supplierValue = this.getSupplierQuotationValue(fileIndex, rowIndex, header);
+        const invoiceRow = this.invoiceData[rowIndex];
+        
+        // Find matching header in invoice headers (case-insensitive)
+        let invoiceHeader = header;
+        for (const invHeader of this.invoiceHeaders) {
+            const invHeaderLower = invHeader.toLowerCase().trim();
+            if (invHeaderLower === headerLower || 
+                (headerLower.includes('description') && invHeaderLower.includes('description')) ||
+                (headerLower.includes('remark') && invHeaderLower.includes('remark'))) {
+                invoiceHeader = invHeader;
+                break;
+            }
+        }
+        
+        const invoiceValue = this.getCellValue(invoiceRow, invoiceHeader);
+        
+        return this.valuesDiffer(supplierValue, invoiceValue);
+    }
+
+    shouldHighlightCell2(fileIndex: number, rowIndex: number, header: string): boolean {
+        if (rowIndex >= this.invoiceData2.length) {
+            return false;
+        }
+        
+        // Only highlight Description and Remark columns
+        const headerLower = header.toLowerCase().trim();
+        const isDescriptionOrRemark = headerLower === 'description' || headerLower === 'remark' ||
+            headerLower.includes('description') || headerLower.includes('remark');
+        
+        if (!isDescriptionOrRemark) {
+            return false;
+        }
+        
+        const supplierValue = this.getSupplierQuotationValue2(fileIndex, rowIndex, header);
+        const invoiceRow = this.invoiceData2[rowIndex];
+        
+        // Find matching header in invoice headers (case-insensitive)
+        let invoiceHeader = header;
+        for (const invHeader of this.invoiceHeaders2) {
+            const invHeaderLower = invHeader.toLowerCase().trim();
+            if (invHeaderLower === headerLower || 
+                (headerLower.includes('description') && invHeaderLower.includes('description')) ||
+                (headerLower.includes('remark') && invHeaderLower.includes('remark'))) {
+                invoiceHeader = invHeader;
+                break;
+            }
+        }
+        
+        const invoiceValue = this.getCellValue2(invoiceRow, invoiceHeader);
+        
+        return this.valuesDiffer(supplierValue, invoiceValue);
     }
 
     getRecordCount2(): number {
@@ -511,6 +673,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
             let currentRow = 1;
 
+            // Declare filtered headers arrays at function scope so they can be used for spacing column calculation
+            let filteredSupplierQuotationHeaders: string[][] = [];
+            let filteredSupplierQuotationHeaders2: string[][] = [];
+
             // Extract and write header information from invoice file (above topLeftCell)
             // Use table 1 invoice file if available, otherwise use table 2 invoice file
             let invoiceFileForHeader: SupplierAnalysisFileInfo | null = null;
@@ -577,6 +743,19 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 // Limit invoice headers to 7 columns (A-G)
                 const invoiceHeadersLimited = this.invoiceHeaders.slice(0, 7);
 
+                // Create filtered headers for each supplier quotation file (only include Description/Remark if they differ)
+                filteredSupplierQuotationHeaders = [];
+                for (let fileIndex = 0; fileIndex < this.supplierQuotationHeaders.length; fileIndex++) {
+                    const filteredHeaders = this.getFilteredHeadersForExport(
+                        fileIndex,
+                        this.supplierQuotationHeaders[fileIndex],
+                        this.invoiceData,
+                        invoiceHeadersLimited,
+                        false
+                    );
+                    filteredSupplierQuotationHeaders.push(filteredHeaders);
+                }
+
                 // Add Section label in column A just above the datatable
                 const sectionRow = worksheet.getRow(currentRow);
                 const sectionCell = sectionRow.getCell(1);
@@ -616,7 +795,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
                 // Supplier quotation headers (skip 2 columns between each) - orange background, white bold font (same as column headers)
                 for (let i = 0; i < this.supplierQuotationFiles.length; i++) {
-                    const headerLength = this.getSupplierQuotationHeaderLength(i);
+                    const headerLength = filteredSupplierQuotationHeaders[i].length;
                     supplierQuotationStartCols.push(col); // Track start column for auto-fit
 
                     // Apply orange background to all cells in this Supplier Quotation group
@@ -664,9 +843,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 // Skip 2 columns (H and I) - spacing columns
                 col += 2;
 
-                // Supplier quotation headers - orange background, white bold font
-                for (let fileIndex = 0; fileIndex < this.supplierQuotationHeaders.length; fileIndex++) {
-                    for (const header of this.supplierQuotationHeaders[fileIndex]) {
+                // Supplier quotation headers - orange background, white bold font (using filtered headers)
+                for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders.length; fileIndex++) {
+                    for (const header of filteredSupplierQuotationHeaders[fileIndex]) {
                         const cell = headerRow2.getCell(col);
                         cell.value = header;
                         cell.font = { name: 'Cambria', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -678,7 +857,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         col++;
                     }
                     // Skip 2 columns before next supplier quotation (except for the last one)
-                    if (fileIndex < this.supplierQuotationHeaders.length - 1) {
+                    if (fileIndex < filteredSupplierQuotationHeaders.length - 1) {
                         col += 2;
                     }
                 }
@@ -694,10 +873,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 // Skip spacing columns (H-I)
                 priceCol += 2;
 
-                // Map Price column positions
-                for (let fileIndex = 0; fileIndex < this.supplierQuotationHeaders.length; fileIndex++) {
-                    for (let headerIndex = 0; headerIndex < this.supplierQuotationHeaders[fileIndex].length; headerIndex++) {
-                        const header = this.supplierQuotationHeaders[fileIndex][headerIndex];
+                // Map Price column positions (using filtered headers)
+                for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders.length; fileIndex++) {
+                    for (let headerIndex = 0; headerIndex < filteredSupplierQuotationHeaders[fileIndex].length; headerIndex++) {
+                        const header = filteredSupplierQuotationHeaders[fileIndex][headerIndex];
                         const headerLower = header.toLowerCase().trim();
                         if (headerLower === 'price' || headerLower.includes('price')) {
                             priceColumnMap.set(priceCol, { fileIndex, headerIndex });
@@ -705,7 +884,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         priceCol++;
                     }
                     // Skip spacing columns between Supplier Quotation groups
-                    if (fileIndex < this.supplierQuotationHeaders.length - 1) {
+                    if (fileIndex < filteredSupplierQuotationHeaders.length - 1) {
                         priceCol += 2;
                     }
                 }
@@ -724,6 +903,12 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         const value = this.getCellValue(this.invoiceData[rowIndex], header);
                         cell.value = value;
                         cell.font = { name: 'Cambria', size: 11 };
+                        // Default very light gray background for Invoice data (same as Supplier Quotation)
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FFF5F5F5' } // Very light gray
+                        };
 
                         // Format Price and Total columns as currency
                         const headerLower = header.toLowerCase().trim();
@@ -744,14 +929,20 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     // Skip 2 columns (H and I) - spacing columns (widths set above)
                     col += 2;
 
-                    // Supplier quotation data - Cambria 11 font
-                    for (let fileIndex = 0; fileIndex < this.supplierQuotationHeaders.length; fileIndex++) {
-                        for (let headerIndex = 0; headerIndex < this.supplierQuotationHeaders[fileIndex].length; headerIndex++) {
-                            const header = this.supplierQuotationHeaders[fileIndex][headerIndex];
+                    // Supplier quotation data - Cambria 11 font (using filtered headers)
+                    for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders.length; fileIndex++) {
+                        for (let headerIndex = 0; headerIndex < filteredSupplierQuotationHeaders[fileIndex].length; headerIndex++) {
+                            const header = filteredSupplierQuotationHeaders[fileIndex][headerIndex];
                             const cell = dataRow.getCell(col);
                             const value = this.getSupplierQuotationValue(fileIndex, rowIndex, header);
                             cell.value = value;
                             cell.font = { name: 'Cambria', size: 11 };
+                            // Default very light gray background for Supplier Quotation data
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFF5F5F5' } // Very light gray
+                            };
 
                             // Format Price and Total columns as currency
                             const headerLower = header.toLowerCase().trim();
@@ -774,7 +965,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             col++;
                         }
                         // Skip 2 columns before next supplier quotation (except for the last one)
-                        if (fileIndex < this.supplierQuotationHeaders.length - 1) {
+                        if (fileIndex < filteredSupplierQuotationHeaders.length - 1) {
                             col += 2;
                         }
                     }
@@ -859,14 +1050,14 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     totalSumCell.font = { name: 'Cambria', size: 11, bold: true };
                 }
 
-                // Find Price and Total column positions for Supplier Quotations
+                // Find Price and Total column positions for Supplier Quotations (using filtered headers)
                 col = 1;
                 col += invoiceHeadersLimited.length; // Skip invoice columns
                 col += 2; // Skip spacing columns H-I
 
-                for (let fileIndex = 0; fileIndex < this.supplierQuotationHeaders.length; fileIndex++) {
-                    for (let headerIndex = 0; headerIndex < this.supplierQuotationHeaders[fileIndex].length; headerIndex++) {
-                        const header = this.supplierQuotationHeaders[fileIndex][headerIndex];
+                for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders.length; fileIndex++) {
+                    for (let headerIndex = 0; headerIndex < filteredSupplierQuotationHeaders[fileIndex].length; headerIndex++) {
+                        const header = filteredSupplierQuotationHeaders[fileIndex][headerIndex];
                         const headerLower = header.toLowerCase().trim();
 
                         if (headerLower === 'price' || headerLower.includes('price')) {
@@ -899,7 +1090,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         col++;
                     }
                     // Skip 2 columns before next supplier quotation (except for the last one)
-                    if (fileIndex < this.supplierQuotationHeaders.length - 1) {
+                    if (fileIndex < filteredSupplierQuotationHeaders.length - 1) {
                         col += 2;
                     }
                 }
@@ -912,6 +1103,19 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             if (hasTable2) {
                 // Limit invoice headers to 7 columns (A-G)
                 const invoiceHeaders2Limited = this.invoiceHeaders2.slice(0, 7);
+
+                // Create filtered headers for each supplier quotation file (only include Description/Remark if they differ)
+                filteredSupplierQuotationHeaders2 = [];
+                for (let fileIndex = 0; fileIndex < this.supplierQuotationHeaders2.length; fileIndex++) {
+                    const filteredHeaders = this.getFilteredHeadersForExport(
+                        fileIndex,
+                        this.supplierQuotationHeaders2[fileIndex],
+                        this.invoiceData2,
+                        invoiceHeaders2Limited,
+                        true
+                    );
+                    filteredSupplierQuotationHeaders2.push(filteredHeaders);
+                }
 
                 // Add Section label in column A just above the datatable
                 const sectionRow2 = worksheet.getRow(currentRow);
@@ -952,7 +1156,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
                 // Supplier quotation headers (skip 2 columns between each) - orange background, white bold font (same as column headers)
                 for (let i = 0; i < this.supplierQuotationFiles2.length; i++) {
-                    const headerLength = this.getSupplierQuotationHeaderLength2(i);
+                    const headerLength = filteredSupplierQuotationHeaders2[i].length;
                     supplierQuotationStartCols2.push(col); // Track start column for auto-fit
 
                     // Apply orange background to all cells in this Supplier Quotation group
@@ -1000,9 +1204,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 // Skip 2 columns
                 col += 2;
 
-                // Supplier quotation headers - orange background, white bold font
-                for (let fileIndex = 0; fileIndex < this.supplierQuotationHeaders2.length; fileIndex++) {
-                    for (const header of this.supplierQuotationHeaders2[fileIndex]) {
+                // Supplier quotation headers - orange background, white bold font (using filtered headers)
+                for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders2.length; fileIndex++) {
+                    for (const header of filteredSupplierQuotationHeaders2[fileIndex]) {
                         const cell = headerRow2.getCell(col);
                         cell.value = header;
                         cell.font = { name: 'Cambria', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -1014,7 +1218,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         col++;
                     }
                     // Skip 2 columns before next supplier quotation (except for the last one)
-                    if (fileIndex < this.supplierQuotationHeaders2.length - 1) {
+                    if (fileIndex < filteredSupplierQuotationHeaders2.length - 1) {
                         col += 2;
                     }
                 }
@@ -1030,10 +1234,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 // Skip spacing columns (H-I)
                 priceCol2 += 2;
 
-                // Map Price column positions for table 2
-                for (let fileIndex = 0; fileIndex < this.supplierQuotationHeaders2.length; fileIndex++) {
-                    for (let headerIndex = 0; headerIndex < this.supplierQuotationHeaders2[fileIndex].length; headerIndex++) {
-                        const header = this.supplierQuotationHeaders2[fileIndex][headerIndex];
+                // Map Price column positions for table 2 (using filtered headers)
+                for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders2.length; fileIndex++) {
+                    for (let headerIndex = 0; headerIndex < filteredSupplierQuotationHeaders2[fileIndex].length; headerIndex++) {
+                        const header = filteredSupplierQuotationHeaders2[fileIndex][headerIndex];
                         const headerLower = header.toLowerCase().trim();
                         if (headerLower === 'price' || headerLower.includes('price')) {
                             priceColumnMap2.set(priceCol2, { fileIndex, headerIndex });
@@ -1041,7 +1245,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         priceCol2++;
                     }
                     // Skip spacing columns between Supplier Quotation groups
-                    if (fileIndex < this.supplierQuotationHeaders2.length - 1) {
+                    if (fileIndex < filteredSupplierQuotationHeaders2.length - 1) {
                         priceCol2 += 2;
                     }
                 }
@@ -1060,6 +1264,12 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         const value = this.getCellValue2(this.invoiceData2[rowIndex], header);
                         cell.value = value;
                         cell.font = { name: 'Cambria', size: 11 };
+                        // Default very light gray background for Invoice data (same as Supplier Quotation)
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FFF5F5F5' } // Very light gray
+                        };
 
                         // Format Price and Total columns as currency
                         const headerLower = header.toLowerCase().trim();
@@ -1080,14 +1290,20 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     // Skip 2 columns (H and I) - spacing columns (widths set above)
                     col += 2;
 
-                    // Supplier quotation data - Cambria 11 font
-                    for (let fileIndex = 0; fileIndex < this.supplierQuotationHeaders2.length; fileIndex++) {
-                        for (let headerIndex = 0; headerIndex < this.supplierQuotationHeaders2[fileIndex].length; headerIndex++) {
-                            const header = this.supplierQuotationHeaders2[fileIndex][headerIndex];
+                    // Supplier quotation data - Cambria 11 font (using filtered headers)
+                    for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders2.length; fileIndex++) {
+                        for (let headerIndex = 0; headerIndex < filteredSupplierQuotationHeaders2[fileIndex].length; headerIndex++) {
+                            const header = filteredSupplierQuotationHeaders2[fileIndex][headerIndex];
                             const cell = dataRow.getCell(col);
                             const value = this.getSupplierQuotationValue2(fileIndex, rowIndex, header);
                             cell.value = value;
                             cell.font = { name: 'Cambria', size: 11 };
+                            // Default very light gray background for Supplier Quotation data
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFF5F5F5' } // Very light gray
+                            };
 
                             // Format Price and Total columns as currency
                             const headerLower = header.toLowerCase().trim();
@@ -1110,7 +1326,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             col++;
                         }
                         // Skip 2 columns before next supplier quotation (except for the last one)
-                        if (fileIndex < this.supplierQuotationHeaders2.length - 1) {
+                        if (fileIndex < filteredSupplierQuotationHeaders2.length - 1) {
                             col += 2;
                         }
                     }
@@ -1195,14 +1411,14 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     totalSumCell.font = { name: 'Cambria', size: 11, bold: true };
                 }
 
-                // Find Price and Total column positions for Supplier Quotations
+                // Find Price and Total column positions for Supplier Quotations (using filtered headers)
                 col = 1;
                 col += invoiceHeaders2Limited.length; // Skip invoice columns
                 col += 2; // Skip spacing columns H-I
 
-                for (let fileIndex = 0; fileIndex < this.supplierQuotationHeaders2.length; fileIndex++) {
-                    for (let headerIndex = 0; headerIndex < this.supplierQuotationHeaders2[fileIndex].length; headerIndex++) {
-                        const header = this.supplierQuotationHeaders2[fileIndex][headerIndex];
+                for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders2.length; fileIndex++) {
+                    for (let headerIndex = 0; headerIndex < filteredSupplierQuotationHeaders2[fileIndex].length; headerIndex++) {
+                        const header = filteredSupplierQuotationHeaders2[fileIndex][headerIndex];
                         const headerLower = header.toLowerCase().trim();
 
                         if (headerLower === 'price' || headerLower.includes('price')) {
@@ -1235,7 +1451,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         col++;
                     }
                     // Skip 2 columns before next supplier quotation (except for the last one)
-                    if (fileIndex < this.supplierQuotationHeaders2.length - 1) {
+                    if (fileIndex < filteredSupplierQuotationHeaders2.length - 1) {
                         col += 2;
                     }
                 }
@@ -1254,40 +1470,118 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             // Collect all spacing column positions from both tables
             const allSpacingColumns: number[] = [];
 
-            // Table 1 spacing columns: H, I (columns 8, 9), and between Supplier Quotation groups
-            allSpacingColumns.push(8, 9); // Columns H and I
-            // Add spacing columns between Supplier Quotation groups for table 1
-            // Invoice columns are A-G (7 columns), so spacing starts at column 8 (H) and 9 (I)
-            let table1Col = 7; // Start at column G (index 7, 1-based = column 7)
-            table1Col += 7; // Move past invoice columns A-G (7 columns)
-            table1Col += 2; // Move past H and I (spacing columns)
-            for (let i = 0; i < this.supplierQuotationFiles.length - 1; i++) {
-                const headerLength = this.getSupplierQuotationHeaderLength(i);
-                table1Col += headerLength; // Move past this Supplier Quotation group
-                allSpacingColumns.push(table1Col + 1); // First spacing column
-                allSpacingColumns.push(table1Col + 2); // Second spacing column
-                table1Col += 2; // Move past spacing columns
+            // Both tables share the same column structure, so calculate spacing columns based on the table with more supplier quotation files
+            // Determine which headers to use (prefer filtered headers, use the one with more groups)
+            let headersToUse: string[][] = [];
+            
+            // Get filtered headers from both tables
+            const table1Filtered = hasTable1 && filteredSupplierQuotationHeaders.length > 0 ? filteredSupplierQuotationHeaders : null;
+            const table2Filtered = hasTable2 && filteredSupplierQuotationHeaders2.length > 0 ? filteredSupplierQuotationHeaders2 : null;
+            const table1Original = hasTable1 && this.supplierQuotationHeaders.length > 0 ? this.supplierQuotationHeaders : null;
+            const table2Original = hasTable2 && this.supplierQuotationHeaders2.length > 0 ? this.supplierQuotationHeaders2 : null;
+            
+            // Use filtered headers if available, otherwise use original headers
+            // Prefer the table with more supplier quotation groups
+            if (table1Filtered && table2Filtered) {
+                headersToUse = table1Filtered.length >= table2Filtered.length ? table1Filtered : table2Filtered;
+            } else if (table1Filtered) {
+                headersToUse = table1Filtered;
+            } else if (table2Filtered) {
+                headersToUse = table2Filtered;
+            } else if (table1Original && table2Original) {
+                headersToUse = table1Original.length >= table2Original.length ? table1Original : table2Original;
+            } else if (table1Original) {
+                headersToUse = table1Original;
+            } else if (table2Original) {
+                headersToUse = table2Original;
             }
 
-            // Table 2 spacing columns: same column positions as table 1 (both tables use same columns)
-            // Since both tables are in the same worksheet, they share the same column structure
+            // Spacing columns: H, I (columns 8, 9), and between Supplier Quotation groups
+            allSpacingColumns.push(8, 9); // Columns H and I
+            // Add spacing columns between Supplier Quotation groups
+            // Invoice columns are A-G (7 columns), so spacing starts at column 8 (H) and 9 (I)
+            if (headersToUse.length > 0) {
+                // Start tracking from the last column before the first supplier group
+                // Invoice (7 cols) + Spacing (2 cols) = 9 columns used.
+                // So the cursor starts at 9 (Column I)
+                let currentColumnIndex = 9; 
 
-            // Set spacing columns to 11 pixels
+                // Loop through all Supplier Quotation groups (except the last one) and add spacing columns between them
+                for (let i = 0; i < headersToUse.length - 1; i++) {
+                    const headerLength = headersToUse[i].length;
+                    currentColumnIndex += headerLength; // Move cursor to the last column of the current supplier group
+                    
+                    allSpacingColumns.push(currentColumnIndex + 1); // First spacing column
+                    allSpacingColumns.push(currentColumnIndex + 2); // Second spacing column
+                    
+                    currentColumnIndex += 2; // Move cursor past the spacing columns
+                }
+            }
+
+            // First, set spacing columns to 11 pixels to establish their width
+            // This prevents them from being affected by auto-fit calculations
+            const spacingColumnWidth = 11 / 7; // Convert 11 pixels to Excel character width
             allSpacingColumns.forEach(colNum => {
-                worksheet.getColumn(colNum).width = 11 / 7;
+                worksheet.getColumn(colNum).width = spacingColumnWidth;
             });
 
-            // Set default width for Supplier Quotation data columns (auto-fit effect)
-            // Only set width for columns that aren't spacing columns
-            worksheet.columns.forEach((column, index) => {
-                // Column index is 0-based, so column H is index 7
-                if (index >= 7) { // Column H and beyond
-                    const colNum = index + 1; // Convert to 1-based
-                    // Only set width if it's not a spacing column and hasn't been set
-                    if (!allSpacingColumns.includes(colNum) && !column.width) {
-                        column.width = 15; // Default width for Supplier Quotation columns (auto-fit)
+            // Auto-fit Supplier Quotation data columns based on content
+            // Calculate maximum content width for each column
+            const columnMaxWidths: Map<number, number> = new Map();
+            
+            // Iterate through all rows to find maximum content width for each column
+            worksheet.eachRow((row, rowNumber) => {
+                row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+                    // Column number is 1-based
+                    if (colNumber >= 8) { // Column H and beyond (Supplier Quotation columns)
+                        // Skip spacing columns - they should never be auto-fitted
+                        if (!allSpacingColumns.includes(colNumber)) {
+                            // Calculate content width
+                            let contentLength = 0;
+                            if (cell.value !== null && cell.value !== undefined) {
+                                const cellValue = String(cell.value);
+                                contentLength = cellValue.length;
+                                // Add extra padding for currency formatting (e.g., "$1,234.56")
+                                if (cell.numFmt && (cell.numFmt.includes('$') || cell.numFmt.includes('#'))) {
+                                    contentLength += 3; // Add space for $, commas, and formatting
+                                }
+                                // Header rows might be longer, so give them extra weight
+                                if (rowNumber <= 3) { // Header rows (typically rows 1-3)
+                                    contentLength = Math.max(contentLength * 1.2, contentLength + 3);
+                                }
+                            }
+                            // Update maximum width for this column
+                            const currentMax = columnMaxWidths.get(colNumber) || 0;
+                            columnMaxWidths.set(colNumber, Math.max(currentMax, contentLength));
+                        }
+                    }
+                });
+            });
+
+            // Set column widths based on calculated maximums (only for data columns)
+            // Explicitly exclude spacing columns from auto-fit
+            columnMaxWidths.forEach((maxWidth, colNumber) => {
+                // Double-check: Only set width if it's NOT a spacing column
+                if (!allSpacingColumns.includes(colNumber)) {
+                    // Set width with padding (minimum 10, add 3 for padding)
+                    // ExcelJS width is in character units, so we use the calculated width directly
+                    const calculatedWidth = Math.max(maxWidth + 3, 10);
+                    // Only set if column doesn't already have a width set (preserve Invoice column widths)
+                    // For Supplier Quotation columns (>= 8), set width if not already set
+                    if (colNumber >= 8) {
+                        const currentWidth = worksheet.getColumn(colNumber).width;
+                        // Only set if not already set or if it's not a spacing column
+                        if (!currentWidth || currentWidth !== spacingColumnWidth) {
+                            worksheet.getColumn(colNumber).width = calculatedWidth;
+                        }
                     }
                 }
+            });
+
+            // Finally, set spacing columns to 11 pixels AGAIN after auto-fit to ensure they're not overridden
+            // This must be done last to ensure spacing columns maintain their 11 pixel width
+            allSpacingColumns.forEach(colNum => {
+                worksheet.getColumn(colNum).width = spacingColumnWidth;
             });
 
             // Apply Cambria 11 font to all cells that don't have explicit font settings

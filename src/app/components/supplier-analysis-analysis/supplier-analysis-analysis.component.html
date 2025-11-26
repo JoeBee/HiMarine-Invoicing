@@ -89,7 +89,11 @@
                                     <ng-container
                                         *ngFor="let fileHeaders of supplierQuotationHeaders; let fileIndex = index">
                                         <td *ngFor="let header of fileHeaders"
-                                            [class]="fileIndex % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">
+                                            [ngClass]="{
+                                                'supplier-column': fileIndex % 2 === 0,
+                                                'supplier-column-alt': fileIndex % 2 !== 0,
+                                                'highlight-difference': shouldHighlightCell(fileIndex, rowIndex, header)
+                                            }">
                                             {{ getSupplierQuotationValue(fileIndex, rowIndex, header) }}
                                         </td>
                                     </ng-container>
@@ -147,7 +151,11 @@
                                     <ng-container
                                         *ngFor="let fileHeaders of supplierQuotationHeaders2; let fileIndex = index">
                                         <td *ngFor="let header of fileHeaders"
-                                            [class]="fileIndex % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">
+                                            [ngClass]="{
+                                                'supplier-column': fileIndex % 2 === 0,
+                                                'supplier-column-alt': fileIndex % 2 !== 0,
+                                                'highlight-difference': shouldHighlightCell2(fileIndex, rowIndex, header)
+                                            }">
                                             {{ getSupplierQuotationValue2(fileIndex, rowIndex, header) }}
                                         </td>
                                     </ng-container>

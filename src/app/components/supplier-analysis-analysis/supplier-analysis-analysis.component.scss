@@ -340,6 +340,10 @@
                 }
             }
 
+            .highlight-difference {
+                background-color: #ffff00 !important; // Yellow background for differences
+            }
+
             .invoice-header-container {
                 display: flex;
                 align-items: center;
