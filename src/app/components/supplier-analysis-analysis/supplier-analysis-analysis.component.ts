@@ -696,7 +696,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
                     for (let col = 0; col < rowData.length; col++) {
                         const cell = headerRow.getCell(col + 1);
-                        cell.value = rowData[col];
+                        const cellValue = rowData[col];
+                        // Set empty strings to null to allow overflow from previous cells
+                        cell.value = (cellValue === '') ? null : cellValue;
 
                         // Apply styling from original file using "row-col" key format
                         const styleKey = `${rowIndex}-${col}`;
@@ -710,7 +712,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 cell.font = { name: 'Cambria', size: 11 };
                             }
                             if (originalStyle.alignment) {
-                                cell.alignment = originalStyle.alignment;
+                                // Force wrapText to false to allow overflow (especially for bank info in narrow Column A)
+                                cell.alignment = { ...originalStyle.alignment, wrapText: false };
+                            } else {
+                                cell.alignment = { wrapText: false };
                             }
                             if (originalStyle.border) {
                                 cell.border = originalStyle.border;
@@ -727,6 +732,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         } else {
                             // Apply Cambria 11 font if no original style
                             cell.font = { name: 'Cambria', size: 11 };
+                            cell.alignment = { wrapText: false };
                         }
                     }
                     currentRow++;
@@ -890,6 +896,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 }
 
                 // Write data rows
+                // Initialize counts and sums for yellow/purple cells in Price columns
+                const priceHighlightStats = new Map<number, { count: number, sum: number }>();
+
                 for (let rowIndex = 0; rowIndex < this.invoiceData.length; rowIndex++) {
                     const dataRow = worksheet.getRow(currentRow);
                     col = 1;
@@ -980,6 +989,12 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             const priceCell = dataRow.getCell(priceEntry.col);
 
                             if (priceEntry.value === minPrice) {
+                                // Update stats for this column
+                                const stats = priceHighlightStats.get(priceEntry.col) || { count: 0, sum: 0 };
+                                stats.count++;
+                                stats.sum += priceEntry.value;
+                                priceHighlightStats.set(priceEntry.col, stats);
+
                                 if (minPriceEntries.length > 1) {
                                     // Tie - purple background, bold font
                                     priceCell.fill = {
@@ -1004,8 +1019,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     currentRow++;
                 }
 
-                // Add totals two rows below the data
-                const totalRow = currentRow + 2;
+                // Add totals three rows below the data
+                const totalRow = currentRow + 3;
                 const totalRowObj = worksheet.getRow(totalRow);
 
                 // Find Price and Total column positions for Invoice
@@ -1023,11 +1038,13 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     col++;
                 }
 
-                // Add "TOTAL USD" below Price column
+                // Add "TOTAL SUM" below Price column
                 if (priceColInvoice > 0) {
                     const totalLabelCell = totalRowObj.getCell(priceColInvoice);
-                    totalLabelCell.value = 'TOTAL USD';
+                    totalLabelCell.value = 'TOTAL SUM';
                     totalLabelCell.font = { name: 'Cambria', size: 11, bold: true };
+                    totalLabelCell.numFmt = '@'; // Force text format
+                    totalLabelCell.alignment = { horizontal: 'right' };
                 }
 
                 // Calculate sum of all Totals and add below Total column
@@ -1050,6 +1067,39 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     totalSumCell.font = { name: 'Cambria', size: 11, bold: true };
                 }
 
+                // Add highlight counts 3 rows below the totals
+                const countRow = totalRow + 3;
+                const countRowObj = worksheet.getRow(countRow);
+
+                // Add counts for Invoice Price column
+                if (priceColInvoice > 0) {
+                    const stats = priceHighlightStats.get(priceColInvoice) || { count: 0, sum: 0 };
+                    const countCell = countRowObj.getCell(priceColInvoice);
+                    countCell.value = `${stats.count} items`;
+                    countCell.font = { name: 'Cambria', size: 11, bold: true }; // Same font as TOTAL SUM
+                    countCell.alignment = { horizontal: 'right' };
+                    countCell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFFFFF00' } // Yellow background
+                    };
+
+                    // Add sum of highlighted items in the column to the right
+                    if (totalColInvoice > 0) { // Usually the column to the right is Total column
+                        // If totalColInvoice is adjacent to priceColInvoice, use it. Otherwise use priceColInvoice + 1
+                        const targetCol = priceColInvoice + 1;
+                        const sumCell = countRowObj.getCell(targetCol);
+                        sumCell.value = stats.sum;
+                        sumCell.numFmt = '$#,##0.00';
+                        sumCell.font = { name: 'Cambria', size: 11, bold: true };
+                        sumCell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FFFFFF00' } // Yellow background
+                        };
+                    }
+                }
+
                 // Find Price and Total column positions for Supplier Quotations (using filtered headers)
                 col = 1;
                 col += invoiceHeadersLimited.length; // Skip invoice columns
@@ -1061,10 +1111,35 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         const headerLower = header.toLowerCase().trim();
 
                         if (headerLower === 'price' || headerLower.includes('price')) {
-                            // Add "TOTAL USD" below Price column
+                            // Add "TOTAL SUM" below Price column
                             const totalLabelCell = totalRowObj.getCell(col);
-                            totalLabelCell.value = 'TOTAL USD';
+                            totalLabelCell.value = 'TOTAL SUM';
                             totalLabelCell.font = { name: 'Cambria', size: 11, bold: true };
+                            totalLabelCell.numFmt = '@'; // Force text format
+                            totalLabelCell.alignment = { horizontal: 'right' };
+
+                            // Add count below "TOTAL SUM" (3 rows down)
+                            const stats = priceHighlightStats.get(col) || { count: 0, sum: 0 };
+                            const countCell = countRowObj.getCell(col);
+                            countCell.value = `${stats.count} items`;
+                            countCell.font = { name: 'Cambria', size: 11, bold: true }; // Same font as TOTAL SUM
+                            countCell.alignment = { horizontal: 'right' };
+                            countCell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFFFFF00' } // Yellow background
+                            };
+
+                            // Add sum of highlighted items in the column to the right
+                            const sumCell = countRowObj.getCell(col + 1);
+                            sumCell.value = stats.sum;
+                            sumCell.numFmt = '$#,##0.00';
+                            sumCell.font = { name: 'Cambria', size: 11, bold: true };
+                            sumCell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFFFFF00' } // Yellow background
+                            };
                         }
 
                         if (headerLower === 'total' || headerLower.includes('total')) {
@@ -1251,6 +1326,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 }
 
                 // Write data rows
+                // Initialize counts and sums for yellow/purple cells in Price columns
+                const priceHighlightStats2 = new Map<number, { count: number, sum: number }>();
+
                 for (let rowIndex = 0; rowIndex < this.invoiceData2.length; rowIndex++) {
                     const dataRow = worksheet.getRow(currentRow);
                     col = 1;
@@ -1341,6 +1419,12 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             const priceCell = dataRow.getCell(priceEntry.col);
 
                             if (priceEntry.value === minPrice2) {
+                                // Update stats for this column
+                                const stats = priceHighlightStats2.get(priceEntry.col) || { count: 0, sum: 0 };
+                                stats.count++;
+                                stats.sum += priceEntry.value;
+                                priceHighlightStats2.set(priceEntry.col, stats);
+
                                 if (minPriceEntries2.length > 1) {
                                     // Tie - purple background, bold font
                                     priceCell.fill = {
@@ -1365,8 +1449,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     currentRow++;
                 }
 
-                // Add totals two rows below the data for table 2
-                const totalRow2 = currentRow + 2;
+                // Add totals three rows below the data for table 2
+                const totalRow2 = currentRow + 3;
                 const totalRowObj2 = worksheet.getRow(totalRow2);
 
                 // Find Price and Total column positions for Invoice
@@ -1384,11 +1468,13 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     col++;
                 }
 
-                // Add "TOTAL USD" below Price column
+                // Add "TOTAL SUM" below Price column
                 if (priceColInvoice2 > 0) {
                     const totalLabelCell = totalRowObj2.getCell(priceColInvoice2);
-                    totalLabelCell.value = 'TOTAL USD';
+                    totalLabelCell.value = 'TOTAL SUM';
                     totalLabelCell.font = { name: 'Cambria', size: 11, bold: true };
+                    totalLabelCell.numFmt = '@'; // Force text format
+                    totalLabelCell.alignment = { horizontal: 'right' };
                 }
 
                 // Calculate sum of all Totals and add below Total column
@@ -1411,6 +1497,38 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     totalSumCell.font = { name: 'Cambria', size: 11, bold: true };
                 }
 
+                // Add highlight counts 3 rows below the totals
+                const countRow2 = totalRow2 + 3;
+                const countRowObj2 = worksheet.getRow(countRow2);
+
+                // Add counts for Invoice Price column
+                if (priceColInvoice2 > 0) {
+                    const stats = priceHighlightStats2.get(priceColInvoice2) || { count: 0, sum: 0 };
+                    const countCell = countRowObj2.getCell(priceColInvoice2);
+                    countCell.value = `${stats.count} items`;
+                    countCell.font = { name: 'Cambria', size: 11, bold: true }; // Same font as TOTAL SUM
+                    countCell.alignment = { horizontal: 'right' };
+                    countCell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFFFFF00' } // Yellow background
+                    };
+
+                    // Add sum of highlighted items in the column to the right
+                    if (totalColInvoice2 > 0) {
+                         const targetCol = priceColInvoice2 + 1;
+                         const sumCell = countRowObj2.getCell(targetCol);
+                         sumCell.value = stats.sum;
+                         sumCell.numFmt = '$#,##0.00';
+                         sumCell.font = { name: 'Cambria', size: 11, bold: true };
+                         sumCell.fill = {
+                             type: 'pattern',
+                             pattern: 'solid',
+                             fgColor: { argb: 'FFFFFF00' } // Yellow background
+                         };
+                    }
+                }
+
                 // Find Price and Total column positions for Supplier Quotations (using filtered headers)
                 col = 1;
                 col += invoiceHeaders2Limited.length; // Skip invoice columns
@@ -1422,10 +1540,35 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         const headerLower = header.toLowerCase().trim();
 
                         if (headerLower === 'price' || headerLower.includes('price')) {
-                            // Add "TOTAL USD" below Price column
+                            // Add "TOTAL SUM" below Price column
                             const totalLabelCell = totalRowObj2.getCell(col);
-                            totalLabelCell.value = 'TOTAL USD';
+                            totalLabelCell.value = 'TOTAL SUM';
                             totalLabelCell.font = { name: 'Cambria', size: 11, bold: true };
+                            totalLabelCell.numFmt = '@'; // Force text format
+                            totalLabelCell.alignment = { horizontal: 'right' };
+
+                            // Add count below "TOTAL SUM" (3 rows down)
+                            const stats = priceHighlightStats2.get(col) || { count: 0, sum: 0 };
+                            const countCell = countRowObj2.getCell(col);
+                            countCell.value = `${stats.count} items`;
+                            countCell.font = { name: 'Cambria', size: 11, bold: true }; // Same font as TOTAL SUM
+                            countCell.alignment = { horizontal: 'right' };
+                            countCell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFFFFF00' } // Yellow background
+                            };
+
+                            // Add sum of highlighted items in the column to the right
+                            const sumCell = countRowObj2.getCell(col + 1);
+                            sumCell.value = stats.sum;
+                            sumCell.numFmt = '$#,##0.00';
+                            sumCell.font = { name: 'Cambria', size: 11, bold: true };
+                            sumCell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFFFFF00' } // Yellow background
+                            };
                         }
 
                         if (headerLower === 'total' || headerLower.includes('total')) {
