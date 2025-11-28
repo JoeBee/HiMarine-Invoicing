@@ -280,6 +280,10 @@
                     background-color: #90caf9;
                 }
 
+                th.right-aligned {
+                    text-align: right !important;
+                }
+
                 th.supplier-column {
                     background-color: #f48fb1;
                 }
@@ -318,6 +322,10 @@
             .invoice-column {
                 background-color: #e3f2fd;
                 font-weight: 500;
+
+                &.right-aligned {
+                    text-align: right;
+                }
 
                 &:hover {
                     background-color: #bbdefb;

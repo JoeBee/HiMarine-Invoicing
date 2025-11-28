@@ -71,7 +71,7 @@
                                     </th>
                                 </tr>
                                 <tr>
-                                    <th *ngFor="let header of invoiceHeaders" class="invoice-column">{{ header }}</th>
+                                    <th *ngFor="let header of invoiceHeaders" class="invoice-column" [class.right-aligned]="isRightAlignedHeader(header)">{{ header }}</th>
                                     <ng-container
                                         *ngFor="let headers of supplierQuotationHeaders; let fileIndex = index">
                                         <th *ngFor="let header of headers"
@@ -83,7 +83,7 @@
                             </thead>
                             <tbody>
                                 <tr *ngFor="let invoiceRow of invoiceData; let rowIndex = index">
-                                    <td *ngFor="let header of invoiceHeaders" class="invoice-column">
+                                    <td *ngFor="let header of invoiceHeaders" class="invoice-column" [class.right-aligned]="isRightAlignedHeader(header)">
                                         {{ getCellValue(invoiceRow, header) }}
                                     </td>
                                     <ng-container
@@ -133,7 +133,7 @@
                                     </th>
                                 </tr>
                                 <tr>
-                                    <th *ngFor="let header of invoiceHeaders2" class="invoice-column">{{ header }}</th>
+                                    <th *ngFor="let header of invoiceHeaders2" class="invoice-column" [class.right-aligned]="isRightAlignedHeader(header)">{{ header }}</th>
                                     <ng-container
                                         *ngFor="let headers of supplierQuotationHeaders2; let fileIndex = index">
                                         <th *ngFor="let header of headers"
@@ -145,7 +145,7 @@
                             </thead>
                             <tbody>
                                 <tr *ngFor="let invoiceRow of invoiceData2; let rowIndex = index">
-                                    <td *ngFor="let header of invoiceHeaders2" class="invoice-column">
+                                    <td *ngFor="let header of invoiceHeaders2" class="invoice-column" [class.right-aligned]="isRightAlignedHeader(header)">
                                         {{ getCellValue2(invoiceRow, header) }}
                                     </td>
                                     <ng-container

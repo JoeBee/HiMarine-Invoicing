@@ -507,6 +507,12 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
         return this.valuesDiffer(supplierValue, invoiceValue);
     }
 
+    isRightAlignedHeader(header: string): boolean {
+        const headerLower = header.toLowerCase().trim();
+        return headerLower === 'qty' || headerLower === 'price' || headerLower === 'total' ||
+            headerLower.includes('price') || headerLower.includes('total');
+    }
+
     getRecordCount2(): number {
         return this.invoiceData2.length;
     }
@@ -807,6 +813,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     // Apply orange background to all cells in this Supplier Quotation group
                     for (let j = 0; j < headerLength; j++) {
                         const supplierHeaderCell = headerRow1.getCell(col + j);
+                        const headerName = filteredSupplierQuotationHeaders[i][j];
+                        const headerLower = headerName.toLowerCase().trim();
+
                         if (j === 0) {
                             supplierHeaderCell.value = this.supplierQuotationFiles[i].fileName;
                         }
@@ -816,6 +825,21 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             pattern: 'solid',
                             fgColor: { argb: 'FFFFA500' } // Orange - same as column headers
                         };
+
+                        // Add discount text if applicable (above 'Price' column)
+                        if (this.supplierQuotationFiles[i].discount !== undefined && 
+                            this.supplierQuotationFiles[i].discount !== 0 && 
+                            (headerLower === 'price' || headerLower.includes('price'))) {
+                            
+                            const discountPercent = Math.round(this.supplierQuotationFiles[i].discount * 100);
+                            const discountText = `Discount: ${discountPercent}%`;
+                            
+                            if (j !== 0) {
+                                supplierHeaderCell.value = discountText;
+                                // Align it properly, maybe right aligned or centered
+                                supplierHeaderCell.alignment = { horizontal: 'center' };
+                            }
+                        }
                     }
                     col += headerLength;
                     // Skip 2 columns before next supplier quotation (except for the last one)
@@ -1237,6 +1261,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     // Apply orange background to all cells in this Supplier Quotation group
                     for (let j = 0; j < headerLength; j++) {
                         const supplierHeaderCell2 = headerRow1.getCell(col + j);
+                        const headerName = filteredSupplierQuotationHeaders2[i][j];
+                        const headerLower = headerName.toLowerCase().trim();
+
                         if (j === 0) {
                             supplierHeaderCell2.value = this.supplierQuotationFiles2[i].fileName;
                         }
@@ -1246,6 +1273,20 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             pattern: 'solid',
                             fgColor: { argb: 'FFFFA500' } // Orange - same as column headers
                         };
+
+                        // Add discount text if applicable (above 'Price' column)
+                        if (this.supplierQuotationFiles2[i].discount !== undefined && 
+                            this.supplierQuotationFiles2[i].discount !== 0 && 
+                            (headerLower === 'price' || headerLower.includes('price'))) {
+                            
+                            const discountPercent = Math.round(this.supplierQuotationFiles2[i].discount * 100);
+                            const discountText = `Discount: ${discountPercent}%`;
+                            
+                            if (j !== 0) {
+                                supplierHeaderCell2.value = discountText;
+                                supplierHeaderCell2.alignment = { horizontal: 'center' };
+                            }
+                        }
                     }
                     col += headerLength;
                     // Skip 2 columns before next supplier quotation (except for the last one)

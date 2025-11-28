@@ -11,6 +11,7 @@ export interface SupplierAnalysisFileInfo {
     rowCount: number;
     topLeftCell: string;
     category: 'Invoice' | 'Supplier Quotations';
+    discount: number;
 }
 
 @Component({
@@ -292,7 +293,8 @@ export class SupplierAnalysisInputsComponent implements OnInit {
                         file,
                         rowCount,
                         topLeftCell,
-                        category
+                        category,
+                        discount: 0
                     });
                 } catch (error) {
                     reject(error);
@@ -717,6 +719,12 @@ export class SupplierAnalysisInputsComponent implements OnInit {
             if (a.category === 'Supplier Quotations' && b.category === 'Invoice') return 1;
             return 0; // Same category, maintain order
         });
+    }
+
+    getDiscountPercentage(discount: number | undefined): string {
+        if (discount === undefined || discount === null) return '0';
+        const percentage = (1 - discount) * 100;
+        return percentage.toFixed(0);
     }
 }
 

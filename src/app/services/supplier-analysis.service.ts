@@ -78,10 +78,50 @@ export class SupplierAnalysisService {
                                 hasData = true;
                             }
                             
-                            rowData[headers[col - range.s.c]] = value;
+                            const headerName = headers[col - range.s.c];
+                            let finalValue = value;
+
+                            // Apply discount to Price column
+                            if (fileInfo.discount !== undefined && fileInfo.discount !== 0) {
+                                const headerLower = headerName.toLowerCase().trim();
+                                if (headerLower === 'price' || headerLower.includes('price')) {
+                                    if (typeof value === 'number') {
+                                        finalValue = value * (1 - fileInfo.discount);
+                                    } else if (!isNaN(Number(value)) && String(value).trim() !== '') {
+                                        finalValue = Number(value) * (1 - fileInfo.discount);
+                                    }
+                                }
+                            }
+
+                            rowData[headerName] = finalValue;
                         }
 
                         if (hasData) {
+                            // Recalculate Total = Qty * Price
+                            let qtyKey: string | undefined;
+                            let priceKey: string | undefined;
+                            let totalKey: string | undefined;
+
+                            for (const key of Object.keys(rowData)) {
+                                const keyLower = key.toLowerCase().trim();
+                                if (keyLower === 'qty' || keyLower === 'quantity') {
+                                    qtyKey = key;
+                                } else if (keyLower === 'price' || keyLower.includes('price')) {
+                                    priceKey = key;
+                                } else if (keyLower === 'total' || keyLower.includes('total')) {
+                                    totalKey = key;
+                                }
+                            }
+
+                            if (qtyKey && priceKey && totalKey) {
+                                const qty = Number(rowData[qtyKey]);
+                                const price = Number(rowData[priceKey]);
+                                
+                                if (!isNaN(qty) && !isNaN(price)) {
+                                    rowData[totalKey] = qty * price;
+                                }
+                            }
+
                             rows.push(rowData);
                         } else {
                             // Stop if we hit an empty row
