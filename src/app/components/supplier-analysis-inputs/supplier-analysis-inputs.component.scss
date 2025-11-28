@@ -398,10 +398,17 @@
                     align-items: center;
                     justify-content: center;
                     gap: 20px;
+
+                    .discount-info-column {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 2px;
+                    }
                 }
 
                 .discount-input {
-                    width: 45px;
+                    width: 56px;
                     height: 53px;
                     padding: 0;
                     border: 1px solid #ddd;
@@ -434,6 +441,12 @@
                     color: #666;
                     white-space: nowrap;
                     margin: 0;
+                }
+
+                .discount-range-text {
+                    font-size: 10px;
+                    color: #999;
+                    white-space: nowrap;
                 }
 
                 .row-count {

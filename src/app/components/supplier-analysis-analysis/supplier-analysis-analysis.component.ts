@@ -920,7 +920,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 }
 
                 // Write data rows
-                // Initialize counts and sums for yellow/purple cells in Price columns
+                // Initialize counts and sums for yellow/Light Green cells in Price columns
                 const priceHighlightStats = new Map<number, { count: number, sum: number }>();
 
                 for (let rowIndex = 0; rowIndex < this.invoiceData.length; rowIndex++) {
@@ -1020,11 +1020,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 priceHighlightStats.set(priceEntry.col, stats);
 
                                 if (minPriceEntries.length > 1) {
-                                    // Tie - purple background, bold font
+                                    // Tie - Light Green background, bold font
                                     priceCell.fill = {
                                         type: 'pattern',
                                         pattern: 'solid',
-                                        fgColor: { argb: 'FF800080' } // Purple
+                                        fgColor: { argb: 'FFC6EFCE' } // Light Green
                                     };
                                     priceCell.font = { name: 'Cambria', size: 11, bold: true };
                                 } else {
@@ -1367,7 +1367,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 }
 
                 // Write data rows
-                // Initialize counts and sums for yellow/purple cells in Price columns
+                // Initialize counts and sums for yellow/Light Green cells in Price columns
                 const priceHighlightStats2 = new Map<number, { count: number, sum: number }>();
 
                 for (let rowIndex = 0; rowIndex < this.invoiceData2.length; rowIndex++) {
@@ -1467,11 +1467,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 priceHighlightStats2.set(priceEntry.col, stats);
 
                                 if (minPriceEntries2.length > 1) {
-                                    // Tie - purple background, bold font
+                                    // Tie - Light Green background, bold font
                                     priceCell.fill = {
                                         type: 'pattern',
                                         pattern: 'solid',
-                                        fgColor: { argb: 'FF800080' } // Purple
+                                        fgColor: { argb: 'FFC6EFCE' } // Light Green
                                     };
                                     priceCell.font = { name: 'Cambria', size: 11, bold: true };
                                 } else {
