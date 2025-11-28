@@ -257,13 +257,13 @@ export class CaptainsOrderComponent {
     }
 
     private processTabData(worksheet: XLSX.WorkSheet): TabData {
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
 
         let recordsWithTotal = 0;
         let sumOfTotals = 0;
 
         // Detect currency from the first price or total value found
-        let detectedCurrency = '£'; // Default to GBP
+        let detectedCurrency = ''; // Default to empty string
         for (let i = 1; i < jsonData.length; i++) {
             const row = jsonData[i] as any[];
             if (row && row.length >= 7) {
@@ -278,7 +278,7 @@ export class CaptainsOrderComponent {
                 }
 
                 // Also check total column (index 6) if price didn't have currency
-                if (detectedCurrency === '£') {
+                if (!detectedCurrency) {
                     const totalValue = row[6];
                     if (totalValue) {
                         const currency = this.detectCurrency(String(totalValue));
@@ -319,14 +319,14 @@ export class CaptainsOrderComponent {
     }
 
     private processTabDataWithItems(worksheet: XLSX.WorkSheet, tabName: string): { recordsWithTotal: number; sumOfTotals: number; items: ExcelItemData[] } {
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
 
         let recordsWithTotal = 0;
         let sumOfTotals = 0;
         const items: ExcelItemData[] = [];
 
         // Detect currency from the first price or total value found
-        let detectedCurrency = '£'; // Default to GBP
+        let detectedCurrency = ''; // Default to empty string
         for (let i = 1; i < jsonData.length; i++) {
             const row = jsonData[i] as any[];
             if (row && row.length >= 7) {
@@ -342,7 +342,7 @@ export class CaptainsOrderComponent {
                 }
 
                 // Also check total column (index 6) if price didn't have currency
-                if (detectedCurrency === '£') {
+                if (!detectedCurrency) {
                     const totalValue = row[6];
                     if (totalValue) {
                         const currency = this.detectCurrency(String(totalValue));
@@ -444,7 +444,7 @@ export class CaptainsOrderComponent {
     }
 
     getPrimaryCurrency(): string {
-        if (!this.excelData) return '£';
+        if (!this.excelData) return '';
 
         const tabs = this.getSummaryTabs();
         const currencyCount: { [key: string]: number } = {};
@@ -457,13 +457,13 @@ export class CaptainsOrderComponent {
             }
         });
 
-        // If no currencies found, default to £
+        // If no currencies found, default to empty string
         const currencies = Object.keys(currencyCount);
-        if (currencies.length === 0) return '£';
+        if (currencies.length === 0) return '';
 
         // Find the most common currency
         let maxCount = 0;
-        let mostCommonCurrency = currencies[0]; // Start with first found currency instead of £
+        let mostCommonCurrency = currencies[0];
         for (const [currency, count] of Object.entries(currencyCount)) {
             if (count > maxCount) {
                 maxCount = count;
@@ -475,8 +475,8 @@ export class CaptainsOrderComponent {
     }
 
     getTabCurrency(tab: string): string {
-        if (!this.excelData || !this.excelData[tab]) return '£';
-        return this.excelData[tab].currency || '£';
+        if (!this.excelData || !this.excelData[tab]) return '';
+        return this.excelData[tab].currency || '';
     }
 }
 
