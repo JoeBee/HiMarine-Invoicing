@@ -110,6 +110,10 @@ export class OurQuoteComponent implements OnInit {
         this.updateExportFileName();
     }
 
+    onTableCategoryChange(table: ProposalTable): void {
+        this.rfqState.updateTableCategory(table.fileName, table.tabName, table.category);
+    }
+
     get proposalItems(): ProposalItem[] {
         return this.rfqState.proposalItems;
     }
@@ -161,7 +165,7 @@ export class OurQuoteComponent implements OnInit {
             parts.push(portSegment);
         }
 
-        const categorySegment = this.buildInvoiceDetailSegment('Category', this.rfqData.category);
+        const categorySegment = '<category>';
         if (categorySegment) {
             parts.push(categorySegment);
         }

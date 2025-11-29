@@ -28,6 +28,7 @@ export interface TabInfo {
     previewRows: string[][];
     images: string[]; // Array of data URLs for images found in this worksheet
     fileType?: string; // File type (e.g., 'XLS', 'XLSX') when images cannot be extracted
+    category: string;
 }
 
 export interface FileAnalysis {
@@ -54,6 +55,7 @@ export interface ProposalTable {
     tabName: string;
     rowCount: number;
     items: ProposalItem[];
+    category: string;
 }
 
 export type CurrencyCode = 'GBP' | 'USD' | 'EUR' | 'AUD' | 'NZD' | 'CAD';
@@ -385,6 +387,10 @@ export class RfqStateService {
             }
         }
 
+        const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+        const nameParts = fileNameWithoutExt.split(/[\s_-]+/);
+        const defaultCategory = nameParts.length > 0 ? nameParts[nameParts.length - 1] : 'Provisions';
+
         const tabInfo: TabInfo = {
             tabName: sheetName,
             rowCount: 0,
@@ -406,7 +412,8 @@ export class RfqStateService {
             previewHeaders: [],
             previewRows: [],
             images: images,
-            fileType: fileType
+            fileType: fileType,
+            category: defaultCategory
         };
 
         if (columnHeaders.length > 0) {
@@ -1047,21 +1054,45 @@ export class RfqStateService {
             vessel: this.rfqData.vessel,
             country: this.rfqData.country,
             port: this.rfqData.port,
-            category: this.rfqData.category,
+            category: table.category,
             invoiceDue: this.rfqData.invoiceDue,
             exportFileName: fileNameBase
         };
     }
 
-    private getResolvedProposalExportFileName(_table: ProposalTable): string | null {
-        const trimmed = this.proposalExportFileName.trim();
+    private getResolvedProposalExportFileName(table: ProposalTable): string | null {
+        let trimmed = this.proposalExportFileName.trim();
         if (!trimmed) {
             return null;
         }
 
+        // Replace <category> placeholder with actual category
+        trimmed = trimmed.replace(/<category>/gi, table.category || '');
+
         const withoutExtension = trimmed.replace(/\.xlsx$/i, '');
         const sanitized = this.sanitizeFileNameSegment(withoutExtension);
         return sanitized ? sanitized : null;
+    }
+
+    updateTableCategory(fileName: string, tabName: string, category: string): void {
+        for (const analysis of this.fileAnalyses) {
+            if (analysis.fileName === fileName) {
+                const tab = analysis.tabs.find(t => t.tabName === tabName);
+                if (tab) {
+                    tab.category = category;
+                    // We don't need to refresh proposal preview here because we are just updating a property
+                    // that is passed through to ProposalTable. The UI already updated the ProposalTable object.
+                    // However, if we want to ensure consistency if refresh happens later, this is enough.
+                    
+                    // Also update the current proposalTable instance to match, although binding should handle it
+                    const proposalTable = this.proposalTables.find(pt => pt.fileName === fileName && pt.tabName === tabName);
+                    if (proposalTable) {
+                        proposalTable.category = category;
+                    }
+                }
+                break;
+            }
+        }
     }
 
     private async refreshProposalPreview(): Promise<void> {
@@ -1120,7 +1151,8 @@ export class RfqStateService {
                         fileName: analysis.fileName,
                         tabName: tab.tabName,
                         rowCount: 0,
-                        items: []
+                        items: [],
+                        category: tab.category
                     });
                     continue;
                 }
@@ -1174,7 +1206,8 @@ export class RfqStateService {
                     fileName: analysis.fileName,
                     tabName: tab.tabName,
                     rowCount: tableItems.length,
-                    items: tableItems
+                    items: tableItems,
+                    category: tab.category
                 });
             }
         }
