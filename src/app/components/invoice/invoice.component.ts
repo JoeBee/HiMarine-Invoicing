@@ -93,6 +93,7 @@ export class InvoiceComponent implements OnInit {
     hasDataToInvoice = false;
     selectedBank: string = ''; // Default to empty (no selection)
     primaryCurrency: string = ''; // Will be updated from Excel file
+    selectedCurrency: string | null = null; // The selected currency from radio buttons (null = no selection)
 
     // Toggle switch for Split Invoices / One Invoice
     splitFileMode: boolean = false; // false = "Split invoices" (default), true = "One invoice"
@@ -102,6 +103,16 @@ export class InvoiceComponent implements OnInit {
     
     // Exchange rate for USD conversion
     exchangeRate: number = 1; // Default to 1 (1:1 conversion)
+
+    // Currency options matching OurQuoteComponent
+    readonly currencyOptions: Array<{ code: string; label: string }> = [
+        { code: 'GBP', label: 'GBP (£)' },
+        { code: 'EUR', label: 'EUR (€)' },
+        { code: 'AUD', label: 'AUD (A$)' },
+        { code: 'NZD', label: 'NZD (NZ$)' },
+        { code: 'USD', label: 'USD ($)' },
+        { code: 'CAD', label: 'CAD (C$)' }
+    ];
 
     // Country dropdown options
     countries = COUNTRIES;
@@ -453,6 +464,10 @@ export class InvoiceComponent implements OnInit {
 
     ngOnInit(): void {
         this.loadImoMappings();
+        // Ensure currency is cleared initially
+        this.selectedCurrency = null;
+        this.primaryCurrency = '';
+        
         // Subscribe to Excel data from captains-order component
         this.dataService.excelData$.subscribe(data => {
             if (data) {
@@ -464,6 +479,12 @@ export class InvoiceComponent implements OnInit {
                     totalAmount: this.invoiceData.totalGBP,
                     finalAmount: this.invoiceData.grandTotal
                 }, 'InvoiceComponent');
+            } else {
+                // Clear currency if no data
+                this.selectedCurrency = null;
+                this.primaryCurrency = '';
+                this.invoiceData.items = [];
+                this.hasDataToInvoice = false;
             }
         });
 
@@ -471,8 +492,16 @@ export class InvoiceComponent implements OnInit {
         this.dataService.processedData$.subscribe(data => {
             this.processedData = data;
             if (!this.dataService.getExcelData()) {
-                this.convertToInvoiceItems(data);
-                this.hasDataToInvoice = data.some(row => row.count > 0);
+                if (data && data.length > 0) {
+                    this.convertToInvoiceItems(data);
+                    this.hasDataToInvoice = data.some(row => row.count > 0);
+                } else {
+                    // Clear currency if no legacy data
+                    this.selectedCurrency = null;
+                    this.primaryCurrency = '';
+                    this.invoiceData.items = [];
+                    this.hasDataToInvoice = false;
+                }
             }
         });
     }
@@ -541,19 +570,30 @@ export class InvoiceComponent implements OnInit {
     private detectPrimaryCurrency(): void {
         if (this.invoiceData.items.length === 0) {
             this.primaryCurrency = '';
+            this.selectedCurrency = null;
             return;
         }
 
         // Count occurrences of each currency
         const currencyCount: { [key: string]: number } = {};
         this.invoiceData.items.forEach(item => {
-            const currency = item.currency || '£';
-            currencyCount[currency] = (currencyCount[currency] || 0) + 1;
+            const currency = item.currency;
+            if (currency) { // Only count if currency is not empty
+                currencyCount[currency] = (currencyCount[currency] || 0) + 1;
+            }
         });
+
+        // If no currencies found (e.g. all items have empty currency), reset everything
+        const currencies = Object.keys(currencyCount);
+        if (currencies.length === 0) {
+            this.primaryCurrency = '';
+            this.selectedCurrency = null;
+            return;
+        }
 
         // Find the most common currency
         let maxCount = 0;
-        let mostCommonCurrency = '£';
+        let mostCommonCurrency = '';
         for (const [currency, count] of Object.entries(currencyCount)) {
             if (count > maxCount) {
                 maxCount = count;
@@ -561,9 +601,49 @@ export class InvoiceComponent implements OnInit {
             }
         }
 
-        this.primaryCurrency = mostCommonCurrency;
-        // Initialize exchange rate with default for the detected currency
-        this.initializeExchangeRate(mostCommonCurrency);
+        if (mostCommonCurrency) {
+            this.primaryCurrency = mostCommonCurrency;
+            
+            // Map detecting currency to our currency codes
+            const mappedCurrency = this.mapSymbolToCode(mostCommonCurrency);
+            this.selectedCurrency = mappedCurrency;
+
+            // Initialize exchange rate with default for the detected currency
+            this.initializeExchangeRate(mostCommonCurrency);
+        } else {
+            this.primaryCurrency = '';
+            this.selectedCurrency = null;
+        }
+    }
+
+    private mapSymbolToCode(symbol: string): string {
+        switch (symbol) {
+            case '£': return 'GBP';
+            case '€': return 'EUR';
+            case 'A$': return 'AUD';
+            case 'NZ$': return 'NZD';
+            case '$': return 'USD';
+            case 'C$': return 'CAD';
+            default: 
+                // Try to find by label content
+                const found = this.currencyOptions.find(opt => opt.label.includes(symbol));
+                return found ? found.code : 'GBP';
+        }
+    }
+
+    onCurrencySelectionChange(): void {
+        // Update primary currency based on selection
+        // We need to convert the code back to symbol for primaryCurrency used in templates
+        const option = this.currencyOptions.find(opt => opt.code === this.selectedCurrency);
+        if (option) {
+            // Extract symbol from label e.g. "GBP (£)" -> "£"
+            const match = option.label.match(/\((.*?)\)/);
+            if (match && match[1]) {
+                this.primaryCurrency = match[1];
+                // Also update exchange rate defaults
+                this.initializeExchangeRate(this.primaryCurrency);
+            }
+        }
     }
 
     getCurrencyLabel(currency: string): string {
@@ -669,6 +749,7 @@ export class InvoiceComponent implements OnInit {
 
         // For legacy data, use GBP as primary currency
         this.primaryCurrency = '£';
+        this.selectedCurrency = 'GBP';
 
         this.calculateTotals();
     }
@@ -1009,6 +1090,10 @@ export class InvoiceComponent implements OnInit {
         if (!this.invoiceData.category || this.invoiceData.category === '' || this.invoiceData.category === 'Blank') {
             return true;
         }
+        // Disable if no currency is selected
+        if (!this.selectedCurrency || this.selectedCurrency === null) {
+            return true;
+        }
         return false;
     }
 
@@ -1128,166 +1213,4 @@ export class InvoiceComponent implements OnInit {
             alert('An error occurred while exporting to Excel. Please try again.');
         }
     }
-
-    exportInvoiceToPDF(): void {
-        this.loggingService.logButtonClick('export_invoice_pdf', 'InvoiceComponent', {
-            totalItems: this.invoiceData.items.length,
-            totalAmount: this.invoiceData.totalGBP,
-            finalAmount: this.invoiceData.grandTotal
-        });
-
-        if (this.invoiceData.items.length === 0) {
-            this.loggingService.logUserAction('pdf_export_failed', {
-                reason: 'no_items_in_invoice'
-            }, 'InvoiceComponent');
-            alert('No items in the invoice to export.');
-            return;
-        }
-
-        // Create new PDF document
-        const doc = new jsPDF();
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const margin = 15;
-
-        // Add company header
-        doc.setFontSize(20);
-        doc.setFont('helvetica', 'bold');
-        doc.text('HI MARINE COMPANY LIMITED', pageWidth / 2, 20, { align: 'center' });
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Wearfield, Enterprise Park East, Sunderland, Tyne and Wear, SR5 2TA', pageWidth / 2, 30, { align: 'center' });
-        doc.text('United Kingdom', pageWidth / 2, 35, { align: 'center' });
-        doc.text('office@himarinecompany.com', pageWidth / 2, 40, { align: 'center' });
-
-        // Invoice details - Left side
-        let yPos = 55;
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Invoice Details:', margin, yPos);
-
-        yPos += 10;
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Invoice No: ${this.invoiceData.invoiceNumber}`, margin, yPos);
-        yPos += 7;
-        doc.text(`Invoice Date: ${this.invoiceData.invoiceDate}`, margin, yPos);
-        yPos += 7;
-        doc.text(`Vessel: ${this.invoiceData.vessel}`, margin, yPos);
-        yPos += 7;
-        doc.text(`Country: ${this.invoiceData.country}`, margin, yPos);
-        yPos += 7;
-        doc.text(`Port: ${this.invoiceData.port}`, margin, yPos);
-        yPos += 7;
-        doc.text(`Category: ${this.invoiceData.category}`, margin, yPos);
-        yPos += 7;
-        doc.text(`Invoice Due: ${this.invoiceData.invoiceDue}`, margin, yPos);
-
-        // Bank details - Right side
-        yPos = 55;
-        const rightMargin = pageWidth / 2 + 10;
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Bank Details:', rightMargin, yPos);
-
-        yPos += 10;
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Bank Name: ${this.invoiceData.bankName}`, rightMargin, yPos);
-        yPos += 7;
-        doc.text(`Bank Address: ${this.invoiceData.bankAddress}`, rightMargin, yPos, { maxWidth: pageWidth / 2 - 20 });
-        yPos += 14;
-        doc.text(`IBAN: ${this.invoiceData.iban}`, rightMargin, yPos);
-        yPos += 7;
-        doc.text(`Swift Code: ${this.invoiceData.swiftCode}`, rightMargin, yPos);
-        yPos += 7;
-        doc.text(`Account Title: ${this.invoiceData.accountTitle}`, rightMargin, yPos, { maxWidth: pageWidth / 2 - 20 });
-        yPos += 14;
-        doc.text(`Account Number: ${this.invoiceData.accountNumber}`, rightMargin, yPos);
-        yPos += 7;
-        doc.text(`Sort Code: ${this.invoiceData.sortCode}`, rightMargin, yPos);
-
-        // Items table
-        yPos = 140;
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Items:', margin, yPos);
-
-        yPos += 10;
-        // Table header
-        const colWidths = [15, 20, 50, 25, 15, 15, 20, 20];
-        const colPositions = [margin];
-        for (let i = 1; i < colWidths.length; i++) {
-            colPositions.push(colPositions[i - 1] + colWidths[i - 1]);
-        }
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        const headers = ['Pos', 'Tab', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
-        headers.forEach((header, index) => {
-            doc.text(header, colPositions[index], yPos);
-        });
-
-        // Draw header line
-        doc.line(margin, yPos + 3, pageWidth - margin, yPos + 3);
-        yPos += 10;
-
-        // Table rows
-        doc.setFont('helvetica', 'normal');
-        this.invoiceData.items.forEach((item) => {
-            if (yPos > doc.internal.pageSize.getHeight() - 50) {
-                doc.addPage();
-                yPos = 20;
-            }
-
-            doc.text(item.pos.toString(), colPositions[0], yPos);
-            doc.text(item.tabName.substring(0, 8) + (item.tabName.length > 8 ? '...' : ''), colPositions[1], yPos);
-            doc.text(item.description.substring(0, 20) + (item.description.length > 20 ? '...' : ''), colPositions[2], yPos);
-            doc.text(item.remark.substring(0, 10) + (item.remark.length > 10 ? '...' : ''), colPositions[3], yPos);
-            doc.text(item.unit, colPositions[4], yPos);
-            doc.text(item.qty.toString(), colPositions[5], yPos);
-            doc.text(`${item.currency}${item.price.toFixed(2)}`, colPositions[6], yPos);
-            doc.text(`${item.currency}${item.total.toFixed(2)}`, colPositions[7], yPos);
-
-            yPos += 8;
-        });
-
-        // Totals and Fees
-        const totalCurrencyLabel = this.getCurrencyLabel(this.primaryCurrency);
-        yPos += 10;
-        doc.line(margin, yPos, pageWidth - margin, yPos);
-        yPos += 10;
-
-        doc.setFont('helvetica', 'bold');
-        doc.text(`TOTAL ${totalCurrencyLabel}: ${this.primaryCurrency}${this.invoiceData.totalGBP.toFixed(2)}`, pageWidth - 100, yPos);
-        yPos += 8;
-        doc.setFont('helvetica', 'normal');
-        const discountAmountForPdf = this.invoiceData.totalGBP * (this.invoiceData.discountPercent || 0) / 100;
-        if (discountAmountForPdf > 0) {
-            doc.text(`Discount: -${this.primaryCurrency}${discountAmountForPdf.toFixed(2)}`, pageWidth - 100, yPos);
-            yPos += 8;
-        }
-        if ((this.invoiceData.deliveryFee || 0) > 0) { doc.text(`Delivery fee: ${this.primaryCurrency}${(this.invoiceData.deliveryFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
-        if ((this.invoiceData.portFee || 0) > 0) { doc.text(`Port fee: ${this.primaryCurrency}${(this.invoiceData.portFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
-        if ((this.invoiceData.agencyFee || 0) > 0) { doc.text(`Agency fee: ${this.primaryCurrency}${(this.invoiceData.agencyFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
-        if ((this.invoiceData.transportCustomsLaunchFees || 0) > 0) { doc.text(`Transport/Customs/Launch: ${this.primaryCurrency}${(this.invoiceData.transportCustomsLaunchFees || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
-        if ((this.invoiceData.launchFee || 0) > 0) { doc.text(`Launch: ${this.primaryCurrency}${(this.invoiceData.launchFee || 0).toFixed(2)}`, pageWidth - 100, yPos); yPos += 8; }
-        yPos += 10;
-        doc.line(margin, yPos, pageWidth - margin, yPos);
-        yPos += 10;
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.text(`GRAND TOTAL: ${this.primaryCurrency}${this.invoiceData.grandTotal.toFixed(2)}`, pageWidth - 110, yPos);
-
-        // Save the PDF
-        const fileName = `HIMarine_Invoice_${this.invoiceData.invoiceNumber}_${new Date().toISOString().split('T')[0]}.pdf`;
-        doc.save(fileName);
-
-        this.loggingService.logExport('pdf_invoice_exported', {
-            fileName,
-            itemsIncluded: this.invoiceData.items.length,
-            totalAmount: this.invoiceData.grandTotal
-        }, 'InvoiceComponent');
-    }
 }
-

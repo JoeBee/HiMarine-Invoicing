@@ -27,7 +27,7 @@
                         Export Invoice
                     </button>
                     <button class="export-btn pdf-btn" *ngIf="false" [disabled]="invoiceData.items.length === 0"
-                        (click)="exportInvoiceToPDF()">
+                        (click)="generateInvoicePDF()">
                         <span class="btn-icon">📄</span>
                         Export to PDF
                     </button>
@@ -69,6 +69,17 @@
 
                 <!-- Currency Display and Toggle Section -->
                 <div class="currency-section">
+                    <!-- Currency Radio Buttons -->
+                    <div class="radio-group currency-group">
+                        <ng-container *ngFor="let option of currencyOptions">
+                            <label class="radio-option" [for]="'invoiceCurrency' + option.code">
+                                <input type="radio" [id]="'invoiceCurrency' + option.code" name="invoiceCurrency"
+                                    [value]="option.code" [(ngModel)]="selectedCurrency" (change)="onCurrencySelectionChange()">
+                                <span class="radio-label">{{ option.label }}</span>
+                            </label>
+                        </ng-container>
+                    </div>
+
                     <div class="currency-toggle-row">
                         <div class="currency-toggle-group">
                             <label class="currency-toggle-switch">
@@ -364,8 +375,8 @@
                         <td>{{ item.remark }}</td>
                         <td>{{ item.unit }}</td>
                         <td>{{ item.qty }}</td>
-                        <td>{{ item.currency }} {{ item.price | number:'1.2-2' }}</td>
-                        <td>{{ item.currency }} {{ item.total | number:'1.2-2' }}</td>
+                        <td>{{ primaryCurrency }} {{ item.price | number:'1.2-2' }}</td>
+                        <td>{{ primaryCurrency }} {{ item.total | number:'1.2-2' }}</td>
                     </tr>
                 </tbody>
             </table>

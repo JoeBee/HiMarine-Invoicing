@@ -22,14 +22,14 @@
         margin-bottom: 30px;
 
         .left-column-container {
-            flex: 0 0 40%;
+            flex: 0 0 50%; // Increased from 40%
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
 
         .bank-selection-section {
-            flex: 0 0 40%;
+            // flex-basis handled by parent container
             padding: 20px;
             background-color: #f8f9fa;
             border-radius: 8px;
@@ -52,6 +52,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+
 
             .currency-toggle-row {
                 display: flex;
@@ -180,7 +181,7 @@
         }
 
         .fees-section {
-            flex: 0 0 60%;
+            flex: 0 0 50%; // Reduced from 60% to balance with left column
             padding: 20px;
             background-color: #f8f9fa;
             border-radius: 8px;
@@ -220,6 +221,27 @@
                         .radio-label {
                             color: #007bff;
                         }
+                    }
+                }
+            }
+        }
+
+        .currency-section {
+            .radio-group.currency-group {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px; // Add gap to separate radio buttons
+
+                .radio-option {
+                    font-size: 12px; // Further reduced font size
+                    font-weight: 500;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px; // Space between radio input and label
+
+                    input[type="radio"] {
+                        transform: scale(1); // Standard scale
+                        margin: 0;
                     }
                 }
             }
@@ -271,10 +293,12 @@
                         border-radius: 4px;
                         background-color: #f5f5f5;
                         margin-left: -52px; // Align with other right column fields
+                        width: fit-content; // Fit content to reduce container width
 
                         .discount-input {
                             background-color: #fafafa;
                             border: 1px solid #ccc;
+                            width: 40px; // Slightly smaller width for the input itself
                         }
                     }
                 }
