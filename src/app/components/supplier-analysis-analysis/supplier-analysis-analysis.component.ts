@@ -176,7 +176,29 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
         if (fileIndex < set.supplierQuotationData.length &&
             rowIndex < set.supplierQuotationData[fileIndex].length) {
             const row = set.supplierQuotationData[fileIndex][rowIndex];
-            const value = row[header] !== undefined ? row[header] : '';
+            let value = row[header] !== undefined ? row[header] : '';
+
+            const headerLower = header.toLowerCase().trim();
+
+            // For Unit columns, check if value matches Invoice - if so, return blank
+            if (headerLower.includes('unit') && rowIndex < set.invoiceData.length) {
+                // Find corresponding Invoice header
+                let invoiceHeader = header;
+                for (const invHeader of set.invoiceHeaders) {
+                    const invHeaderLower = invHeader.toLowerCase().trim();
+                    if (invHeaderLower === headerLower || invHeaderLower.includes('unit')) {
+                        invoiceHeader = invHeader;
+                        break;
+                    }
+                }
+                const invoiceValue = this.getCellValue(set.invoiceData[rowIndex], invoiceHeader);
+
+                // If values match, return blank
+                if (!this.valuesDiffer(value, invoiceValue)) {
+                    return '';
+                }
+            }
+
             if (this.isPriceOrTotalColumn(header)) {
                 return this.formatToTwoDecimals(value);
             }
@@ -233,6 +255,17 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
         }
 
         const supplierValue = this.getSupplierQuotationValue(set, fileIndex, rowIndex, header);
+
+        // For Unit columns, only highlight if there's an actual value (not blank)
+        if (headerLower.includes('unit')) {
+            // If the supplier value is blank/empty, don't highlight
+            if (supplierValue === '' || supplierValue === null || supplierValue === undefined) {
+                return false;
+            }
+            // If there's a value, it means it differs from Invoice, so highlight it
+            return true;
+        }
+
         const invoiceRow = set.invoiceData[rowIndex];
 
         let invoiceHeader = header;
@@ -240,8 +273,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             const invHeaderLower = invHeader.toLowerCase().trim();
             if (invHeaderLower === headerLower ||
                 (headerLower.includes('description') && invHeaderLower.includes('description')) ||
-                (headerLower.includes('remark') && invHeaderLower.includes('remark')) ||
-                (headerLower.includes('unit') && invHeaderLower.includes('unit'))) {
+                (headerLower.includes('remark') && invHeaderLower.includes('remark'))) {
                 invoiceHeader = invHeader;
                 break;
             }
@@ -735,6 +767,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 const totalRow = currentRow + 3;
                 const totalRowObj = worksheet.getRow(totalRow);
                 let checkCol = 1;
+                const startCol = 1;
+                let endCol = 1;
+
+                // Track all cells that have content in the total row for border application
+                const totalRowCellsWithContent: number[] = [];
 
                 for (const header of invoiceHeadersLimited) {
                     const hLower = header.toLowerCase().trim();
@@ -743,6 +780,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         labelCell.value = 'TOTAL SUM';
                         labelCell.font = { name: 'Cambria', size: 11, bold: true };
                         labelCell.alignment = { horizontal: 'right' };
+                        totalRowCellsWithContent.push(checkCol);
                     }
                     if (hLower.includes('total')) {
                         let totalSum = 0;
@@ -754,8 +792,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         sumCell.value = totalSum;
                         sumCell.numFmt = '$#,##0.00';
                         sumCell.font = { name: 'Cambria', size: 11, bold: true };
+                        totalRowCellsWithContent.push(checkCol);
                     }
                     checkCol++;
+                    endCol = checkCol - 1;
                 }
                 checkCol += 2;
 
@@ -771,6 +811,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 labelCell.value = 'TOTAL SUM';
                                 labelCell.font = { name: 'Cambria', size: 11, bold: true };
                                 labelCell.alignment = { horizontal: 'right' };
+                                totalRowCellsWithContent.push(checkCol);
                             }
 
                             // Matrix stats will be written after this loop
@@ -787,9 +828,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 sumCell.value = totalSum;
                                 sumCell.numFmt = '$#,##0.00';
                                 sumCell.font = { name: 'Cambria', size: 11, bold: true };
+                                totalRowCellsWithContent.push(checkCol);
                             }
                         }
                         checkCol++;
+                        endCol = checkCol - 1;
                     }
                     if (fileIndex < filteredSupplierQuotationHeaders.length - 1) checkCol += 2;
                 }
@@ -800,17 +843,20 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     if (set.supplierQuotationFiles[winFileIdx].isBlank) continue;
 
                     const matrixRow = worksheet.getRow(matrixStartRow);
+                    const matrixRowCellsWithContent: number[] = [];
 
                     // Label: "{FileName}"
                     const labelCell = matrixRow.getCell(7);
                     labelCell.value = set.supplierQuotationFiles[winFileIdx].fileName;
                     labelCell.font = { name: 'Cambria', size: 11, bold: true };
                     labelCell.alignment = { horizontal: 'right' };
+                    matrixRowCellsWithContent.push(7);
 
                     // Shade columns F (6) and G (7)
                     const shadeColor: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9D9D9' } };
                     matrixRow.getCell(6).fill = shadeColor;
                     labelCell.fill = shadeColor;
+                    matrixRowCellsWithContent.push(6);
 
                     const winnerStats = matrixStats.get(winFileIdx);
 
@@ -826,11 +872,13 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 countCell.value = `${targetStats.count} items`;
                                 countCell.font = { name: 'Cambria', size: 11, bold: true };
                                 countCell.alignment = { horizontal: 'right' };
+                                matrixRowCellsWithContent.push(priceCol);
 
                                 const sumCell = matrixRow.getCell(priceCol + 1);
                                 sumCell.value = targetStats.sum;
                                 sumCell.numFmt = '$#,##0.00';
                                 sumCell.font = { name: 'Cambria', size: 11, bold: true };
+                                matrixRowCellsWithContent.push(priceCol + 1);
 
                                 if (winFileIdx === targetFileIdx) {
                                     const yellow: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
@@ -840,6 +888,21 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             }
                         }
                     }
+
+                    // Apply gray top and bottom borders from column F onwards (skip columns A-E)
+                    for (let col = 6; col <= endCol; col++) {
+                        const cell = matrixRow.getCell(col);
+                        const existingFill = cell.fill;
+                        cell.border = {
+                            top: { style: 'thin', color: { argb: 'FF808080' } },
+                            bottom: { style: 'thin', color: { argb: 'FF808080' } }
+                        };
+                        // Preserve existing fill (for gray shading and yellow highlighting)
+                        if (existingFill) {
+                            cell.fill = existingFill;
+                        }
+                    }
+
                     matrixStartRow++;
                 }
 
