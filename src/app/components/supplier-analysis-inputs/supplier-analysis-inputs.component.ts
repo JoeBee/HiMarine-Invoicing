@@ -25,6 +25,9 @@ export class SupplierAnalysisInputsComponent implements OnInit {
     isDragging = false;
     isProcessing = false;
     instructionsExpanded = false;
+    isDraggingFile = false;
+    draggedFile: SupplierAnalysisFileInfo | null = null;
+    dragOverFile: SupplierAnalysisFileInfo | null = null;
 
     constructor(
         private loggingService: LoggingService,
@@ -646,5 +649,85 @@ export class SupplierAnalysisInputsComponent implements OnInit {
         if (discount === undefined || discount === null) return '0';
         const percentage = (1 - discount) * 100;
         return percentage.toFixed(0);
+    }
+
+    onFileDragStart(event: DragEvent, file: SupplierAnalysisFileInfo, setIndex: number): void {
+        if (file.category !== 'Supplier Quotations') {
+            event.preventDefault();
+            return;
+        }
+        
+        this.isDraggingFile = true;
+        this.draggedFile = file;
+        
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', file.fileName);
+        }
+
+        this.loggingService.logUserAction('file_drag_start', {
+            fileName: file.fileName,
+            setIndex: setIndex
+        }, 'SupplierAnalysisInputsComponent');
+    }
+
+    onFileDragEnd(event: DragEvent): void {
+        this.isDraggingFile = false;
+        this.draggedFile = null;
+        this.dragOverFile = null;
+    }
+
+    onFileDragOver(event: DragEvent, file: SupplierAnalysisFileInfo, setIndex: number): void {
+        if (!this.isDraggingFile || !this.draggedFile || file.category !== 'Supplier Quotations') {
+            return;
+        }
+
+        event.preventDefault();
+        
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'move';
+        }
+
+        this.dragOverFile = file;
+    }
+
+    onFileDrop(event: DragEvent, targetFile: SupplierAnalysisFileInfo, setIndex: number): void {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!this.draggedFile || !targetFile || targetFile.category !== 'Supplier Quotations') {
+            this.onFileDragEnd(event);
+            return;
+        }
+
+        if (this.draggedFile === targetFile) {
+            this.onFileDragEnd(event);
+            return;
+        }
+
+        const set = this.dropzoneSets[setIndex];
+        const draggedIndex = set.supplierQuotationFiles.findIndex(f => f === this.draggedFile);
+        const targetIndex = set.supplierQuotationFiles.findIndex(f => f === targetFile);
+
+        if (draggedIndex === -1 || targetIndex === -1) {
+            this.onFileDragEnd(event);
+            return;
+        }
+
+        // Reorder the array
+        const [removed] = set.supplierQuotationFiles.splice(draggedIndex, 1);
+        set.supplierQuotationFiles.splice(targetIndex, 0, removed);
+
+        // Update service with new order
+        this.updateServiceFileSet(set);
+
+        this.loggingService.logUserAction('file_reordered', {
+            fileName: this.draggedFile.fileName,
+            fromIndex: draggedIndex,
+            toIndex: targetIndex,
+            setIndex: setIndex
+        }, 'SupplierAnalysisInputsComponent');
+
+        this.onFileDragEnd(event);
     }
 }

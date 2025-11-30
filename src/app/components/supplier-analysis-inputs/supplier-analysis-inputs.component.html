@@ -109,8 +109,16 @@
                             <tbody>
                                 <tr *ngFor="let file of getAllFiles(set); let fileIndex = index"
                                     [class.invoice-row]="file.category === 'Invoice'"
-                                    [class.mismatch-row]="file.category === 'Supplier Quotations' && !hasMatchingRowCount(file, set)">
+                                    [class.mismatch-row]="file.category === 'Supplier Quotations' && !hasMatchingRowCount(file, set)"
+                                    [class.draggable-row]="file.category === 'Supplier Quotations'"
+                                    [class.dragging]="file.category === 'Supplier Quotations' && isDraggingFile && draggedFile === file"
+                                    [class.drag-over-row]="file.category === 'Supplier Quotations' && isDraggingFile && dragOverFile === file"
+                                    [attr.draggable]="file.category === 'Supplier Quotations' ? true : false"
+                                    (dragstart)="onFileDragStart($event, file, i)" (dragend)="onFileDragEnd($event)"
+                                    (dragover)="onFileDragOver($event, file, i)" (drop)="onFileDrop($event, file, i)">
                                     <td>
+                                        <span class="drag-handle" *ngIf="file.category === 'Supplier Quotations'"
+                                            title="Drag to reorder">⋮⋮</span>
                                         <span class="clickable-filename" (click)="openFile(file)">{{ file.fileName
                                             }}</span>
                                     </td>
