@@ -867,6 +867,14 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         pattern: 'solid',
                         fgColor: { argb: 'FF808080' } // Dark gray
                     };
+
+                    // Center align Price and Total headers
+                    const headerLower = header.toLowerCase().trim();
+                    if (headerLower === 'price' || headerLower === 'total' || 
+                        headerLower.includes('price') || headerLower.includes('total')) {
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                    }
+
                     col++;
                 }
 
@@ -884,6 +892,14 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             pattern: 'solid',
                             fgColor: { argb: 'FFFFA500' } // Orange
                         };
+
+                        // Center align Price and Total headers
+                        const headerLower = header.toLowerCase().trim();
+                        if (headerLower === 'price' || headerLower === 'total' || 
+                            headerLower.includes('price') || headerLower.includes('total')) {
+                            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                        }
+
                         col++;
                     }
                     // Skip 2 columns before next supplier quotation (except for the last one)
@@ -922,6 +938,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 // Write data rows
                 // Initialize counts and sums for yellow/Light Green cells in Price columns
                 const priceHighlightStats = new Map<number, { count: number, sum: number }>();
+                const priceNonBestStats = new Map<number, { count: number, sum: number }>();
 
                 for (let rowIndex = 0; rowIndex < this.invoiceData.length; rowIndex++) {
                     const dataRow = worksheet.getRow(currentRow);
@@ -1036,6 +1053,12 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                     };
                                     priceCell.font = { name: 'Cambria', size: 11, bold: true };
                                 }
+                            } else {
+                                // Not the cheapest - track for "not best" stats
+                                const stats = priceNonBestStats.get(priceEntry.col) || { count: 0, sum: 0 };
+                                stats.count++;
+                                stats.sum += priceEntry.value;
+                                priceNonBestStats.set(priceEntry.col, stats);
                             }
                         }
                     }
@@ -1094,9 +1117,16 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 // Add highlight counts 3 rows below the totals
                 const countRow = totalRow + 3;
                 const countRowObj = worksheet.getRow(countRow);
+                
+                // Add "not best" counts 2 rows below the totals (just above the highlight counts)
+                const nonBestRow = totalRow + 2;
+                const nonBestRowObj = worksheet.getRow(nonBestRow);
 
                 // Add counts for Invoice Price column
                 if (priceColInvoice > 0) {
+                    // The yellow highlight counts are only for Supplier Quotation data, not Invoice.
+                    // So we do NOT write stats for the Invoice Price column here.
+                    /*
                     const stats = priceHighlightStats.get(priceColInvoice) || { count: 0, sum: 0 };
                     const countCell = countRowObj.getCell(priceColInvoice);
                     countCell.value = `${stats.count} items`;
@@ -1122,6 +1152,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             fgColor: { argb: 'FFFFFF00' } // Yellow background
                         };
                     }
+                    */
                 }
 
                 // Find Price and Total column positions for Supplier Quotations (using filtered headers)
@@ -1142,7 +1173,21 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             totalLabelCell.numFmt = '@'; // Force text format
                             totalLabelCell.alignment = { horizontal: 'right' };
 
-                            // Add count below "TOTAL SUM" (3 rows down)
+                            // Add count below "TOTAL SUM" (2 rows down) - Not Best
+                            const nonBestStats = priceNonBestStats.get(col);
+                            if (nonBestStats) {
+                                const countCell = nonBestRowObj.getCell(col);
+                                countCell.value = `${nonBestStats.count} items`;
+                                countCell.font = { name: 'Cambria', size: 11, bold: true };
+                                countCell.alignment = { horizontal: 'right' };
+
+                                const sumCell = nonBestRowObj.getCell(col + 1);
+                                sumCell.value = nonBestStats.sum;
+                                sumCell.numFmt = '$#,##0.00';
+                                sumCell.font = { name: 'Cambria', size: 11, bold: true };
+                            }
+
+                            // Add count below "TOTAL SUM" (3 rows down) - Best (Yellow)
                             const stats = priceHighlightStats.get(col) || { count: 0, sum: 0 };
                             const countCell = countRowObj.getCell(col);
                             countCell.value = `${stats.count} items`;
@@ -1314,6 +1359,14 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         pattern: 'solid',
                         fgColor: { argb: 'FF808080' } // Dark gray
                     };
+
+                    // Center align Price and Total headers
+                    const headerLower = header.toLowerCase().trim();
+                    if (headerLower === 'price' || headerLower === 'total' || 
+                        headerLower.includes('price') || headerLower.includes('total')) {
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                    }
+
                     col++;
                 }
 
@@ -1331,6 +1384,14 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             pattern: 'solid',
                             fgColor: { argb: 'FFFFA500' } // Orange
                         };
+
+                        // Center align Price and Total headers
+                        const headerLower = header.toLowerCase().trim();
+                        if (headerLower === 'price' || headerLower === 'total' || 
+                            headerLower.includes('price') || headerLower.includes('total')) {
+                            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                        }
+
                         col++;
                     }
                     // Skip 2 columns before next supplier quotation (except for the last one)
@@ -1369,6 +1430,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 // Write data rows
                 // Initialize counts and sums for yellow/Light Green cells in Price columns
                 const priceHighlightStats2 = new Map<number, { count: number, sum: number }>();
+                const priceNonBestStats2 = new Map<number, { count: number, sum: number }>();
 
                 for (let rowIndex = 0; rowIndex < this.invoiceData2.length; rowIndex++) {
                     const dataRow = worksheet.getRow(currentRow);
@@ -1483,6 +1545,12 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                     };
                                     priceCell.font = { name: 'Cambria', size: 11, bold: true };
                                 }
+                            } else {
+                                // Not the cheapest - track for "not best" stats
+                                const stats = priceNonBestStats2.get(priceEntry.col) || { count: 0, sum: 0 };
+                                stats.count++;
+                                stats.sum += priceEntry.value;
+                                priceNonBestStats2.set(priceEntry.col, stats);
                             }
                         }
                     }
@@ -1541,9 +1609,16 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 // Add highlight counts 3 rows below the totals
                 const countRow2 = totalRow2 + 3;
                 const countRowObj2 = worksheet.getRow(countRow2);
+                
+                // Add "not best" counts 2 rows below the totals (just above the highlight counts)
+                const nonBestRow2 = totalRow2 + 2;
+                const nonBestRowObj2 = worksheet.getRow(nonBestRow2);
 
                 // Add counts for Invoice Price column
                 if (priceColInvoice2 > 0) {
+                    // The yellow highlight counts are only for Supplier Quotation data, not Invoice.
+                    // So we do NOT write stats for the Invoice Price column here.
+                    /*
                     const stats = priceHighlightStats2.get(priceColInvoice2) || { count: 0, sum: 0 };
                     const countCell = countRowObj2.getCell(priceColInvoice2);
                     countCell.value = `${stats.count} items`;
@@ -1568,6 +1643,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                              fgColor: { argb: 'FFFFFF00' } // Yellow background
                          };
                     }
+                    */
                 }
 
                 // Find Price and Total column positions for Supplier Quotations (using filtered headers)
@@ -1588,7 +1664,21 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             totalLabelCell.numFmt = '@'; // Force text format
                             totalLabelCell.alignment = { horizontal: 'right' };
 
-                            // Add count below "TOTAL SUM" (3 rows down)
+                            // Add count below "TOTAL SUM" (2 rows down) - Not Best
+                            const nonBestStats = priceNonBestStats2.get(col);
+                            if (nonBestStats) {
+                                const countCell = nonBestRowObj2.getCell(col);
+                                countCell.value = `${nonBestStats.count} items`;
+                                countCell.font = { name: 'Cambria', size: 11, bold: true };
+                                countCell.alignment = { horizontal: 'right' };
+
+                                const sumCell = nonBestRowObj2.getCell(col + 1);
+                                sumCell.value = nonBestStats.sum;
+                                sumCell.numFmt = '$#,##0.00';
+                                sumCell.font = { name: 'Cambria', size: 11, bold: true };
+                            }
+
+                            // Add count below "TOTAL SUM" (3 rows down) - Best (Yellow)
                             const stats = priceHighlightStats2.get(col) || { count: 0, sum: 0 };
                             const countCell = countRowObj2.getCell(col);
                             countCell.value = `${stats.count} items`;
