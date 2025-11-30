@@ -670,13 +670,18 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 checkCol += 2;
 
                 for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders.length; fileIndex++) {
+                    const isBlankFile = set.supplierQuotationFiles[fileIndex].isBlank;
+
                     for (const header of filteredSupplierQuotationHeaders[fileIndex]) {
                         const hLower = header.toLowerCase().trim();
                         if (hLower.includes('price')) {
-                            const labelCell = totalRowObj.getCell(checkCol);
-                            labelCell.value = 'TOTAL SUM';
-                            labelCell.font = { name: 'Cambria', size: 11, bold: true };
-                            labelCell.alignment = { horizontal: 'right' };
+                            // Only show TOTAL SUM label if not a blank file
+                            if (!isBlankFile) {
+                                const labelCell = totalRowObj.getCell(checkCol);
+                                labelCell.value = 'TOTAL SUM';
+                                labelCell.font = { name: 'Cambria', size: 11, bold: true };
+                                labelCell.alignment = { horizontal: 'right' };
+                            }
 
                             const nonBestRow = totalRow + 2;
                             const countRow = totalRow + 3;
@@ -709,15 +714,18 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             }
                         }
                         if (hLower.includes('total')) {
-                            let totalSum = 0;
-                            for (let r = 0; r < set.invoiceData.length; r++) {
-                                const val = this.getSupplierQuotationValue(set, fileIndex, r, header);
-                                if (val) totalSum += Number(val) || 0;
+                            // Only calculate and show total sum if not a blank file
+                            if (!isBlankFile) {
+                                let totalSum = 0;
+                                for (let r = 0; r < set.invoiceData.length; r++) {
+                                    const val = this.getSupplierQuotationValue(set, fileIndex, r, header);
+                                    if (val) totalSum += Number(val) || 0;
+                                }
+                                const sumCell = totalRowObj.getCell(checkCol);
+                                sumCell.value = totalSum;
+                                sumCell.numFmt = '$#,##0.00';
+                                sumCell.font = { name: 'Cambria', size: 11, bold: true };
                             }
-                            const sumCell = totalRowObj.getCell(checkCol);
-                            sumCell.value = totalSum;
-                            sumCell.numFmt = '$#,##0.00';
-                            sumCell.font = { name: 'Cambria', size: 11, bold: true };
                         }
                         checkCol++;
                     }
