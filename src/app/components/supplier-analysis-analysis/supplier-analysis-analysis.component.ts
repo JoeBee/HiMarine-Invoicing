@@ -444,6 +444,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             }
 
             const allSpacingColumns: number[] = [];
+            const supplierPriceAndTotalColumns: Set<number> = new Set(); // Track Price and Total columns in Supplier Quotation sections
 
             for (const set of exportSets) {
                 const invoiceHeadersLimited = set.invoiceHeaders.slice(0, 7);
@@ -487,6 +488,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
                         cell.font = { name: 'Cambria', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } }; // Blue instead of Orange
+
+                        // Track Price and Total columns in first header row
+                        if (headerLower.includes('price') || headerLower.includes('total')) {
+                            supplierPriceAndTotalColumns.add(col + j);
+                        }
 
                         if (set.supplierQuotationFiles[i].discount !== undefined &&
                             set.supplierQuotationFiles[i].discount !== 0 &&
@@ -534,6 +540,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         const headerLower = header.toLowerCase().trim();
                         if (headerLower.includes('price') || headerLower.includes('total')) {
                             cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                            // Track Price and Total columns in headers
+                            supplierPriceAndTotalColumns.add(col);
                         }
                         col++;
                     }
@@ -544,10 +552,22 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 const priceHighlightStats = new Map<number, { count: number, sum: number }>();
                 const priceNonBestStats = new Map<number, { count: number, sum: number }>();
 
+                // Matrix Stats: WinnerFileIndex -> TargetFileIndex -> Stats
+                const matrixStats = new Map<number, Map<number, { count: number, sum: number }>>();
+                for (let i = 0; i < set.supplierQuotationFiles.length; i++) {
+                    const rowMap = new Map<number, { count: number, sum: number }>();
+                    for (let j = 0; j < set.supplierQuotationFiles.length; j++) {
+                        rowMap.set(j, { count: 0, sum: 0 });
+                    }
+                    matrixStats.set(i, rowMap);
+                }
+                const filePriceColMap = new Map<number, number>(); // FileIndex -> Excel Column Index
+
                 for (let rowIndex = 0; rowIndex < set.invoiceData.length; rowIndex++) {
                     const dataRow = worksheet.getRow(currentRow);
                     col = 1;
-                    const rowPriceValues: { col: number, value: number }[] = [];
+                    const rowPriceValues: { col: number, value: number, fileIndex: number }[] = [];
+                    const currentFilesPrices = new Map<number, number>(); // FileIndex -> Price
 
                     for (const header of invoiceHeadersLimited) {
                         const cell = dataRow.getCell(col);
@@ -605,12 +625,21 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             }
 
                             if (headerLower.includes('price') || headerLower.includes('total')) {
+                                // Track this column for auto-fitting
+                                supplierPriceAndTotalColumns.add(col);
+
                                 if (value !== '' && value !== null) {
                                     const numValue = Number(value);
                                     if (!isNaN(numValue)) {
                                         cell.value = numValue;
                                         cell.numFmt = '$#,##0.00';
-                                        if (headerLower.includes('price')) rowPriceValues.push({ col, value: numValue });
+                                        if (headerLower.includes('price')) {
+                                            rowPriceValues.push({ col, value: numValue, fileIndex });
+                                            currentFilesPrices.set(fileIndex, numValue);
+                                            if (!filePriceColMap.has(fileIndex)) {
+                                                filePriceColMap.set(fileIndex, col);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -622,15 +651,31 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     if (rowPriceValues.length > 0) {
                         const minPrice = Math.min(...rowPriceValues.map(p => p.value));
                         const minEntries = rowPriceValues.filter(p => p.value === minPrice);
+                        const winningFileIndices = new Set<number>();
+
                         for (const entry of rowPriceValues) {
                             const cell = dataRow.getCell(entry.col);
                             if (entry.value === minPrice) {
+                                winningFileIndices.add(entry.fileIndex);
                                 const stats = priceHighlightStats.get(entry.col) || { count: 0, sum: 0 };
                                 stats.count++;
                                 stats.sum += entry.value;
                                 priceHighlightStats.set(entry.col, stats);
-                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: minEntries.length > 1 ? 'FFC6EFCE' : 'FFFFFF00' } };
+
+                                const highlightFill: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: minEntries.length > 1 ? 'FFC6EFCE' : 'FFFFFF00' } };
+                                cell.fill = highlightFill;
                                 cell.font = { name: 'Cambria', size: 11, bold: true };
+
+                                // Also highlight the 'Total' column next to this Price column if it exists
+                                const totalColIndex = entry.col + 1;
+                                const totalCell = dataRow.getCell(totalColIndex);
+                                // Simple check if the next column is indeed a 'Total' column based on typical layout (Price then Total)
+                                // A more robust check would involve inspecting headers, but given the fixed layout generation:
+                                // We know Price and Total are adjacent in the filtered export logic.
+                                if (totalCell.value !== null && totalCell.value !== undefined) {
+                                    totalCell.fill = highlightFill;
+                                    totalCell.font = { name: 'Cambria', size: 11, bold: true };
+                                }
                             } else {
                                 const stats = priceNonBestStats.get(entry.col) || { count: 0, sum: 0 };
                                 stats.count++;
@@ -638,6 +683,23 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 priceNonBestStats.set(entry.col, stats);
                             }
                         }
+
+                        // Update Matrix Stats
+                        winningFileIndices.forEach(winFileIdx => {
+                            const winnerRowStats = matrixStats.get(winFileIdx);
+                            if (winnerRowStats) {
+                                for (let targetFileIdx = 0; targetFileIdx < set.supplierQuotationFiles.length; targetFileIdx++) {
+                                    const price = currentFilesPrices.get(targetFileIdx);
+                                    if (price !== undefined) {
+                                        const s = winnerRowStats.get(targetFileIdx);
+                                        if (s) {
+                                            s.sum += price;
+                                            s.count++;
+                                        }
+                                    }
+                                }
+                            }
+                        });
                     }
                     currentRow++;
                 }
@@ -683,35 +745,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 labelCell.alignment = { horizontal: 'right' };
                             }
 
-                            const nonBestRow = totalRow + 2;
-                            const countRow = totalRow + 3;
-                            const nonBestRowObj = worksheet.getRow(nonBestRow);
-                            const countRowObj = worksheet.getRow(countRow);
-
-                            const nonBest = priceNonBestStats.get(checkCol);
-                            if (nonBest) {
-                                const c = nonBestRowObj.getCell(checkCol);
-                                c.value = `${nonBest.count} items`;
-                                c.font = { name: 'Cambria', size: 11, bold: true };
-                                c.alignment = { horizontal: 'right' };
-                                const s = nonBestRowObj.getCell(checkCol + 1);
-                                s.value = nonBest.sum;
-                                s.numFmt = '$#,##0.00';
-                                s.font = { name: 'Cambria', size: 11, bold: true };
-                            }
-                            const best = priceHighlightStats.get(checkCol);
-                            if (best) {
-                                const c = countRowObj.getCell(checkCol);
-                                c.value = `${best.count} items`;
-                                c.font = { name: 'Cambria', size: 11, bold: true };
-                                c.alignment = { horizontal: 'right' };
-                                c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
-                                const s = countRowObj.getCell(checkCol + 1);
-                                s.value = best.sum;
-                                s.numFmt = '$#,##0.00';
-                                s.font = { name: 'Cambria', size: 11, bold: true };
-                                s.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
-                            }
+                            // Matrix stats will be written after this loop
                         }
                         if (hLower.includes('total')) {
                             // Only calculate and show total sum if not a blank file
@@ -730,6 +764,55 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         checkCol++;
                     }
                     if (fileIndex < filteredSupplierQuotationHeaders.length - 1) checkCol += 2;
+                }
+
+                // Write Matrix Summary
+                let matrixStartRow = totalRow + 2;
+                for (let winFileIdx = 0; winFileIdx < set.supplierQuotationFiles.length; winFileIdx++) {
+                    if (set.supplierQuotationFiles[winFileIdx].isBlank) continue;
+
+                    const matrixRow = worksheet.getRow(matrixStartRow);
+
+                    // Label: "{FileName}"
+                    const labelCell = matrixRow.getCell(7);
+                    labelCell.value = set.supplierQuotationFiles[winFileIdx].fileName;
+                    labelCell.font = { name: 'Cambria', size: 11, bold: true };
+                    labelCell.alignment = { horizontal: 'right' };
+
+                    // Shade columns F (6) and G (7)
+                    const shadeColor: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9D9D9' } };
+                    matrixRow.getCell(6).fill = shadeColor;
+                    labelCell.fill = shadeColor;
+
+                    const winnerStats = matrixStats.get(winFileIdx);
+
+                    if (winnerStats) {
+                        for (let targetFileIdx = 0; targetFileIdx < set.supplierQuotationFiles.length; targetFileIdx++) {
+                            if (set.supplierQuotationFiles[targetFileIdx].isBlank) continue;
+
+                            const targetStats = winnerStats.get(targetFileIdx);
+                            const priceCol = filePriceColMap.get(targetFileIdx);
+
+                            if (targetStats && priceCol) {
+                                const countCell = matrixRow.getCell(priceCol);
+                                countCell.value = `${targetStats.count} items`;
+                                countCell.font = { name: 'Cambria', size: 11, bold: true };
+                                countCell.alignment = { horizontal: 'right' };
+
+                                const sumCell = matrixRow.getCell(priceCol + 1);
+                                sumCell.value = targetStats.sum;
+                                sumCell.numFmt = '$#,##0.00';
+                                sumCell.font = { name: 'Cambria', size: 11, bold: true };
+
+                                if (winFileIdx === targetFileIdx) {
+                                    const yellow: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+                                    countCell.fill = yellow;
+                                    sumCell.fill = yellow;
+                                }
+                            }
+                        }
+                    }
+                    matrixStartRow++;
                 }
 
                 allSpacingColumns.push(8, 9);
@@ -752,9 +835,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
             const columnMaxWidths: Map<number, number> = new Map();
             const remarkColumns: Set<number> = new Set();
-            const priceAndTotalColumns: Set<number> = new Set();
+            const priceColumns: Set<number> = new Set();
+            const totalColumns: Set<number> = new Set();
 
-            // First pass: identify remark and price/total columns
+            // First pass: identify remark, price, and total columns, calculate widths
             worksheet.eachRow((row, rowNumber) => {
                 row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
                     if (colNumber >= 8 && !allSpacingColumns.includes(colNumber)) {
@@ -764,24 +848,39 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             if (headerName.includes('remark')) {
                                 remarkColumns.add(colNumber);
                             }
-                            if (headerName.includes('price') || headerName.includes('total')) {
-                                priceAndTotalColumns.add(colNumber);
+                            if (headerName.includes('price')) {
+                                priceColumns.add(colNumber);
                             }
-                        }
-                        // Check if cell has gray header background (Invoice section)
-                        if (cell.fill && (cell.fill as ExcelJS.FillPattern).fgColor?.argb === 'FF808080') {
-                            const headerName = cell.value ? String(cell.value).toLowerCase() : '';
-                            if (headerName.includes('price') || headerName.includes('total')) {
-                                priceAndTotalColumns.add(colNumber);
+                            if (headerName.includes('total')) {
+                                totalColumns.add(colNumber);
                             }
                         }
 
                         // Calculate content length for autofit
                         let contentLength = 0;
                         if (cell.value !== null && cell.value !== undefined) {
-                            contentLength = String(cell.value).length;
-                            if (cell.numFmt && (cell.numFmt.includes('$') || cell.numFmt.includes('#'))) contentLength += 3;
-                            if (rowNumber <= 3) contentLength = Math.max(contentLength * 1.2, contentLength + 3);
+                            // For numeric values with currency formatting, estimate the formatted string length
+                            if (typeof cell.value === 'number' && cell.numFmt) {
+                                // Format the number to estimate display length
+                                const formatted = cell.value.toLocaleString('en-US', {
+                                    style: 'currency',
+                                    currency: 'USD',
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                });
+                                contentLength = formatted.length;
+                            } else {
+                                contentLength = String(cell.value).length;
+                                // Increase length for currency formatting
+                                if (cell.numFmt && (cell.numFmt.includes('$') || cell.numFmt.includes('#'))) {
+                                    contentLength += 5; // Account for $, commas, and decimals
+                                }
+                            }
+
+                            // Increase length for bold text (headers are typically bold)
+                            if (cell.font && cell.font.bold) {
+                                contentLength = Math.ceil(contentLength * 1.15) + 2;
+                            }
                         }
                         const currentMax = columnMaxWidths.get(colNumber) || 0;
                         columnMaxWidths.set(colNumber, Math.max(currentMax, contentLength));
@@ -796,13 +895,15 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         if (remarkColumns.has(colNumber)) {
                             // Remark columns: 25 pixels (approximately 3.57 Excel units)
                             worksheet.getColumn(colNumber).width = 25 / 7;
-                        } else if (priceAndTotalColumns.has(colNumber)) {
-                            // Price and Total columns: autofit
-                            const calculatedWidth = Math.max(maxWidth + 3, 10);
-                            worksheet.getColumn(colNumber).width = calculatedWidth;
+                        } else if (priceColumns.has(colNumber)) {
+                            // Price columns: 95 pixels
+                            worksheet.getColumn(colNumber).width = 95 / 7;
+                        } else if (totalColumns.has(colNumber)) {
+                            // Total columns: 92 pixels
+                            worksheet.getColumn(colNumber).width = 92 / 7;
                         } else {
                             // Other columns: autofit
-                            const calculatedWidth = Math.max(maxWidth + 3, 10);
+                            const calculatedWidth = Math.max(maxWidth + 2, 10);
                             worksheet.getColumn(colNumber).width = calculatedWidth;
                         }
                     }
