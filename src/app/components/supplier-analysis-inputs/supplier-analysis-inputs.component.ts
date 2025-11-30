@@ -408,6 +408,11 @@ export class SupplierAnalysisInputsComponent implements OnInit {
     }
 
     private async reanalyzeFileWithTopLeft(fileInfo: SupplierAnalysisFileInfo, topLeftCell: string, setIndex: number): Promise<void> {
+        // Don't reanalyze blank files
+        if (fileInfo.isBlank || !fileInfo.file) {
+            return Promise.resolve();
+        }
+
         this.isProcessing = true;
         try {
             return new Promise((resolve) => {
@@ -527,7 +532,11 @@ export class SupplierAnalysisInputsComponent implements OnInit {
                     resolve();
                 };
 
-                reader.readAsArrayBuffer(fileInfo.file);
+                if (fileInfo.file) {
+                    reader.readAsArrayBuffer(fileInfo.file);
+                } else {
+                    resolve();
+                }
             });
         } finally {
             this.isProcessing = false;
@@ -592,6 +601,11 @@ export class SupplierAnalysisInputsComponent implements OnInit {
     }
 
     async openFile(fileInfo: SupplierAnalysisFileInfo): Promise<void> {
+        // Don't open blank files
+        if (fileInfo.isBlank || !fileInfo.file) {
+            return;
+        }
+
         this.loggingService.logUserAction('file_opened', {
             fileName: fileInfo.fileName,
             fileSize: fileInfo.file.size,
@@ -729,5 +743,36 @@ export class SupplierAnalysisInputsComponent implements OnInit {
         }, 'SupplierAnalysisInputsComponent');
 
         this.onFileDragEnd(event);
+    }
+
+    addBlankSupplierQuotation(setIndex: number): void {
+        const set = this.dropzoneSets[setIndex];
+        
+        if (!this.hasInvoiceFiles(set)) {
+            return;
+        }
+
+        // Count existing blank columns for naming
+        const blankCount = set.supplierQuotationFiles.filter(f => f.isBlank).length;
+        const blankNumber = blankCount + 1;
+
+        // Create blank file info
+        const blankFileInfo: SupplierAnalysisFileInfo = {
+            fileName: `Blank Column ${blankNumber}`,
+            file: null,
+            rowCount: set.invoiceFiles[0].rowCount,
+            topLeftCell: 'A1',
+            category: 'Supplier Quotations',
+            discount: 0,
+            isBlank: true
+        };
+
+        set.supplierQuotationFiles.push(blankFileInfo);
+        this.updateServiceFileSet(set);
+
+        this.loggingService.logUserAction('blank_column_added', {
+            blankNumber: blankNumber,
+            setIndex: setIndex
+        }, 'SupplierAnalysisInputsComponent');
     }
 }

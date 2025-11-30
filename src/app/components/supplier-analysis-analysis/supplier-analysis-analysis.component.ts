@@ -217,6 +217,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             return false;
         }
 
+        // Don't highlight blank files
+        if (set.supplierQuotationFiles[fileIndex].isBlank) {
+            return false;
+        }
+
         const headerLower = header.toLowerCase().trim();
         const isDescriptionOrRemark = headerLower === 'description' || headerLower === 'remark' ||
             headerLower.includes('description') || headerLower.includes('remark');
@@ -266,6 +271,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
     }
 
     private async extractHeaderInfo(fileInfo: SupplierAnalysisFileInfo): Promise<{ rows: any[][], styles: Map<string, Partial<ExcelJS.Style>> }> {
+        // Handle blank files - return empty header info
+        if (fileInfo.isBlank || !fileInfo.file) {
+            return Promise.resolve({ rows: [], styles: new Map() });
+        }
+
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
 
@@ -318,7 +328,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 }
             };
             reader.onerror = () => reject(new Error('File reading error'));
-            reader.readAsArrayBuffer(fileInfo.file);
+
+            if (fileInfo.file) {
+                reader.readAsArrayBuffer(fileInfo.file);
+            }
         });
     }
 
@@ -460,13 +473,21 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
                 for (let i = 0; i < set.supplierQuotationFiles.length; i++) {
                     const headerLength = filteredSupplierQuotationHeaders[i].length;
+                    const isBlankFile = set.supplierQuotationFiles[i].isBlank;
+
                     for (let j = 0; j < headerLength; j++) {
                         const cell = headerRow1.getCell(col + j);
                         const headerName = filteredSupplierQuotationHeaders[i][j];
                         const headerLower = headerName.toLowerCase().trim();
-                        if (j === 0) cell.value = set.supplierQuotationFiles[i].fileName;
+
+                        // Only show filename for non-blank files, or on first column
+                        if (j === 0 && !isBlankFile) {
+                            cell.value = set.supplierQuotationFiles[i].fileName;
+                        }
+
                         cell.font = { name: 'Cambria', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } }; // Blue instead of Orange
+
                         if (set.supplierQuotationFiles[i].discount !== undefined &&
                             set.supplierQuotationFiles[i].discount !== 0 &&
                             (headerLower === 'price' || headerLower.includes('price'))) {
@@ -498,9 +519,16 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 col += 2;
 
                 for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders.length; fileIndex++) {
+                    const isBlankFile = set.supplierQuotationFiles[fileIndex].isBlank;
+
                     for (const header of filteredSupplierQuotationHeaders[fileIndex]) {
                         const cell = headerRow2.getCell(col);
-                        cell.value = header;
+
+                        // Don't show header labels for blank files
+                        if (!isBlankFile) {
+                            cell.value = header;
+                        }
+
                         cell.font = { name: 'Cambria', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } }; // Blue instead of Orange
                         const headerLower = header.toLowerCase().trim();
@@ -551,6 +579,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     col += 2;
 
                     for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders.length; fileIndex++) {
+                        const isBlankFile = set.supplierQuotationFiles[fileIndex].isBlank;
+
                         for (const header of filteredSupplierQuotationHeaders[fileIndex]) {
                             const cell = dataRow.getCell(col);
                             const value = this.getSupplierQuotationValue(set, fileIndex, rowIndex, header);
@@ -567,8 +597,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
                             const headerLower = header.toLowerCase().trim();
 
-                            // Orange background for Remark data only if cell contains data
-                            if (headerLower.includes('remark') && value !== '' && value !== null && value !== undefined) {
+                            // Orange background for Remark data only if cell contains data AND not a blank file
+                            if (!isBlankFile && headerLower.includes('remark') && value !== '' && value !== null && value !== undefined) {
                                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFA500' } };
                             } else {
                                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };

@@ -4,11 +4,12 @@ import * as XLSX from 'xlsx';
 
 export interface SupplierAnalysisFileInfo {
     fileName: string;
-    file: File;
+    file: File | null;
     rowCount: number;
     topLeftCell: string;
     category: 'Invoice' | 'Supplier Quotations';
     discount: number;
+    isBlank?: boolean;
 }
 
 export interface SupplierAnalysisFileSet {
@@ -68,6 +69,18 @@ export class SupplierAnalysisService {
     // I will remove them and fix the components immediately.
 
     async extractDataFromFile(fileInfo: SupplierAnalysisFileInfo): Promise<{ headers: string[]; rows: ExcelRowData[] }> {
+        // Handle blank files
+        if (fileInfo.isBlank || !fileInfo.file) {
+            const blankHeaders = ['Description', 'Price', 'Total'];
+            const blankRows: ExcelRowData[] = [];
+            for (let i = 0; i < fileInfo.rowCount; i++) {
+                const blankRow: ExcelRowData = {};
+                blankHeaders.forEach(header => blankRow[header] = '');
+                blankRows.push(blankRow);
+            }
+            return Promise.resolve({ headers: blankHeaders, rows: blankRows });
+        }
+
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
 
@@ -172,7 +185,9 @@ export class SupplierAnalysisService {
                 reject(new Error('File reading error'));
             };
 
-            reader.readAsArrayBuffer(fileInfo.file);
+            if (fileInfo.file) {
+                reader.readAsArrayBuffer(fileInfo.file);
+            }
         });
     }
 }

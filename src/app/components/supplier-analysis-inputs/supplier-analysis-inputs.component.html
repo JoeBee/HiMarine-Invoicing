@@ -78,6 +78,11 @@
                             <input type="file" [id]="'fileInput-Supplier Quotations-' + i" multiple
                                 accept=".xlsx,.xls,.xlsm" (change)="onFileSelect($event, 'Supplier Quotations', i)"
                                 style="display: none;">
+                            <!-- Add Blank Column Button -->
+                            <button type="button" class="add-blank-button" (click)="addBlankSupplierQuotation(i)"
+                                [disabled]="!hasInvoiceFiles(set)" title="Add a blank column to Supplier Quotations">
+                                ➕ Add Blank "Supplier Quotations"
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -119,11 +124,14 @@
                                     <td>
                                         <span class="drag-handle" *ngIf="file.category === 'Supplier Quotations'"
                                             title="Drag to reorder">⋮⋮</span>
-                                        <span class="clickable-filename" (click)="openFile(file)">{{ file.fileName
+                                        <span *ngIf="!file.isBlank" class="clickable-filename"
+                                            (click)="openFile(file)">{{ file.fileName
                                             }}</span>
+                                        <span *ngIf="file.isBlank" class="blank-filename"
+                                            title="This is a blank column placeholder">{{ file.fileName }} 📄</span>
                                     </td>
                                     <td>
-                                        <div class="discount-container">
+                                        <div *ngIf="!file.isBlank" class="discount-container">
                                             <input type="number" [(ngModel)]="file.discount" step="0.01" min="0" max="1"
                                                 class="discount-input">
                                             <div class="discount-info-column">
@@ -136,14 +144,14 @@
                                     </td>
                                     <td>{{ file.category }}</td>
                                     <td class="top-left-cell" style="text-align: center;">
-                                        <input type="text" [(ngModel)]="file.topLeftCell"
+                                        <input *ngIf="!file.isBlank" type="text" [(ngModel)]="file.topLeftCell"
                                             (input)="onTopLeftCellChange($event, file, i)"
                                             (blur)="validateTopLeftCell(file)"
                                             [attr.list]="(!file.topLeftCell || file.topLeftCell.trim() === '' || file.topLeftCell === 'NOT FOUND') ? ('topLeftList-' + i + '-' + fileIndex) : null"
                                             class="top-left-input" placeholder="e.g., A1" maxlength="3"
                                             pattern="[A-Za-z][0-9]{1,2}">
                                         <datalist
-                                            *ngIf="!file.topLeftCell || file.topLeftCell.trim() === '' || file.topLeftCell === 'NOT FOUND'"
+                                            *ngIf="!file.isBlank && (!file.topLeftCell || file.topLeftCell.trim() === '' || file.topLeftCell === 'NOT FOUND')"
                                             [attr.id]="'topLeftList-' + i + '-' + fileIndex">
                                             <option *ngFor="let cell of getTopLeftCellOptions()" [value]="cell">{{ cell
                                                 }}
@@ -151,7 +159,7 @@
                                         </datalist>
                                     </td>
                                     <td style="text-align: center;">
-                                        <span class="row-count">{{ file.rowCount }}</span>
+                                        <span *ngIf="!file.isBlank" class="row-count">{{ file.rowCount }}</span>
                                     </td>
                                     <td>
                                         <button type="button" class="remove-button"

@@ -55,7 +55,7 @@
                                         <th *ngFor="let file of set.supplierQuotationFiles; let i = index"
                                             [attr.colspan]="getSupplierQuotationHeaderLength(set, i)"
                                             [class]="i % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">
-                                            {{ file.fileName }}
+                                            <span *ngIf="!file.isBlank">{{ file.fileName }}</span>
                                         </th>
                                     </tr>
                                     <tr>
@@ -63,9 +63,9 @@
                                         <ng-container
                                             *ngFor="let headers of set.supplierQuotationHeaders; let fileIndex = index">
                                             <th *ngFor="let header of headers"
-                                                [class]="fileIndex % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">{{
-                                                header
-                                                }}</th>
+                                                [class]="fileIndex % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">
+                                                <span *ngIf="!set.supplierQuotationFiles[fileIndex].isBlank">{{ header }}</span>
+                                            </th>
                                         </ng-container>
                                     </tr>
                                 </thead>
