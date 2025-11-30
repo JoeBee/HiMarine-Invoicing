@@ -100,9 +100,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         const result = await this.supplierAnalysisService.extractDataFromFile(file);
                         const filteredHeaders = result.headers.filter(header => {
                             const headerLower = header.toLowerCase().trim();
-                            return headerLower === 'description' || headerLower === 'remark' ||
+                            return headerLower === 'description' || headerLower === 'remark' || headerLower === 'unit' ||
                                 headerLower === 'price' || headerLower === 'total' ||
-                                headerLower.includes('description') || headerLower.includes('remark') ||
+                                headerLower.includes('description') || headerLower.includes('remark') || headerLower.includes('unit') ||
                                 headerLower.includes('price') || headerLower.includes('total');
                         });
                         analysisSet.supplierQuotationHeaders.push(filteredHeaders);
@@ -203,7 +203,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
     }
 
     getSupplierQuotationHeaderLength(set: AnalysisSet, index: number): number {
-        return set.supplierQuotationHeaders[index]?.length || 1;
+        const headers = set.supplierQuotationHeaders[index];
+        if (!headers) return 1;
+        return this.getFilteredHeaders(set, index, headers).length;
     }
 
     isRightAlignedHeader(header: string): boolean {
@@ -223,10 +225,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
         }
 
         const headerLower = header.toLowerCase().trim();
-        const isDescriptionOrRemark = headerLower === 'description' || headerLower === 'remark' ||
-            headerLower.includes('description') || headerLower.includes('remark');
+        const isDescriptionRemarkOrUnit = headerLower === 'description' || headerLower === 'remark' || headerLower === 'unit' ||
+            headerLower.includes('description') || headerLower.includes('remark') || headerLower.includes('unit');
 
-        if (!isDescriptionOrRemark) {
+        if (!isDescriptionRemarkOrUnit) {
             return false;
         }
 
@@ -238,7 +240,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             const invHeaderLower = invHeader.toLowerCase().trim();
             if (invHeaderLower === headerLower ||
                 (headerLower.includes('description') && invHeaderLower.includes('description')) ||
-                (headerLower.includes('remark') && invHeaderLower.includes('remark'))) {
+                (headerLower.includes('remark') && invHeaderLower.includes('remark')) ||
+                (headerLower.includes('unit') && invHeaderLower.includes('unit'))) {
                 invoiceHeader = invHeader;
                 break;
             }
@@ -335,14 +338,14 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
         });
     }
 
-    private isDescriptionOrRemarkColumn(header: string): boolean {
+    private isDescriptionRemarkOrUnitColumn(header: string): boolean {
         const headerLower = header.toLowerCase().trim();
-        return headerLower === 'description' || headerLower === 'remark' ||
-            headerLower.includes('description') || headerLower.includes('remark');
+        return headerLower === 'description' || headerLower === 'remark' || headerLower === 'unit' ||
+            headerLower.includes('description') || headerLower.includes('remark') || headerLower.includes('unit');
     }
 
     private hasColumnDifferences(set: AnalysisSet, fileIndex: number, header: string): boolean {
-        if (!this.isDescriptionOrRemarkColumn(header)) return true;
+        if (!this.isDescriptionRemarkOrUnitColumn(header)) return true;
 
         let invoiceHeader = header;
         const headerLower = header.toLowerCase().trim();
@@ -350,7 +353,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             const invHeaderLower = invHeader.toLowerCase().trim();
             if (invHeaderLower === headerLower ||
                 (headerLower.includes('description') && invHeaderLower.includes('description')) ||
-                (headerLower.includes('remark') && invHeaderLower.includes('remark'))) {
+                (headerLower.includes('remark') && invHeaderLower.includes('remark')) ||
+                (headerLower.includes('unit') && invHeaderLower.includes('unit'))) {
                 invoiceHeader = invHeader;
                 break;
             }
@@ -364,11 +368,15 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
         return false;
     }
 
-    private getFilteredHeadersForExport(set: AnalysisSet, fileIndex: number, headers: string[]): string[] {
+    getFilteredHeaders(set: AnalysisSet, fileIndex: number, headers: string[]): string[] {
         return headers.filter(header => {
-            if (!this.isDescriptionOrRemarkColumn(header)) return true;
+            if (!this.isDescriptionRemarkOrUnitColumn(header)) return true;
             return this.hasColumnDifferences(set, fileIndex, header);
         });
+    }
+
+    private getFilteredHeadersForExport(set: AnalysisSet, fileIndex: number, headers: string[]): string[] {
+        return this.getFilteredHeaders(set, fileIndex, headers);
     }
 
     async exportToExcel(): Promise<void> {
@@ -603,7 +611,29 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
                         for (const header of filteredSupplierQuotationHeaders[fileIndex]) {
                             const cell = dataRow.getCell(col);
-                            const value = this.getSupplierQuotationValue(set, fileIndex, rowIndex, header);
+                            let value = this.getSupplierQuotationValue(set, fileIndex, rowIndex, header);
+
+                            const headerLower = header.toLowerCase().trim();
+
+                            // For Unit columns, check if value matches Invoice - if so, make it blank
+                            if (headerLower.includes('unit')) {
+                                // Find corresponding Invoice header
+                                let invoiceHeader = header;
+                                for (const invHeader of set.invoiceHeaders) {
+                                    const invHeaderLower = invHeader.toLowerCase().trim();
+                                    if (invHeaderLower === headerLower || invHeaderLower.includes('unit')) {
+                                        invoiceHeader = invHeader;
+                                        break;
+                                    }
+                                }
+                                const invoiceValue = this.getCellValue(set.invoiceData[rowIndex], invoiceHeader);
+
+                                // If values match, make supplier value blank
+                                if (!this.valuesDiffer(value, invoiceValue)) {
+                                    value = '';
+                                }
+                            }
+
                             cell.value = value;
                             cell.font = { name: 'Cambria', size: 11 };
 
@@ -615,10 +645,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 right: { style: 'thin', color: { argb: 'FF404040' } }
                             };
 
-                            const headerLower = header.toLowerCase().trim();
-
-                            // Orange background for Remark data only if cell contains data AND not a blank file
-                            if (!isBlankFile && headerLower.includes('remark') && value !== '' && value !== null && value !== undefined) {
+                            // Orange background for Remark and Unit data only if cell contains data AND not a blank file
+                            if (!isBlankFile && (headerLower.includes('remark') || headerLower.includes('unit')) && value !== '' && value !== null && value !== undefined) {
                                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFA500' } };
                             } else {
                                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
@@ -835,10 +863,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
             const columnMaxWidths: Map<number, number> = new Map();
             const remarkColumns: Set<number> = new Set();
+            const unitColumns: Set<number> = new Set();
             const priceColumns: Set<number> = new Set();
             const totalColumns: Set<number> = new Set();
 
-            // First pass: identify remark, price, and total columns, calculate widths
+            // First pass: identify remark, unit, price, and total columns, calculate widths
             worksheet.eachRow((row, rowNumber) => {
                 row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
                     if (colNumber >= 8 && !allSpacingColumns.includes(colNumber)) {
@@ -847,6 +876,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             const headerName = cell.value ? String(cell.value).toLowerCase() : '';
                             if (headerName.includes('remark')) {
                                 remarkColumns.add(colNumber);
+                            }
+                            if (headerName.includes('unit')) {
+                                unitColumns.add(colNumber);
                             }
                             if (headerName.includes('price')) {
                                 priceColumns.add(colNumber);
@@ -894,6 +926,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     if (colNumber >= 8) {
                         if (remarkColumns.has(colNumber)) {
                             // Remark columns: 25 pixels (approximately 3.57 Excel units)
+                            worksheet.getColumn(colNumber).width = 25 / 7;
+                        } else if (unitColumns.has(colNumber)) {
+                            // Unit columns: 25 pixels
                             worksheet.getColumn(colNumber).width = 25 / 7;
                         } else if (priceColumns.has(colNumber)) {
                             // Price columns: 95 pixels
