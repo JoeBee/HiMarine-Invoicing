@@ -98,6 +98,61 @@
         }
     }
 
+    .set-container {
+        margin-bottom: 5px;
+    }
+
+    .set-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 20px;
+        cursor: pointer;
+        user-select: none;
+        background-color: #fff176;
+        border-radius: 8px;
+        // margin-bottom: 10px; // Removed to allow tighter stacking when collapsed
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background-color: #ffee58;
+        }
+        
+        h2 {
+            margin: 0;
+            color: #7b1fa2;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .expand-icon {
+            font-size: 14px;
+            color: #7b1fa2;
+            transition: transform 0.3s ease;
+            display: inline-block;
+            cursor: pointer;
+
+            &.expanded {
+                transform: rotate(180deg);
+            }
+        }
+    }
+
+    .set-content {
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+        max-height: 5000px; // Arbitrary large height
+        opacity: 1;
+        margin-top: 10px;
+
+        &.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin: 0;
+            padding: 0;
+        }
+    }
+
     .drop-zones-wrapper {
         background-color: #ffffff;
         border: 2px solid #7b1fa2;
@@ -226,14 +281,11 @@
             justify-content: space-between;
             align-items: center;
             padding: 16px 20px;
-            cursor: pointer;
+            // cursor: pointer; // No longer collapsible itself
             user-select: none;
             transition: background-color 0.2s ease;
             border-bottom: 1px solid #e0e0e0;
-
-            &:hover {
-                background-color: #f9f9f9;
-            }
+            background-color: #f9f9f9;
 
             h2 {
                 margin: 0;
@@ -241,27 +293,15 @@
                 font-size: 18px;
                 font-weight: 600;
             }
-
-            .expand-icon {
-                font-size: 14px;
-                color: #7b1fa2;
-                transition: transform 0.3s ease;
-                display: inline-block;
-
-                &.expanded {
-                    transform: rotate(180deg);
-                }
-            }
         }
 
         .files-table {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
+            // max-height: 0; // Removed manual collapsing logic
+            overflow: visible;
             margin-top: 0;
 
             &.expanded {
-                max-height: 2000px;
+                max-height: none;
             }
 
             table {
@@ -269,8 +309,8 @@
                 border-collapse: collapse;
                 background-color: #ffffff;
                 border-radius: 8px;
-                overflow: hidden;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                // overflow: hidden; // Allow tooltips etc
+                box-shadow: none; // Table is inside container now
 
                 thead {
                     background-color: #7b1fa2;
@@ -517,4 +557,3 @@
         }
     }
 }
-

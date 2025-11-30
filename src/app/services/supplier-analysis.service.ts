@@ -1,7 +1,20 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { SupplierAnalysisFileInfo } from '../components/supplier-analysis-inputs/supplier-analysis-inputs.component';
 import * as XLSX from 'xlsx';
+
+export interface SupplierAnalysisFileInfo {
+    fileName: string;
+    file: File;
+    rowCount: number;
+    topLeftCell: string;
+    category: 'Invoice' | 'Supplier Quotations';
+    discount: number;
+}
+
+export interface SupplierAnalysisFileSet {
+    id: number;
+    files: SupplierAnalysisFileInfo[];
+}
 
 export interface ExcelRowData {
     [key: string]: any;
@@ -18,27 +31,41 @@ export interface SupplierAnalysisData {
     providedIn: 'root'
 })
 export class SupplierAnalysisService {
-    private filesSubject = new BehaviorSubject<SupplierAnalysisFileInfo[]>([]);
-    files$: Observable<SupplierAnalysisFileInfo[]> = this.filesSubject.asObservable();
-    
-    private files2Subject = new BehaviorSubject<SupplierAnalysisFileInfo[]>([]);
-    files2$: Observable<SupplierAnalysisFileInfo[]> = this.files2Subject.asObservable();
+    private fileSetsSubject = new BehaviorSubject<SupplierAnalysisFileSet[]>([]);
+    fileSets$: Observable<SupplierAnalysisFileSet[]> = this.fileSetsSubject.asObservable();
 
-    setFiles(files: SupplierAnalysisFileInfo[]): void {
-        this.filesSubject.next(files);
+    setFileSets(fileSets: SupplierAnalysisFileSet[]): void {
+        this.fileSetsSubject.next(fileSets);
     }
 
-    getFiles(): SupplierAnalysisFileInfo[] {
-        return this.filesSubject.value;
+    getFileSets(): SupplierAnalysisFileSet[] {
+        return this.fileSetsSubject.value;
     }
     
-    setFiles2(files: SupplierAnalysisFileInfo[]): void {
-        this.files2Subject.next(files);
+    updateFileSet(id: number, files: SupplierAnalysisFileInfo[]): void {
+        const currentSets = this.getFileSets();
+        const existingSetIndex = currentSets.findIndex(s => s.id === id);
+        
+        let newSets: SupplierAnalysisFileSet[];
+        
+        if (existingSetIndex !== -1) {
+            newSets = [...currentSets];
+            newSets[existingSetIndex] = { ...newSets[existingSetIndex], files };
+        } else {
+            newSets = [...currentSets, { id, files }];
+        }
+        
+        this.fileSetsSubject.next(newSets);
+    }
+    
+    removeFileSet(id: number): void {
+        const currentSets = this.getFileSets();
+        const newSets = currentSets.filter(s => s.id !== id);
+        this.fileSetsSubject.next(newSets);
     }
 
-    getFiles2(): SupplierAnalysisFileInfo[] {
-        return this.files2Subject.value;
-    }
+    // Deprecated methods for backward compatibility during refactor (or removal if I update everything at once)
+    // I will remove them and fix the components immediately.
 
     async extractDataFromFile(fileInfo: SupplierAnalysisFileInfo): Promise<{ headers: string[]; rows: ExcelRowData[] }> {
         return new Promise((resolve, reject) => {
@@ -52,7 +79,13 @@ export class SupplierAnalysisService {
                     const worksheet = workbook.Sheets[firstSheetName];
 
                     const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
-                    const topLeftCellRef = XLSX.utils.decode_cell(fileInfo.topLeftCell);
+                    let topLeftCellRef;
+                    try {
+                        topLeftCellRef = XLSX.utils.decode_cell(fileInfo.topLeftCell);
+                    } catch (e) {
+                         // Fallback if cell is invalid
+                         topLeftCellRef = { c: 0, r: 0 };
+                    }
 
                     // Extract headers
                     const headers: string[] = [];
@@ -143,4 +176,3 @@ export class SupplierAnalysisService {
         });
     }
 }
-
