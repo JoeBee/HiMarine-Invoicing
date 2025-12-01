@@ -38,8 +38,8 @@ export class PriceListComponent implements OnInit, OnDestroy {
     // Row expansion properties
     expandedRowIndex: number | null = null;
 
-    // Select all functionality
-    selectAllState: 'all' | 'some' | 'none' = 'all';
+    // Select all functionality - REMOVED
+
 
     // Invalid price tracking
     invalidPriceRecords: ProcessedDataRow[] = [];
@@ -72,7 +72,6 @@ export class PriceListComponent implements OnInit, OnDestroy {
             this.updateAvailableFileNames();
             this.updateCommonDescriptions();
             this.applyFilters();
-            this.updateSelectAllState();
             this.updateExportFileName(); // Update filename when data changes
 
             // Update hasProcessedFiles based on data availability
@@ -96,81 +95,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
     }
 
 
-    onIncludeChange(index: number, event: Event): void {
-        const checkbox = event.target as HTMLInputElement;
-        const included = checkbox.checked;
-
-        // Find the original index in processedData
-        const filteredRow = this.filteredData[index];
-        const originalIndex = this.processedData.findIndex(row =>
-            row.fileName === filteredRow.fileName &&
-            row.description === filteredRow.description &&
-            row.price === filteredRow.price &&
-            row.unit === filteredRow.unit
-        );
-
-        if (originalIndex !== -1) {
-            this.dataService.updateRowIncluded(originalIndex, included);
-            this.updateSelectAllState();
-
-            this.loggingService.logDataSelection('item_inclusion_toggled',
-                this.filteredData.filter(row => row.included).length,
-                this.filteredData.length,
-                'PriceListComponent'
-            );
-        }
-    }
-
-    onSelectAllChange(event: Event): void {
-        const checkbox = event.target as HTMLInputElement;
-        const checked = checkbox.checked;
-
-        this.loggingService.logDataSelection('select_all_toggled',
-            checked ? this.filteredData.length : 0,
-            this.filteredData.length,
-            'PriceListComponent'
-        );
-
-        if (checked) {
-            // When checking "Select All", only select the currently filtered/visible rows
-            this.filteredData.forEach((filteredRow, index) => {
-                const originalIndex = this.processedData.findIndex(row =>
-                    row.fileName === filteredRow.fileName &&
-                    row.description === filteredRow.description &&
-                    row.price === filteredRow.price &&
-                    row.unit === filteredRow.unit
-                );
-
-                if (originalIndex !== -1) {
-                    this.dataService.updateRowIncluded(originalIndex, checked);
-                }
-            });
-        } else {
-            // When unchecking "Select All", uncheck ALL rows in the entire dataset
-            this.processedData.forEach((row, index) => {
-                this.dataService.updateRowIncluded(index, false);
-            });
-        }
-
-        this.updateSelectAllState();
-    }
-
-    updateSelectAllState(): void {
-        const totalRows = this.filteredData.length;
-        const checkedRows = this.filteredData.filter(row => row.included).length;
-
-        if (checkedRows === 0) {
-            this.selectAllState = 'none';
-        } else if (checkedRows === totalRows) {
-            this.selectAllState = 'all';
-        } else {
-            this.selectAllState = 'some';
-        }
-    }
-
-    getSelectedCount(): number {
-        return this.filteredData.filter(row => row.included).length;
-    }
+    // Select all methods removed
 
     isSectionHeading(row: ProcessedDataRow): boolean {
         // Section heading has description but no price, unit, or remarks
@@ -238,10 +163,6 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 case 'price':
                     aValue = a.price;
                     bValue = b.price;
-                    break;
-                case 'included':
-                    aValue = a.included ? 1 : 0;
-                    bValue = b.included ? 1 : 0;
                     break;
                 default:
                     return 0;
@@ -312,7 +233,6 @@ export class PriceListComponent implements OnInit, OnDestroy {
         }
 
         this.filteredData = filtered;
-        this.updateSelectAllState();
     }
 
     clearFilters(): void {
@@ -364,7 +284,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
     async exportToExcel(): Promise<void> {
         this.loggingService.logButtonClick('export_to_excel', 'PriceListComponent', {
             totalRecords: this.processedData.length,
-            selectedRecords: this.filteredData.filter(row => row.included).length
+            selectedRecords: this.filteredData.length
         });
 
         try {
@@ -494,7 +414,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 fileName,
                 fileSize: data.size,
                 totalRecords: this.processedData.length,
-                selectedRecords: this.filteredData.filter(row => row.included).length
+                selectedRecords: this.filteredData.length
             }, 'PriceListComponent');
         } catch (error) {
             this.loggingService.logError(error as Error, 'excel_export', 'PriceListComponent');
@@ -599,9 +519,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
             // If separateFreshProvisions is true, only include non-fresh provisions
             let provisionsDataLength: number;
             if (separateFreshProvisions) {
-                provisionsDataLength = this.getValidPriceRecords().filter(item => this.isProvisionItem(item) && !this.isFreshProvisionItem(item) && item.included).length;
+                provisionsDataLength = this.getValidPriceRecords().filter(item => this.isProvisionItem(item) && !this.isFreshProvisionItem(item)).length;
             } else {
-                provisionsDataLength = this.getValidPriceRecords().filter(item => this.isProvisionItem(item) && item.included).length;
+                provisionsDataLength = this.getValidPriceRecords().filter(item => this.isProvisionItem(item)).length;
             }
             const provisionsTotalRow = provisionsDataLength + 3; // +1 for header, +2 for two rows below last data
             if (provisionsDataLength > 0) {
@@ -658,7 +578,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
             const freshProvisionsRow = worksheet.getRow(currentRow);
             freshProvisionsRow.getCell(2).value = 'FRESH PROVISIONS';
             // Calculate the total row number dynamically based on data length (only included items with valid prices)
-            const freshProvisionsDataLength = this.getValidPriceRecords().filter(item => this.isFreshProvisionItem(item) && item.included).length;
+            const freshProvisionsDataLength = this.getValidPriceRecords().filter(item => this.isFreshProvisionItem(item)).length;
             const freshProvisionsTotalRow = freshProvisionsDataLength + 3; // +1 for header, +2 for two rows below last data
             if (freshProvisionsDataLength > 0) {
                 freshProvisionsRow.getCell(3).value = { formula: `'FRESH PROVISIONS'!G${freshProvisionsTotalRow}` };
@@ -714,7 +634,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
             const bondRow = worksheet.getRow(currentRow);
             bondRow.getCell(2).value = 'BOND';
             // Calculate the total row number dynamically based on data length (only included items with valid prices)
-            const bondDataLength = this.getValidPriceRecords().filter(item => this.isBondItem(item) && item.included).length;
+            const bondDataLength = this.getValidPriceRecords().filter(item => this.isBondItem(item)).length;
             const bondTotalRow = bondDataLength + 3; // +1 for header, +2 for two rows below last data
             if (bondDataLength > 0) {
                 bondRow.getCell(3).value = { formula: `BOND!G${bondTotalRow}` };
@@ -808,12 +728,12 @@ export class PriceListComponent implements OnInit, OnDestroy {
         if (separateFreshProvisions) {
             // Data uploaded via "Provisions" dropzone AND NOT fresh provisions AND valid price
             provisionsData = this.getValidPriceRecords().filter(item =>
-                this.isProvisionItem(item) && !this.isFreshProvisionItem(item) && item.included
+                this.isProvisionItem(item) && !this.isFreshProvisionItem(item)
             );
         } else {
             // Data uploaded via "Provisions" dropzone AND valid price (includes fresh provisions)
             provisionsData = this.getValidPriceRecords().filter(item =>
-                this.isProvisionItem(item) && item.included
+                this.isProvisionItem(item)
             );
         }
 
@@ -955,7 +875,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
     private createFreshProvisionsSheet(workbook: ExcelJS.Workbook): void {
         // Filter data for fresh provisions: Data uploaded via "Provisions" dropzone AND has description containing fresh provisions keywords AND valid price
         const freshProvisionsData = this.getValidPriceRecords().filter(item =>
-            this.isFreshProvisionItem(item) && item.included
+            this.isFreshProvisionItem(item)
         );
 
         const worksheet = workbook.addWorksheet('FRESH PROVISIONS');
@@ -1096,7 +1016,7 @@ export class PriceListComponent implements OnInit, OnDestroy {
     private createBondSheet(workbook: ExcelJS.Workbook): void {
         // Filter data for bond items: Data uploaded via "Bonded" dropzone AND valid price
         const bondData = this.getValidPriceRecords().filter(item =>
-            this.isBondItem(item) && item.included
+            this.isBondItem(item)
         );
 
         const worksheet = workbook.addWorksheet('BOND');
@@ -1262,15 +1182,15 @@ export class PriceListComponent implements OnInit, OnDestroy {
     }
 
     private hasProvisionsData(): boolean {
-        // Check if there are any provisions items with valid prices and included
+        // Check if there are any provisions items with valid prices
         const validData = this.getValidPriceRecords();
-        return validData.some(item => this.isProvisionItem(item) && item.included);
+        return validData.some(item => this.isProvisionItem(item));
     }
 
     private hasBondData(): boolean {
-        // Check if there are any bond items with valid prices and included
+        // Check if there are any bond items with valid prices
         const validData = this.getValidPriceRecords();
-        return validData.some(item => this.isBondItem(item) && item.included);
+        return validData.some(item => this.isBondItem(item));
     }
 
     private getCurrencyFormat(): string {
@@ -1321,10 +1241,10 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
         // Determine category part based on data
         const hasProvisions = this.processedData.some(item =>
-            item.category === 'Provisions' && item.included && this.isPriceValid(item.price)
+            item.category === 'Provisions' && this.isPriceValid(item.price)
         );
         const hasBonded = this.processedData.some(item =>
-            item.category === 'Bonded' && item.included && this.isPriceValid(item.price)
+            item.category === 'Bonded' && this.isPriceValid(item.price)
         );
 
         // Build category suffix

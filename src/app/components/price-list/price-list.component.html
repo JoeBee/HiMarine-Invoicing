@@ -108,7 +108,6 @@
             </div>
 
             <div class="results-info" *ngIf="filteredData.length > 0">
-                <p>Selected {{ getSelectedCount() }} of {{ filteredData.length }} results</p>
                 <button class="secondary" [disabled]="processedData.length === 0" (click)="showInvalidPricesDialog()">
                     Show Invalid
                 </button>
@@ -117,12 +116,6 @@
             <table>
                 <thead>
                     <tr>
-                        <th class="select-all-header sortable-header" (click)="sortData('included')">
-                            <input type="checkbox" [checked]="selectAllState === 'all'"
-                                [indeterminate]="selectAllState === 'some'" (change)="onSelectAllChange($event)"
-                                class="select-all-checkbox" title="Select All" (click)="$event.stopPropagation()">
-                            <span class="select-all-label">Include {{ getSortIcon('included') }}</span>
-                        </th>
                         <th class="sortable-header" (click)="sortData('fileName')">
                             File Name {{ getSortIcon('fileName') }}
                         </th>
@@ -146,10 +139,6 @@
                 <tbody>
                     <ng-container *ngFor="let row of filteredData; let i = index">
                         <tr *ngIf="!isSectionHeading(row)" class="data-row" (click)="onRowClick(i)" [class.expanded]="isRowExpanded(i)">
-                            <td>
-                                <input type="checkbox" [checked]="row.included" (change)="onIncludeChange(i, $event)"
-                                    class="include-checkbox" (click)="$event.stopPropagation()">
-                            </td>
                             <td>{{ row.fileName }}</td>
                             <td>{{ row.category || 'N/A' }}</td>
                             <td>{{ row.description }}</td>
@@ -163,16 +152,12 @@
                         <!-- Section Heading Row -->
                         <tr *ngIf="isSectionHeading(row)" class="data-row section-heading" (click)="onRowClick(i)"
                             [class.expanded]="isRowExpanded(i)">
-                            <td>
-                                <input type="checkbox" [checked]="row.included" (change)="onIncludeChange(i, $event)"
-                                    class="include-checkbox" (click)="$event.stopPropagation()">
-                            </td>
                             <td colspan="6" style="font-weight: bold;">{{ row.description }}</td>
                         </tr>
 
                         <!-- Expanded row showing original XLSX data -->
                         <tr *ngIf="isRowExpanded(i)" class="expanded-row">
-                            <td colspan="7" class="expanded-content">
+                            <td colspan="6" class="expanded-content">
                                 <div class="original-data-container">
                                     <h4>Original Data from {{ row.fileName }}</h4>
                                     <div class="original-data-table" *ngIf="row.originalData && row.originalHeaders">
