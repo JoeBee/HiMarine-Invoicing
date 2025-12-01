@@ -1148,8 +1148,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             worksheet.getColumn(3).width = 120 / 7;
             worksheet.getColumn(4).width = 51 / 7;
             worksheet.getColumn(5).width = 87 / 7;
-            worksheet.getColumn(6).width = 146 / 7;
-            worksheet.getColumn(7).width = 99 / 7;
+            worksheet.getColumn(6).width = 90 / 7;
+            worksheet.getColumn(7).width = 95 / 7;
 
             const columnMaxWidths: Map<number, number> = new Map();
             const remarkColumns: Set<number> = new Set();
@@ -1221,11 +1221,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             // Unit columns: 25 pixels
                             worksheet.getColumn(colNumber).width = 25 / 7;
                         } else if (priceColumns.has(colNumber)) {
-                            // Price columns: 95 pixels
-                            worksheet.getColumn(colNumber).width = 95 / 7;
+                            // Price columns: 90 pixels
+                            worksheet.getColumn(colNumber).width = 90 / 7;
                         } else if (totalColumns.has(colNumber)) {
-                            // Total columns: 92 pixels
-                            worksheet.getColumn(colNumber).width = 92 / 7;
+                            // Total columns: 95 pixels
+                            worksheet.getColumn(colNumber).width = 95 / 7;
                         } else {
                             // Other columns: autofit
                             const calculatedWidth = Math.max(maxWidth + 2, 10);
