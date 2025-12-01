@@ -172,16 +172,25 @@ export class PriceListComponent implements OnInit, OnDestroy {
         return this.filteredData.filter(row => row.included).length;
     }
 
+    isSectionHeading(row: ProcessedDataRow): boolean {
+        // Section heading has description but no price, unit, or remarks
+        return !!row.description && isNaN(row.price) && !row.unit && !row.remarks;
+    }
+
     isPriceValid(price: any): boolean {
         return typeof price === 'number' && !isNaN(price) && isFinite(price);
     }
 
     validatePrices(): void {
-        this.invalidPriceRecords = this.processedData.filter(row => !this.isPriceValid(row.price));
+        this.invalidPriceRecords = this.processedData.filter(row => 
+            !this.isPriceValid(row.price) && !this.isSectionHeading(row)
+        );
     }
 
     getValidPriceRecords(): ProcessedDataRow[] {
-        return this.processedData.filter(row => this.isPriceValid(row.price));
+        return this.processedData.filter(row => 
+            this.isPriceValid(row.price) || this.isSectionHeading(row)
+        );
     }
 
     showInvalidPricesDialog(): void {
@@ -840,10 +849,40 @@ export class PriceListComponent implements OnInit, OnDestroy {
         });
 
         // Add data rows
+        let posCounter = 1;
         provisionsData.forEach((item, index) => {
             const rowNumber = index + 2; // +2 because header is row 1, data starts at row 2
+
+            if (this.isSectionHeading(item)) {
+                const dataRow = worksheet.addRow([
+                    '',
+                    this.toUpperCellText(item.description),
+                    '', '', '', '', ''
+                ]);
+
+                // Merge cells B to G
+                worksheet.mergeCells(`B${rowNumber}:G${rowNumber}`);
+
+                // Style the merged cell
+                const descCell = worksheet.getCell(`B${rowNumber}`);
+                descCell.font = { name: 'Cambria', size: 11, bold: true };
+                descCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+
+                // Apply borders to all cells in row
+                dataRow.eachCell((cell, colNumber) => {
+                    cell.border = {
+                        top: { style: 'thin' },
+                        left: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        right: { style: 'thin' }
+                    };
+                });
+
+                return;
+            }
+
             const dataRow = worksheet.addRow([
-                (index + 1).toString(),
+                (posCounter++).toString(),
                 this.toUpperCellText(item.description),
                 this.toUpperCellText(item.remarks || '-'),
                 this.toUpperCellText(item.unit),
@@ -951,10 +990,40 @@ export class PriceListComponent implements OnInit, OnDestroy {
         });
 
         // Add data rows
+        let posCounter = 1;
         freshProvisionsData.forEach((item, index) => {
             const rowNumber = index + 2; // +2 because header is row 1, data starts at row 2
+
+            if (this.isSectionHeading(item)) {
+                const dataRow = worksheet.addRow([
+                    '',
+                    this.toUpperCellText(item.description),
+                    '', '', '', '', ''
+                ]);
+
+                // Merge cells B to G
+                worksheet.mergeCells(`B${rowNumber}:G${rowNumber}`);
+
+                // Style the merged cell
+                const descCell = worksheet.getCell(`B${rowNumber}`);
+                descCell.font = { name: 'Cambria', size: 11, bold: true };
+                descCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+
+                // Apply borders to all cells in row
+                dataRow.eachCell((cell, colNumber) => {
+                    cell.border = {
+                        top: { style: 'thin' },
+                        left: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        right: { style: 'thin' }
+                    };
+                });
+
+                return;
+            }
+
             const dataRow = worksheet.addRow([
-                (index + 1).toString(),
+                (posCounter++).toString(),
                 this.toUpperCellText(item.description),
                 this.toUpperCellText(item.remarks || '-'),
                 this.toUpperCellText(item.unit),
@@ -1062,10 +1131,40 @@ export class PriceListComponent implements OnInit, OnDestroy {
         });
 
         // Add data rows
+        let posCounter = 1;
         bondData.forEach((item, index) => {
             const rowNumber = index + 2; // +2 because header is row 1, data starts at row 2
+
+            if (this.isSectionHeading(item)) {
+                const dataRow = worksheet.addRow([
+                    '',
+                    this.toUpperCellText(item.description),
+                    '', '', '', '', ''
+                ]);
+
+                // Merge cells B to G
+                worksheet.mergeCells(`B${rowNumber}:G${rowNumber}`);
+
+                // Style the merged cell
+                const descCell = worksheet.getCell(`B${rowNumber}`);
+                descCell.font = { name: 'Cambria', size: 11, bold: true };
+                descCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+
+                // Apply borders to all cells in row
+                dataRow.eachCell((cell, colNumber) => {
+                    cell.border = {
+                        top: { style: 'thin' },
+                        left: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        right: { style: 'thin' }
+                    };
+                });
+
+                return;
+            }
+
             const dataRow = worksheet.addRow([
-                (index + 1).toString(),
+                (posCounter++).toString(),
                 this.toUpperCellText(item.description),
                 this.toUpperCellText(item.remarks || '-'),
                 this.toUpperCellText(item.unit),

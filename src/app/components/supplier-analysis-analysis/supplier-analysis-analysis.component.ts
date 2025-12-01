@@ -266,6 +266,14 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             return true;
         }
 
+        // For Remark columns, only highlight if there's an actual value
+        if (headerLower.includes('remark')) {
+            if (supplierValue === '' || supplierValue === null || supplierValue === undefined) {
+                return false;
+            }
+            return true;
+        }
+
         const invoiceRow = set.invoiceData[rowIndex];
 
         let invoiceHeader = header;
@@ -839,26 +847,43 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
                 // Write Matrix Summary
                 let matrixStartRow = totalRow + 2;
+                const matrixStartRowIndex = matrixStartRow;
+
                 for (let winFileIdx = 0; winFileIdx < set.supplierQuotationFiles.length; winFileIdx++) {
                     if (set.supplierQuotationFiles[winFileIdx].isBlank) continue;
 
                     const matrixRow = worksheet.getRow(matrixStartRow);
-                    const matrixRowCellsWithContent: number[] = [];
 
-                    // Label: "{FileName}"
-                    const labelCell = matrixRow.getCell(7);
+                    // Label: "{FileName}" in Column E
+                    const labelCell = matrixRow.getCell(5);
                     labelCell.value = set.supplierQuotationFiles[winFileIdx].fileName;
                     labelCell.font = { name: 'Cambria', size: 11, bold: true };
                     labelCell.alignment = { horizontal: 'right' };
-                    matrixRowCellsWithContent.push(7);
 
-                    // Shade columns F (6) and G (7)
+                    // Shade columns C, D and E
                     const shadeColor: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9D9D9' } };
-                    matrixRow.getCell(6).fill = shadeColor;
-                    labelCell.fill = shadeColor;
-                    matrixRowCellsWithContent.push(6);
+                    matrixRow.getCell(3).fill = shadeColor;
+                    matrixRow.getCell(4).fill = shadeColor;
+                    matrixRow.getCell(5).fill = shadeColor;
 
+                    // Calculate Row Total (sum of items won by this supplier)
+                    let rowTotal = 0;
                     const winnerStats = matrixStats.get(winFileIdx);
+                    if (winnerStats) {
+                        // Only sum the values where targetFileIdx is the winning file (the yellowed cells)
+                        // This represents the cost of the items won by this supplier, payable to this supplier
+                        const selfStats = winnerStats.get(winFileIdx);
+                        if (selfStats) {
+                            rowTotal = selfStats.sum;
+                        }
+                    }
+
+                    // Column G: Total Sum
+                    const totalCell = matrixRow.getCell(7);
+                    totalCell.value = rowTotal;
+                    totalCell.numFmt = '$#,##0.00';
+                    totalCell.font = { name: 'Cambria', size: 11, bold: true };
+                    totalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
 
                     if (winnerStats) {
                         for (let targetFileIdx = 0; targetFileIdx < set.supplierQuotationFiles.length; targetFileIdx++) {
@@ -872,13 +897,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 countCell.value = `${targetStats.count} items`;
                                 countCell.font = { name: 'Cambria', size: 11, bold: true };
                                 countCell.alignment = { horizontal: 'right' };
-                                matrixRowCellsWithContent.push(priceCol);
 
                                 const sumCell = matrixRow.getCell(priceCol + 1);
                                 sumCell.value = targetStats.sum;
                                 sumCell.numFmt = '$#,##0.00';
                                 sumCell.font = { name: 'Cambria', size: 11, bold: true };
-                                matrixRowCellsWithContent.push(priceCol + 1);
 
                                 if (winFileIdx === targetFileIdx) {
                                     const yellow: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
@@ -889,8 +912,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         }
                     }
 
-                    // Apply gray top and bottom borders from column F onwards (skip columns A-E)
-                    for (let col = 6; col <= endCol; col++) {
+                    // Apply gray top and bottom borders from column C onwards
+                    for (let col = 3; col <= endCol; col++) {
                         const cell = matrixRow.getCell(col);
                         const existingFill = cell.fill;
                         cell.border = {
@@ -905,6 +928,29 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
                     matrixStartRow++;
                 }
+
+                matrixStartRow++; // Add empty line before Total Split
+
+                // TOTAL ALL SPLIT Row
+                const totalSplitRow = worksheet.getRow(matrixStartRow);
+                const splitLabelCell = totalSplitRow.getCell(6); // Column F
+                splitLabelCell.value = 'TOTAL ALL SPLIT';
+                splitLabelCell.font = { name: 'Cambria', size: 11, bold: true };
+                splitLabelCell.alignment = { horizontal: 'right' };
+                splitLabelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+
+                const splitSumCell = totalSplitRow.getCell(7); // Column G
+                const endRow = matrixStartRow - 2; // Data ends before the blank line
+                if (endRow >= matrixStartRowIndex) {
+                    splitSumCell.value = { formula: `SUM(G${matrixStartRowIndex}:G${endRow})` };
+                } else {
+                    splitSumCell.value = 0;
+                }
+                splitSumCell.numFmt = '$#,##0.00';
+                splitSumCell.font = { name: 'Cambria', size: 11, bold: true };
+                splitSumCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+
+                matrixStartRow++;
 
                 allSpacingColumns.push(8, 9);
                 let spacerCol = 9;

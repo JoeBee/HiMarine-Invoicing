@@ -225,8 +225,8 @@ export class DataService {
                                         const descCell = worksheet[descAddress];
                                         const priceCell = worksheet[priceAddress];
 
-                                        // Count rows that have both description and price data
-                                        if (descCell && descCell.v && priceCell && priceCell.v) {
+                                        // Count rows that have description (even if price is missing)
+                                        if (descCell && descCell.v) {
                                             rowCount++;
                                         }
                                     }
@@ -327,7 +327,7 @@ export class DataService {
                     const unitCell = worksheet[unitAddress];
                     const remarksCell = worksheet[remarksAddress];
 
-                    if (descCell && descCell.v && priceCell && priceCell.v) {
+                    if (descCell && descCell.v) {
                         // Extract original row data
                         const originalRowData: any[] = [];
                         for (let col = range.s.c; col <= range.e.c; col++) {
@@ -337,10 +337,13 @@ export class DataService {
                         }
 
                         // Apply price divider to the price
-                        const originalPrice = Number(priceCell.v);
-                        const priceDivider = this.getPriceDividerForCategory(fileInfo.category);
-                        const safeDivider = priceDivider > 0 ? priceDivider : 1;
-                        const adjustedPrice = originalPrice / safeDivider;
+                        let adjustedPrice = NaN;
+                        if (priceCell && priceCell.v) {
+                             const originalPrice = Number(priceCell.v);
+                             const priceDivider = this.getPriceDividerForCategory(fileInfo.category);
+                             const safeDivider = priceDivider > 0 ? priceDivider : 1;
+                             adjustedPrice = originalPrice / safeDivider;
+                        }
 
                         rows.push({
                             fileName: fileInfo.fileName,
@@ -595,7 +598,7 @@ export class DataService {
                         const descCell = worksheet[descAddress];
                         const priceCell = worksheet[priceAddress];
 
-                        if (descCell && descCell.v && priceCell && priceCell.v) {
+                        if (descCell && descCell.v) {
                             rowCount++;
                         } else {
                             break;
