@@ -532,7 +532,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 const sectionRow = worksheet.getRow(currentRow);
                 const sectionCell = sectionRow.getCell(1);
                 sectionCell.value = set.invoiceLabel || '';
-                sectionCell.font = { name: 'Cambria', size: 22 };
+                sectionCell.font = { name: 'Cambria', size: 18 };
                 currentRow++;
 
                 const headerRow1 = worksheet.getRow(currentRow);
@@ -891,12 +891,6 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     labelCell.font = { name: 'Cambria', size: 11, bold: true };
                     labelCell.alignment = { horizontal: 'right' };
 
-                    // Shade columns C, D and E
-                    const shadeColor: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9D9D9' } };
-                    matrixRow.getCell(3).fill = shadeColor;
-                    matrixRow.getCell(4).fill = shadeColor;
-                    matrixRow.getCell(5).fill = shadeColor;
-
                     // Calculate Row Total (sum of items won by this supplier)
                     let rowTotal = 0;
                     const winnerStats = matrixStats.get(winFileIdx);
@@ -925,7 +919,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
                             if (targetStats && priceCol) {
                                 const countCell = matrixRow.getCell(priceCol);
-                                // countCell.value = `${targetStats.count} items`; // Removing static value
+                                countCell.numFmt = '0 "items"';
                                 countCell.font = { name: 'Cambria', size: 11, bold: true };
                                 countCell.alignment = { horizontal: 'right' };
 
@@ -1074,7 +1068,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                     sumCell.value = { formula: `SumByColor(${sumRangeStart}:${sumRangeEnd},${sumCellRef})` };
                                 } else {
                                     // Keep static values for non-diagonal cells
-                                    countCell.value = `${targetStats.count} items`;
+                                    countCell.value = targetStats.count;
                                     sumCell.value = targetStats.sum;
                                 }
                             }
@@ -1103,7 +1097,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 // TOTAL ALL SPLIT Row
                 const totalSplitRow = worksheet.getRow(matrixStartRow);
                 const splitLabelCell = totalSplitRow.getCell(6); // Column F
-                splitLabelCell.value = 'TOTAL ALL SPLIT';
+                splitLabelCell.value = 'TOTAL SPLIT';
                 splitLabelCell.font = { name: 'Cambria', size: 11, bold: true };
                 splitLabelCell.alignment = { horizontal: 'right' };
                 splitLabelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
