@@ -616,6 +616,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     col = 1;
                     const rowPriceValues: { col: number, value: number, fileIndex: number }[] = [];
                     const currentFilesPrices = new Map<number, number>(); // FileIndex -> Price
+                    const currentFilesTotals = new Map<number, number>(); // FileIndex -> Total
 
                     for (const header of invoiceHeadersLimited) {
                         const cell = dataRow.getCell(col);
@@ -708,6 +709,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                                 filePriceColMap.set(fileIndex, col);
                                             }
                                         }
+                                        if (headerLower.includes('total')) {
+                                            currentFilesTotals.set(fileIndex, numValue);
+                                        }
                                     }
                                 }
                             }
@@ -757,11 +761,15 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             const winnerRowStats = matrixStats.get(winFileIdx);
                             if (winnerRowStats) {
                                 for (let targetFileIdx = 0; targetFileIdx < set.supplierQuotationFiles.length; targetFileIdx++) {
+                                    const total = currentFilesTotals.get(targetFileIdx);
                                     const price = currentFilesPrices.get(targetFileIdx);
-                                    if (price !== undefined) {
+                                    // Use Total if available, otherwise fallback to Price
+                                    const valueToSum = total !== undefined ? total : price;
+
+                                    if (valueToSum !== undefined) {
                                         const s = winnerRowStats.get(targetFileIdx);
                                         if (s) {
-                                            s.sum += price;
+                                            s.sum += valueToSum;
                                             s.count++;
                                         }
                                     }
