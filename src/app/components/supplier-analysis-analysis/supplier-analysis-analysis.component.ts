@@ -433,8 +433,34 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
         });
 
         try {
+            const templatePath = 'assets/templates/supplier-analysis-macros.xlsm';
+            const templateResponse = await fetch(templatePath);
+            const templateBuffer = await templateResponse.arrayBuffer();
+
+            // 1. Extract macro parts from the template manually to ensure we have them
+            // ExcelJS usually drops the vbaProject.bin when writing, so we need to put it back.
+            let vbaProject: ArrayBuffer | undefined;
+            let workbookRels: string | undefined;
+
+            try {
+                const tempZip = await JSZip.loadAsync(templateBuffer);
+                const vba = tempZip.file('xl/vbaProject.bin');
+                if (vba) vbaProject = await vba.async('arraybuffer');
+
+                const rels = tempZip.file('xl/_rels/workbook.xml.rels');
+                if (rels) workbookRels = await rels.async('string');
+            } catch (e) {
+                console.warn('Error extracting macros from template', e);
+            }
+
             const workbook = new ExcelJS.Workbook();
-            const worksheet = workbook.addWorksheet('Sheet1');
+            await workbook.xlsx.load(templateBuffer);
+
+            let worksheet = workbook.getWorksheet('Sheet1');
+            if (!worksheet) {
+                worksheet = workbook.addWorksheet('Sheet1');
+            }
+
             worksheet.properties.showGridLines = false;
             worksheet.views = [{ showGridLines: false }];
 
@@ -632,7 +658,6 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             right: { style: 'thin', color: { argb: 'FF404040' } }
                         };
 
-                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
                         const headerLower = header.toLowerCase().trim();
                         if (headerLower.includes('price') || headerLower.includes('total')) {
                             if (value !== '' && value !== null) {
@@ -689,8 +714,6 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             // Orange background for Remark and Unit data only if cell contains data AND not a blank file
                             if (!isBlankFile && (headerLower.includes('remark') || headerLower.includes('unit')) && value !== '' && value !== null && value !== undefined) {
                                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFA500' } };
-                            } else {
-                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
                             }
 
                             if (headerLower.includes('price') || headerLower.includes('total')) {
@@ -1065,10 +1088,76 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             const spacingColumnWidth = 11 / 7;
             allSpacingColumns.forEach(c => worksheet.getColumn(c).width = spacingColumnWidth);
 
-            const buffer = await workbook.xlsx.writeBuffer();
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            // Generate the buffer
+            let buffer = await workbook.xlsx.writeBuffer();
+
+            // Post-process with JSZip to fix Macros (ExcelJS doesn't preserve them correctly on write)
+            try {
+                const zip = await JSZip.loadAsync(buffer);
+
+                // 1. Inject vbaProject.bin if missing
+                if (vbaProject && !zip.file('xl/vbaProject.bin')) {
+                    zip.file('xl/vbaProject.bin', vbaProject);
+                }
+
+                // 2. Fix [Content_Types].xml
+                // Switch workbook content type from XLSX to XLSM
+                let contentTypes = await zip.file('[Content_Types].xml')?.async('string');
+                if (contentTypes) {
+                    const xlsxType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml';
+                    const xlsmType = 'application/vnd.ms-excel.sheet.macroEnabled.main+xml';
+
+                    if (contentTypes.includes(xlsxType)) {
+                        contentTypes = contentTypes.replace(xlsxType, xlsmType);
+                    }
+
+                    // Ensure "bin" extension is mapped (needed for vbaProject.bin)
+                    if (!contentTypes.includes('Extension="bin"')) {
+                        // Insert before closing </Types>
+                        contentTypes = contentTypes.replace('</Types>', '<Default Extension="bin" ContentType="application/vnd.ms-office.vbaProject"/></Types>');
+                    }
+                    zip.file('[Content_Types].xml', contentTypes);
+                }
+
+                // 3. Fix xl/_rels/workbook.xml.rels
+                // Ensure relationship to vbaProject exists
+                if (vbaProject) {
+                    let wbRels = await zip.file('xl/_rels/workbook.xml.rels')?.async('string');
+                    if (wbRels) {
+                        if (!wbRels.includes('vbaProject.bin')) {
+                            // Add the relationship if missing. Use a likely unique ID.
+                            // We check if rIdVBA exists, if not we add it.
+                            // Note: Relationships need unique Ids. ExcelJS usually uses rId1, rId2...
+                            // We'll try to reuse the one from template if possible, or just append one.
+                            // Simpler: Check if 'http://schemas.microsoft.com/office/2006/relationships/vbaProject' exists
+                            if (!wbRels.includes('relationships/vbaProject')) {
+                                const rId = 'rIdVbaProject';
+                                const rel = `<Relationship Id="${rId}" Type="http://schemas.microsoft.com/office/2006/relationships/vbaProject" Target="vbaProject.bin"/>`;
+                                wbRels = wbRels.replace('</Relationships>', `${rel}</Relationships>`);
+                                zip.file('xl/_rels/workbook.xml.rels', wbRels);
+                            }
+                        }
+                    } else if (workbookRels) {
+                        // If ExcelJS created a workbook without relationships (unlikely with images), restore template's
+                        zip.file('xl/_rels/workbook.xml.rels', workbookRels);
+                    }
+                }
+
+                buffer = await zip.generateAsync({ type: 'arraybuffer' });
+            } catch (zipError) {
+                console.warn('Error fixing macros in output file', zipError);
+            }
+
+            const blob = new Blob([buffer], { type: 'application/vnd.ms-excel.sheet.macroEnabled.12' });
             let fileName = this.exportFileName.trim();
-            if (!fileName.endsWith('.xlsx')) fileName += '.xlsx';
+
+            if (fileName.toLowerCase().endsWith('.xlsx')) {
+                fileName = fileName.substring(0, fileName.length - 5);
+            }
+            if (!fileName.toLowerCase().endsWith('.xlsm')) {
+                fileName += '.xlsm';
+            }
+
             saveAs(blob, fileName);
 
             this.loggingService.logExport('excel_exported', { fileName, fileSize: blob.size }, 'SupplierAnalysisAnalysisComponent');
