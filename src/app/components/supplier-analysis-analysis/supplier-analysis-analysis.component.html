@@ -7,10 +7,13 @@
                 <label for="exportFileName">Export File Name:</label>
                 <input type="text" id="exportFileName" [(ngModel)]="exportFileName" class="export-filename-input" />
             </div>
-            <button type="button" class="export-button" (click)="exportToExcel()"
-                [disabled]="!exportFileName || exportFileName.trim() === ''">
-                Export to Excel
-            </button>
+            <div class="export-button-wrapper">
+                <button type="button" class="export-button" (click)="exportToExcel()"
+                    [disabled]="!exportFileName || exportFileName.trim() === ''">
+                    Export to Excel
+                </button>
+                <p class="export-note">Note, to force an Excel update press 'F9'.</p>
+            </div>
         </div>
 
         <div *ngIf="isLoading" class="loading-message">

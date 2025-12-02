@@ -65,6 +65,13 @@
             }
         }
 
+        .export-button-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            margin-left: auto;
+        }
+
         .export-button {
             padding: 10px 24px;
             background-color: #7b1fa2;
@@ -75,7 +82,6 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-left: auto;
 
             &:hover:not(:disabled) {
                 background-color: #6a1b9a;
@@ -88,6 +94,14 @@
                 cursor: not-allowed;
                 opacity: 0.6;
             }
+        }
+
+        .export-note {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            color: #888;
+            font-style: italic;
+            text-align: right;
         }
     }
 
