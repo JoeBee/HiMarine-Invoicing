@@ -637,6 +637,42 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 }
                 const filePriceColMap = new Map<number, number>(); // FileIndex -> Excel Column Index
 
+                // Identify column indices for Invoice section (Qty, Price, Total)
+                let invoiceQtyCol: number | null = null;
+                let invoicePriceCol: number | null = null;
+                let invoiceTotalCol: number | null = null;
+                let tempCol = 1;
+                for (const header of invoiceHeadersLimited) {
+                    const headerLower = header.toLowerCase().trim();
+                    if (headerLower === 'qty' || headerLower.includes('qty')) {
+                        invoiceQtyCol = tempCol;
+                    } else if (headerLower === 'price' || headerLower.includes('price')) {
+                        invoicePriceCol = tempCol;
+                    } else if (headerLower === 'total' || headerLower.includes('total')) {
+                        invoiceTotalCol = tempCol;
+                    }
+                    tempCol++;
+                }
+
+                // Identify column indices for Supplier Quotation sections (Price, Total per file)
+                const supplierPriceCols = new Map<number, number>(); // FileIndex -> Price Column
+                const supplierTotalCols = new Map<number, number>(); // FileIndex -> Total Column
+                tempCol = 1 + invoiceHeadersLimited.length + 2; // Start after Invoice + spacing
+                for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders.length; fileIndex++) {
+                    for (const header of filteredSupplierQuotationHeaders[fileIndex]) {
+                        const headerLower = header.toLowerCase().trim();
+                        if (headerLower === 'price' || headerLower.includes('price')) {
+                            supplierPriceCols.set(fileIndex, tempCol);
+                        } else if (headerLower === 'total' || headerLower.includes('total')) {
+                            supplierTotalCols.set(fileIndex, tempCol);
+                        }
+                        tempCol++;
+                    }
+                    if (fileIndex < filteredSupplierQuotationHeaders.length - 1) tempCol += 2;
+                }
+
+                const dataStartRow = currentRow; // Track where data rows start for formula references
+
                 for (let rowIndex = 0; rowIndex < set.invoiceData.length; rowIndex++) {
                     const dataRow = worksheet.getRow(currentRow);
                     col = 1;
@@ -647,7 +683,28 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     for (const header of invoiceHeadersLimited) {
                         const cell = dataRow.getCell(col);
                         const value = this.getCellValue(set.invoiceData[rowIndex], header);
-                        cell.value = value;
+                        const headerLower = header.toLowerCase().trim();
+
+                        // For Total column, use formula instead of value
+                        if (col === invoiceTotalCol && invoiceQtyCol !== null && invoicePriceCol !== null) {
+                            const qtyColLetter = worksheet.getColumn(invoiceQtyCol).letter;
+                            const priceColLetter = worksheet.getColumn(invoicePriceCol).letter;
+                            const rowNum = currentRow;
+                            cell.value = { formula: `${qtyColLetter}${rowNum}*${priceColLetter}${rowNum}` };
+                            cell.numFmt = '$#,##0.00';
+                        } else {
+                            cell.value = value;
+                            if (headerLower.includes('price') || headerLower.includes('total')) {
+                                if (value !== '' && value !== null) {
+                                    const numValue = Number(value);
+                                    if (!isNaN(numValue)) {
+                                        cell.value = numValue;
+                                        cell.numFmt = '$#,##0.00';
+                                    }
+                                }
+                            }
+                        }
+
                         cell.font = { name: 'Cambria', size: 11 };
 
                         // Dark gray border for Invoice data
@@ -658,16 +715,6 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             right: { style: 'thin', color: { argb: 'FF404040' } }
                         };
 
-                        const headerLower = header.toLowerCase().trim();
-                        if (headerLower.includes('price') || headerLower.includes('total')) {
-                            if (value !== '' && value !== null) {
-                                const numValue = Number(value);
-                                if (!isNaN(numValue)) {
-                                    cell.value = numValue;
-                                    cell.numFmt = '$#,##0.00';
-                                }
-                            }
-                        }
                         col++;
                     }
                     col += 2;
@@ -720,19 +767,42 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 // Track this column for auto-fitting
                                 supplierPriceAndTotalColumns.add(col);
 
-                                if (value !== '' && value !== null) {
-                                    const numValue = Number(value);
-                                    if (!isNaN(numValue)) {
-                                        cell.value = numValue;
-                                        cell.numFmt = '$#,##0.00';
-                                        if (headerLower.includes('price')) {
+                                // For Total column, use formula: Invoice Qty * Supplier Price
+                                if (headerLower.includes('total') && invoiceQtyCol !== null && supplierPriceCols.has(fileIndex)) {
+                                    const qtyColLetter = worksheet.getColumn(invoiceQtyCol).letter;
+                                    const priceCol = supplierPriceCols.get(fileIndex)!;
+                                    const priceColLetter = worksheet.getColumn(priceCol).letter;
+                                    const rowNum = currentRow;
+                                    cell.value = { formula: `${qtyColLetter}${rowNum}*${priceColLetter}${rowNum}` };
+                                    cell.numFmt = '$#,##0.00';
+
+                                    // Still track the calculated value for stats
+                                    if (value !== '' && value !== null) {
+                                        const numValue = Number(value);
+                                        if (!isNaN(numValue)) {
+                                            currentFilesTotals.set(fileIndex, numValue);
+                                        }
+                                    }
+                                } else if (headerLower.includes('price')) {
+                                    if (value !== '' && value !== null) {
+                                        const numValue = Number(value);
+                                        if (!isNaN(numValue)) {
+                                            cell.value = numValue;
+                                            cell.numFmt = '$#,##0.00';
                                             rowPriceValues.push({ col, value: numValue, fileIndex });
                                             currentFilesPrices.set(fileIndex, numValue);
                                             if (!filePriceColMap.has(fileIndex)) {
                                                 filePriceColMap.set(fileIndex, col);
                                             }
                                         }
-                                        if (headerLower.includes('total')) {
+                                    }
+                                } else if (headerLower.includes('total')) {
+                                    // Fallback: if we couldn't create formula, use value
+                                    if (value !== '' && value !== null) {
+                                        const numValue = Number(value);
+                                        if (!isNaN(numValue)) {
+                                            cell.value = numValue;
+                                            cell.numFmt = '$#,##0.00';
                                             currentFilesTotals.set(fileIndex, numValue);
                                         }
                                     }
