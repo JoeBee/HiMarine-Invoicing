@@ -18,7 +18,7 @@ export class AppComponent implements OnInit {
     showInfoModal = false;
     activeMainTab = '';
     showHistoryTab = false;
-    showSupplierAnalysisTab = false;
+    showSupplierAnalysisTab = true;
     passwordInput = '';
     showPassword = false;
     private readonly SECRET_WORD = 'drakemaye';
@@ -41,7 +41,6 @@ export class AppComponent implements OnInit {
         const hasAccess = localStorage.getItem(this.STORAGE_KEY);
         if (hasAccess === 'true') {
             this.showHistoryTab = true;
-            this.showSupplierAnalysisTab = true;
             // Fill password input with masked characters (use text type to show asterisks)
             this.passwordInput = '*'.repeat(this.SECRET_WORD.length);
             this.showPassword = true; // Use text type to show asterisks
@@ -117,7 +116,6 @@ export class AppComponent implements OnInit {
         const normalizedValue = value.toLowerCase();
         if (normalizedValue === this.SECRET_WORD) {
             this.showHistoryTab = true;
-            this.showSupplierAnalysisTab = true;
             localStorage.setItem(this.STORAGE_KEY, 'true');
             // Dispatch custom event to notify other components (like information modal)
             window.dispatchEvent(new Event('historyAccessChanged'));
@@ -142,9 +140,8 @@ export class AppComponent implements OnInit {
     }
 
     logout(): void {
-        // Hide the History and Supplier Analysis tabs
+        // Hide the History tab
         this.showHistoryTab = false;
-        this.showSupplierAnalysisTab = false;
         // Clear localStorage
         localStorage.removeItem(this.STORAGE_KEY);
         // Dispatch custom event to notify other components (like information modal)

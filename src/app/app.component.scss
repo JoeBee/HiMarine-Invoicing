@@ -30,18 +30,33 @@ header {
     display: flex;
     max-width: 1400px;
     margin: 0 auto;
+    padding-right: 220px; // Reserve space for password input on the right
+
+    // Responsive adjustments for padding
+    @media (max-width: 1200px) {
+        padding-right: 200px;
+    }
+
+    @media (max-width: 768px) {
+        padding-right: 180px;
+    }
+
+    @media (max-width: 480px) {
+        padding-right: 160px;
+    }
 
     a {
         flex: 1;
         text-align: center;
-        padding: 20px;
+        padding: 18px 16px;
         text-decoration: none;
         color: #666;
         font-weight: 500;
-        font-size: 16px;
+        font-size: 15px;
         border-bottom: none;
         transition: all 0.3s ease;
         cursor: pointer;
+        white-space: nowrap;
 
         &:hover {
             color: #0066cc;
@@ -125,7 +140,7 @@ header {
     a:last-child {
         color: #2e7d32;
         text-align: left;
-        padding-left: 20px;
+        padding-left: 16px;
 
         &:hover {
             color: #1b5e20;
