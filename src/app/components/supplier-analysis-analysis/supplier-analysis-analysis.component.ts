@@ -156,7 +156,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
-        this.exportFileName = `_Invoice ${year}${month}${day}`;
+        this.exportFileName = `Analysis ${year}${month}${day}`;
     }
 
     toggleTable(set: AnalysisSet): void {
@@ -814,61 +814,66 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     }
 
                     if (rowPriceValues.length > 0) {
-                        const minPrice = Math.min(...rowPriceValues.map(p => p.value));
-                        const minEntries = rowPriceValues.filter(p => p.value === minPrice);
-                        const winningFileIndices = new Set<number>();
+                        // Filter out prices of 0 when finding the minimum
+                        const nonZeroPrices = rowPriceValues.filter(p => p.value > 0);
+                        if (nonZeroPrices.length > 0) {
+                            const minPrice = Math.min(...nonZeroPrices.map(p => p.value));
+                            const minEntries = rowPriceValues.filter(p => p.value === minPrice && p.value > 0);
+                            const winningFileIndices = new Set<number>();
 
-                        for (const entry of rowPriceValues) {
-                            const cell = dataRow.getCell(entry.col);
-                            if (entry.value === minPrice) {
-                                winningFileIndices.add(entry.fileIndex);
-                                const stats = priceHighlightStats.get(entry.col) || { count: 0, sum: 0 };
-                                stats.count++;
-                                stats.sum += entry.value;
-                                priceHighlightStats.set(entry.col, stats);
+                            for (const entry of rowPriceValues) {
+                                const cell = dataRow.getCell(entry.col);
+                                // Only highlight if value equals minPrice and is greater than 0
+                                if (entry.value === minPrice && entry.value > 0) {
+                                    winningFileIndices.add(entry.fileIndex);
+                                    const stats = priceHighlightStats.get(entry.col) || { count: 0, sum: 0 };
+                                    stats.count++;
+                                    stats.sum += entry.value;
+                                    priceHighlightStats.set(entry.col, stats);
 
-                                const highlightFill: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: minEntries.length > 1 ? 'FFC6EFCE' : 'FFFFFF00' } };
-                                cell.fill = highlightFill;
-                                cell.font = { name: 'Cambria', size: 11, bold: true };
+                                    const highlightFill: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: minEntries.length > 1 ? 'FFC6EFCE' : 'FFFFFF00' } };
+                                    cell.fill = highlightFill;
+                                    cell.font = { name: 'Cambria', size: 11, bold: true };
 
-                                // Also highlight the 'Total' column next to this Price column if it exists
-                                const totalColIndex = entry.col + 1;
-                                const totalCell = dataRow.getCell(totalColIndex);
-                                // Simple check if the next column is indeed a 'Total' column based on typical layout (Price then Total)
-                                // A more robust check would involve inspecting headers, but given the fixed layout generation:
-                                // We know Price and Total are adjacent in the filtered export logic.
-                                if (totalCell.value !== null && totalCell.value !== undefined) {
-                                    totalCell.fill = highlightFill;
-                                    totalCell.font = { name: 'Cambria', size: 11, bold: true };
+                                    // Also highlight the 'Total' column next to this Price column if it exists
+                                    const totalColIndex = entry.col + 1;
+                                    const totalCell = dataRow.getCell(totalColIndex);
+                                    // Simple check if the next column is indeed a 'Total' column based on typical layout (Price then Total)
+                                    // A more robust check would involve inspecting headers, but given the fixed layout generation:
+                                    // We know Price and Total are adjacent in the filtered export logic.
+                                    if (totalCell.value !== null && totalCell.value !== undefined) {
+                                        totalCell.fill = highlightFill;
+                                        totalCell.font = { name: 'Cambria', size: 11, bold: true };
+                                    }
+                                } else {
+                                    const stats = priceNonBestStats.get(entry.col) || { count: 0, sum: 0 };
+                                    stats.count++;
+                                    stats.sum += entry.value;
+                                    priceNonBestStats.set(entry.col, stats);
                                 }
-                            } else {
-                                const stats = priceNonBestStats.get(entry.col) || { count: 0, sum: 0 };
-                                stats.count++;
-                                stats.sum += entry.value;
-                                priceNonBestStats.set(entry.col, stats);
                             }
-                        }
 
-                        // Update Matrix Stats
-                        winningFileIndices.forEach(winFileIdx => {
-                            const winnerRowStats = matrixStats.get(winFileIdx);
-                            if (winnerRowStats) {
-                                for (let targetFileIdx = 0; targetFileIdx < set.supplierQuotationFiles.length; targetFileIdx++) {
-                                    const total = currentFilesTotals.get(targetFileIdx);
-                                    const price = currentFilesPrices.get(targetFileIdx);
-                                    // Use Total if available, otherwise fallback to Price
-                                    const valueToSum = total !== undefined ? total : price;
+                            // Update Matrix Stats
+                            winningFileIndices.forEach(winFileIdx => {
+                                const winnerRowStats = matrixStats.get(winFileIdx);
+                                if (winnerRowStats) {
+                                    for (let targetFileIdx = 0; targetFileIdx < set.supplierQuotationFiles.length; targetFileIdx++) {
+                                        const total = currentFilesTotals.get(targetFileIdx);
+                                        const price = currentFilesPrices.get(targetFileIdx);
+                                        // Use Total if available, otherwise fallback to Price
+                                        const valueToSum = total !== undefined ? total : price;
 
-                                    if (valueToSum !== undefined) {
-                                        const s = winnerRowStats.get(targetFileIdx);
-                                        if (s) {
-                                            s.sum += valueToSum;
-                                            s.count++;
+                                        if (valueToSum !== undefined) {
+                                            const s = winnerRowStats.get(targetFileIdx);
+                                            if (s) {
+                                                s.sum += valueToSum;
+                                                s.count++;
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        });
+                            });
+                        }
                     }
                     currentRow++;
                 }
@@ -946,8 +951,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     if (fileIndex < filteredSupplierQuotationHeaders.length - 1) checkCol += 2;
                 }
 
+                // Add Delivery Fees and Other Fees rows
                 // Write Matrix Summary
-                let matrixStartRow = totalRow + 2;
+                let matrixStartRow = totalRow + 4; // Matrix starts before Delivery Fee/Other Fees rows
                 const matrixStartRowIndex = matrixStartRow;
 
                 for (let winFileIdx = 0; winFileIdx < set.supplierQuotationFiles.length; winFileIdx++) {
@@ -1195,6 +1201,114 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 splitSumCell.font = { name: 'Cambria', size: 11, bold: true };
                 splitSumCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
 
+                // Add Delivery Fee and Other Fees rows aligned with TOTAL SPLIT
+                const deliveryFeesRow = matrixStartRow; // Same row as TOTAL SPLIT
+                const otherFeesRow = matrixStartRow + 1; // One row below Delivery Fee
+                const deliveryFeesRowObj = worksheet.getRow(deliveryFeesRow);
+                const otherFeesRowObj = worksheet.getRow(otherFeesRow);
+
+                // Add Delivery Fee and Other Fees for each supplier quotation file
+                for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders.length; fileIndex++) {
+                    const isBlankFile = set.supplierQuotationFiles[fileIndex].isBlank;
+                    const priceCol = supplierPriceCols.get(fileIndex);
+
+                    if (priceCol && !isBlankFile) {
+                        // Delivery Fee row
+                        const deliveryLabelCell = deliveryFeesRowObj.getCell(priceCol);
+                        deliveryLabelCell.value = 'Delivery Fee:';
+                        deliveryLabelCell.font = { name: 'Cambria', size: 11, bold: true };
+                        deliveryLabelCell.alignment = { horizontal: 'right' };
+
+                        const deliveryValueCell = deliveryFeesRowObj.getCell(priceCol + 1);
+                        deliveryValueCell.value = null; // Empty cell, user can fill in
+                        deliveryValueCell.numFmt = '$#,##0.00';
+                        deliveryValueCell.font = { name: 'Cambria', size: 11, bold: true };
+
+                        // Other Fees row
+                        const otherLabelCell = otherFeesRowObj.getCell(priceCol);
+                        otherLabelCell.value = 'Other Fees:';
+                        otherLabelCell.font = { name: 'Cambria', size: 11, bold: true };
+                        otherLabelCell.alignment = { horizontal: 'right' };
+
+                        const otherValueCell = otherFeesRowObj.getCell(priceCol + 1);
+                        otherValueCell.value = null; // Empty cell, user can fill in
+                        otherValueCell.numFmt = '$#,##0.00';
+                        otherValueCell.font = { name: 'Cambria', size: 11, bold: true };
+                    }
+                }
+
+                // Add the new summary section 2 rows below "Other Fees:"
+                const summarySectionStartRow = otherFeesRow + 2;
+                const dataEndRow = dataStartRow + set.invoiceData.length - 1;
+                const totalRows = 3; // 3 rows total, all suppliers in the same rows
+
+                // Background colors for the summary rows (light green, light blue, light gold)
+                const summaryColors = [
+                    { argb: 'FFE2EFDA' }, // Light green (top row)
+                    { argb: 'FFDEEBF7' }, // Light blue (middle row)
+                    { argb: 'FFFFEAAE' }  // Light gold (bottom row)
+                ];
+
+                // Get list of non-blank suppliers
+                const nonBlankSuppliers: number[] = [];
+                for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders.length; fileIndex++) {
+                    const isBlankFile = set.supplierQuotationFiles[fileIndex].isBlank;
+                    const priceCol = supplierPriceCols.get(fileIndex);
+                    if (priceCol && !isBlankFile) {
+                        nonBlankSuppliers.push(fileIndex);
+                    }
+                }
+
+                // Iterate through the 3 rows (all suppliers in the same rows)
+                for (let rowOffset = 0; rowOffset < totalRows; rowOffset++) {
+                    const currentRowNum = summarySectionStartRow + rowOffset;
+                    const summaryRow = worksheet.getRow(currentRowNum);
+                    const bgColor = summaryColors[rowOffset]; // Cycle through colors: green, blue, orange
+
+                    // Set borders - use same thin style as table data rows
+                    const borderStyle = 'thin';
+                    const borderColor = { argb: 'FF404040' }; // Dark gray, same as table data
+
+                    // Add cells for each supplier in this row
+                    for (let supplierIdx = 0; supplierIdx < nonBlankSuppliers.length; supplierIdx++) {
+                        const fileIndex = nonBlankSuppliers[supplierIdx];
+                        const priceCol = supplierPriceCols.get(fileIndex)!;
+                        const priceColLetter = worksheet.getColumn(priceCol).letter;
+                        const priceRangeStart = `${priceColLetter}$${dataStartRow}`;
+                        const priceRangeEnd = `${priceColLetter}$${dataEndRow}`;
+                        const priceRangeStartNoDollar = `${priceColLetter}${dataStartRow}`;
+                        const priceRangeEndNoDollar = `${priceColLetter}${dataEndRow}`;
+                        const countCol = priceCol - 1;
+                        const countColLetter = worksheet.getColumn(countCol).letter;
+
+                        // First column: CountByColor formula
+                        // Formula: =@CountByColor(M$30:M$38,L53) where L is countCol, and the row is currentRowNum
+                        const countCellRef = `${countColLetter}${currentRowNum}`;
+                        const countCell = summaryRow.getCell(countCol);
+                        countCell.value = { formula: `@CountByColor(${priceRangeStart}:${priceRangeEnd},${countCellRef})` };
+                        countCell.font = { name: 'Cambria', size: 11 };
+                        countCell.fill = { type: 'pattern', pattern: 'solid', fgColor: bgColor };
+                        countCell.border = {
+                            top: { style: borderStyle, color: borderColor },
+                            bottom: { style: borderStyle, color: borderColor }
+                        };
+
+                        // Second column: SumByColor formula
+                        // Formula: =@SumByColor(M30:M38,M53) where M is priceCol, and the row is currentRowNum
+                        const sumCellRef = `${priceColLetter}${currentRowNum}`;
+                        const sumCell = summaryRow.getCell(priceCol);
+                        sumCell.value = { formula: `@SumByColor(${priceRangeStartNoDollar}:${priceRangeEndNoDollar},${sumCellRef})` };
+                        sumCell.numFmt = '$#,##0.00';
+                        sumCell.font = { name: 'Cambria', size: 11 };
+                        sumCell.fill = { type: 'pattern', pattern: 'solid', fgColor: bgColor };
+                        sumCell.border = {
+                            top: { style: borderStyle, color: borderColor },
+                            bottom: { style: borderStyle, color: borderColor }
+                        };
+                    }
+                }
+
+
                 matrixStartRow++;
 
                 allSpacingColumns.push(8, 9);
@@ -1227,7 +1341,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     if (colNumber >= 8 && !allSpacingColumns.includes(colNumber)) {
                         // Check if cell has blue header background (Supplier Quotation section)
                         if (cell.fill && (cell.fill as ExcelJS.FillPattern).fgColor?.argb === 'FF4472C4') {
-                            const headerName = cell.value ? String(cell.value).toLowerCase() : '';
+                            const headerName = cell.value ? String(cell.value).toLowerCase().trim() : '';
                             if (headerName.includes('remark')) {
                                 remarkColumns.add(colNumber);
                             }
