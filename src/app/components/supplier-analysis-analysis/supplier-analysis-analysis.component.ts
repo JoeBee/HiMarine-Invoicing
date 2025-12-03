@@ -135,9 +135,6 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     }
 
                     this.analysisSets.push(analysisSet);
-                    if (this.analysisSets.length === 1) {
-                        analysisSet.tableExpanded = true;
-                    }
 
                 } catch (error) {
                     this.loggingService.logError(error as Error, 'data_extraction_error', 'SupplierAnalysisAnalysisComponent', { setId: fileSet.id });
