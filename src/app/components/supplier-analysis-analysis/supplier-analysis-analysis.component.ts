@@ -516,6 +516,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
             const allSpacingColumns: number[] = [];
             const supplierPriceAndTotalColumns: Set<number> = new Set(); // Track Price and Total columns in Supplier Quotation sections
+            const allSupplierPriceColumns: Set<number> = new Set(); // Track all Price columns in Supplier Quotation sections
+            const allSupplierTotalColumns: Set<number> = new Set(); // Track all Total columns in Supplier Quotation sections
 
             for (const set of exportSets) {
                 const invoiceHeadersLimited = set.invoiceHeaders.slice(0, 7);
@@ -660,8 +662,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         const headerLower = header.toLowerCase().trim();
                         if (headerLower === 'price' || headerLower.includes('price')) {
                             supplierPriceCols.set(fileIndex, tempCol);
+                            allSupplierPriceColumns.add(tempCol);
                         } else if (headerLower === 'total' || headerLower.includes('total')) {
                             supplierTotalCols.set(fileIndex, tempCol);
+                            allSupplierTotalColumns.add(tempCol);
                         }
                         tempCol++;
                     }
@@ -765,7 +769,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 supplierPriceAndTotalColumns.add(col);
 
                                 // For Total column, use formula: Invoice Qty * Supplier Price
-                                if (headerLower.includes('total') && invoiceQtyCol !== null && supplierPriceCols.has(fileIndex)) {
+                                // Do not include formula for blank Supplier Quotation files
+                                if (headerLower.includes('total') && !isBlankFile && invoiceQtyCol !== null && supplierPriceCols.has(fileIndex)) {
                                     const qtyColLetter = worksheet.getColumn(invoiceQtyCol).letter;
                                     const priceCol = supplierPriceCols.get(fileIndex)!;
                                     const priceColLetter = worksheet.getColumn(priceCol).letter;
@@ -795,7 +800,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                     }
                                 } else if (headerLower.includes('total')) {
                                     // Fallback: if we couldn't create formula, use value
-                                    if (value !== '' && value !== null) {
+                                    // Do not set value for blank files
+                                    if (!isBlankFile && value !== '' && value !== null) {
                                         const numValue = Number(value);
                                         if (!isNaN(numValue)) {
                                             cell.value = numValue;
@@ -1276,12 +1282,17 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         const priceRangeStartNoDollar = `${priceColLetter}${dataStartRow}`;
                         const priceRangeEndNoDollar = `${priceColLetter}${dataEndRow}`;
                         const countCol = priceCol - 1;
-                        const countColLetter = worksheet.getColumn(countCol).letter;
+                        // Move blocks one column to the right
+                        const summaryCountCol = countCol + 1;
+                        const summaryPriceCol = priceCol + 1;
+                        const summaryCountColLetter = worksheet.getColumn(summaryCountCol).letter;
+                        const summaryPriceColLetter = worksheet.getColumn(summaryPriceCol).letter;
 
                         // First column: CountByColor formula
-                        // Formula: =@CountByColor(M$30:M$38,L53) where L is countCol, and the row is currentRowNum
-                        const countCellRef = `${countColLetter}${currentRowNum}`;
-                        const countCell = summaryRow.getCell(countCol);
+                        // Formula: =@CountByColor(M$30:M$38,L53) where L is summaryCountCol, and the row is currentRowNum
+                        // Note: Range still points to original priceCol, but cell is moved one column right
+                        const countCellRef = `${summaryCountColLetter}${currentRowNum}`;
+                        const countCell = summaryRow.getCell(summaryCountCol);
                         countCell.value = { formula: `@CountByColor(${priceRangeStart}:${priceRangeEnd},${countCellRef})` };
                         countCell.font = { name: 'Cambria', size: 11 };
                         countCell.fill = { type: 'pattern', pattern: 'solid', fgColor: bgColor };
@@ -1291,9 +1302,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         };
 
                         // Second column: SumByColor formula
-                        // Formula: =@SumByColor(M30:M38,M53) where M is priceCol, and the row is currentRowNum
-                        const sumCellRef = `${priceColLetter}${currentRowNum}`;
-                        const sumCell = summaryRow.getCell(priceCol);
+                        // Formula: =@SumByColor(M30:M38,M53) where M is summaryPriceCol, and the row is currentRowNum
+                        // Note: Range still points to original priceCol, but cell is moved one column right
+                        const sumCellRef = `${summaryPriceColLetter}${currentRowNum}`;
+                        const sumCell = summaryRow.getCell(summaryPriceCol);
                         sumCell.value = { formula: `@SumByColor(${priceRangeStartNoDollar}:${priceRangeEndNoDollar},${sumCellRef})` };
                         sumCell.numFmt = '$#,##0.00';
                         sumCell.font = { name: 'Cambria', size: 11 };
@@ -1386,9 +1398,26 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             });
 
             // Second pass: apply column widths
+            // First, explicitly set widths for all tracked Supplier Quotation Price and Total columns
+            allSupplierPriceColumns.forEach(colNumber => {
+                if (!allSpacingColumns.includes(colNumber)) {
+                    worksheet.getColumn(colNumber).width = 90 / 7; // 90 pixels
+                }
+            });
+            allSupplierTotalColumns.forEach(colNumber => {
+                if (!allSpacingColumns.includes(colNumber)) {
+                    worksheet.getColumn(colNumber).width = 95 / 7; // 95 pixels
+                }
+            });
+
+            // Then apply widths for other columns
             columnMaxWidths.forEach((maxWidth, colNumber) => {
                 if (!allSpacingColumns.includes(colNumber)) {
                     if (colNumber >= 8) {
+                        // Skip Price and Total columns as they're already set above
+                        if (allSupplierPriceColumns.has(colNumber) || allSupplierTotalColumns.has(colNumber)) {
+                            return; // Already set above
+                        }
                         if (remarkColumns.has(colNumber)) {
                             // Remark columns: 25 pixels (approximately 3.57 Excel units)
                             worksheet.getColumn(colNumber).width = 25 / 7;
@@ -1396,10 +1425,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             // Unit columns: 25 pixels
                             worksheet.getColumn(colNumber).width = 25 / 7;
                         } else if (priceColumns.has(colNumber)) {
-                            // Price columns: 90 pixels
+                            // Price columns: 90 pixels (fallback for any missed columns)
                             worksheet.getColumn(colNumber).width = 90 / 7;
                         } else if (totalColumns.has(colNumber)) {
-                            // Total columns: 95 pixels
+                            // Total columns: 95 pixels (fallback for any missed columns)
                             worksheet.getColumn(colNumber).width = 95 / 7;
                         } else {
                             // Other columns: autofit
