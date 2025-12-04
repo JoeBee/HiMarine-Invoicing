@@ -170,7 +170,6 @@ export class DataService {
                                         if ((headerValue.includes('price') ||
                                             headerValue.includes('cost') ||
                                             headerValue.includes('unit aud') ||
-                                            headerValue.includes('amount') ||
                                             headerValue.includes('value') ||
                                             headerValue.includes('precio')) && headerValue.length < 25) {
                                             priceColumn = XLSX.utils.encode_col(searchCol);
@@ -246,16 +245,16 @@ export class DataService {
                                             // Look ahead to the next row
                                             const nextRow = dataRow + 1;
                                             let shouldExcludeAndStop = false;
-                                            
+
                                             if (nextRow <= range.e.r) {
                                                 const nextDescAddress = XLSX.utils.encode_cell({ r: nextRow, c: descColIndex });
                                                 const nextPriceAddress = XLSX.utils.encode_cell({ r: nextRow, c: priceColIndex });
                                                 const nextDescCell = worksheet[nextDescAddress];
                                                 const nextPriceCell = worksheet[nextPriceAddress];
-                                                
+
                                                 const nextHasDescription = nextDescCell && nextDescCell.v && String(nextDescCell.v).trim() !== '';
                                                 const nextHasPrice = nextPriceCell && nextPriceCell.v && String(nextPriceCell.v).trim() !== '';
-                                                
+
                                                 // If next row has no price and no description, exclude current row and stop
                                                 if (!nextHasPrice && !nextHasDescription) {
                                                     shouldExcludeAndStop = true;
@@ -265,7 +264,7 @@ export class DataService {
                                                 // exclude it as it's likely not a valid data row
                                                 shouldExcludeAndStop = true;
                                             }
-                                            
+
                                             if (shouldExcludeAndStop) {
                                                 break;
                                             }
@@ -361,7 +360,7 @@ export class DataService {
 
                 // Start from the row after the header
                 let consecutiveBlankDescriptions = 0;
-                
+
                 for (let row = topLeftCellRef.r + 1; row <= range.e.r; row++) {
                     const descAddress = XLSX.utils.encode_cell({ r: row, c: descColIndex });
                     const priceAddress = XLSX.utils.encode_cell({ r: row, c: priceColIndex });
@@ -393,16 +392,16 @@ export class DataService {
                         // Look ahead to the next row
                         const nextRow = row + 1;
                         let shouldExcludeAndStop = false;
-                        
+
                         if (nextRow <= range.e.r) {
                             const nextDescAddress = XLSX.utils.encode_cell({ r: nextRow, c: descColIndex });
                             const nextPriceAddress = XLSX.utils.encode_cell({ r: nextRow, c: priceColIndex });
                             const nextDescCell = worksheet[nextDescAddress];
                             const nextPriceCell = worksheet[nextPriceAddress];
-                            
+
                             const nextHasDescription = nextDescCell && nextDescCell.v && String(nextDescCell.v).trim() !== '';
                             const nextHasPrice = nextPriceCell && nextPriceCell.v && String(nextPriceCell.v).trim() !== '';
-                            
+
                             // If next row has no price and no description, exclude current row and stop
                             if (!nextHasPrice && !nextHasDescription) {
                                 shouldExcludeAndStop = true;
@@ -412,7 +411,7 @@ export class DataService {
                             // exclude it as it's likely not a valid data row
                             shouldExcludeAndStop = true;
                         }
-                        
+
                         if (shouldExcludeAndStop) {
                             break;
                         }
@@ -429,10 +428,10 @@ export class DataService {
                     // Apply price divider to the price
                     let adjustedPrice = NaN;
                     if (priceCell && priceCell.v) {
-                         const originalPrice = Number(priceCell.v);
-                         const priceDivider = this.getPriceDividerForCategory(fileInfo.category);
-                         const safeDivider = priceDivider > 0 ? priceDivider : 1;
-                         adjustedPrice = originalPrice / safeDivider;
+                        const originalPrice = Number(priceCell.v);
+                        const priceDivider = this.getPriceDividerForCategory(fileInfo.category);
+                        const safeDivider = priceDivider > 0 ? priceDivider : 1;
+                        adjustedPrice = originalPrice / safeDivider;
                     }
 
                     rows.push({
@@ -563,22 +562,22 @@ export class DataService {
     async updateFileTopLeftCell(fileName: string, topLeftCell: string): Promise<void> {
         const currentFiles = this.supplierFilesSubject.value;
         const fileIndex = currentFiles.findIndex(f => f.fileName === fileName);
-        
+
         if (fileIndex === -1) {
             return;
         }
 
         const fileInfo = currentFiles[fileIndex];
-        
+
         // Re-analyze the file with the new top left cell
         const updatedFileInfo = await this.analyzeFileWithTopLeft(fileInfo.file, topLeftCell, fileInfo.category);
-        
+
         // Update the file in the array
         const updatedFiles = [...currentFiles];
         updatedFiles[fileIndex] = updatedFileInfo;
-        
+
         this.supplierFilesSubject.next(updatedFiles);
-        
+
         // Reprocess files to update data
         await this.processSupplierFiles();
     }
@@ -595,7 +594,7 @@ export class DataService {
 
                 const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z100');
                 let topLeftCellRef: XLSX.CellAddress;
-                
+
                 try {
                     topLeftCellRef = XLSX.utils.decode_cell(topLeftCell);
                 } catch {
@@ -632,7 +631,6 @@ export class DataService {
                         if ((headerValue.includes('price') ||
                             headerValue.includes('cost') ||
                             headerValue.includes('unit aud') ||
-                            headerValue.includes('amount') ||
                             headerValue.includes('value') ||
                             headerValue.includes('precio')) && headerValue.length < 25) {
                             priceColumn = XLSX.utils.encode_col(col);
@@ -708,16 +706,16 @@ export class DataService {
                             // Look ahead to the next row
                             const nextRow = dataRow + 1;
                             let shouldExcludeAndStop = false;
-                            
+
                             if (nextRow <= range.e.r) {
                                 const nextDescAddress = XLSX.utils.encode_cell({ r: nextRow, c: descColIndex });
                                 const nextPriceAddress = XLSX.utils.encode_cell({ r: nextRow, c: priceColIndex });
                                 const nextDescCell = worksheet[nextDescAddress];
                                 const nextPriceCell = worksheet[nextPriceAddress];
-                                
+
                                 const nextHasDescription = nextDescCell && nextDescCell.v && String(nextDescCell.v).trim() !== '';
                                 const nextHasPrice = nextPriceCell && nextPriceCell.v && String(nextPriceCell.v).trim() !== '';
-                                
+
                                 // If next row has no price and no description, exclude current row and stop
                                 if (!nextHasPrice && !nextHasDescription) {
                                     shouldExcludeAndStop = true;
@@ -727,7 +725,7 @@ export class DataService {
                                 // exclude it as it's likely not a valid data row
                                 shouldExcludeAndStop = true;
                             }
-                            
+
                             if (shouldExcludeAndStop) {
                                 break;
                             }

@@ -49,60 +49,59 @@ export class SuppliersDocsComponent implements OnInit {
         items: string[];
         footnote?: string;
     }> = {
-        description: {
-            title: 'Description Column Auto-Mapping',
-            description: 'We auto-select the Description column when an Excel header includes one of these values:',
-            items: [
-                '"description"',
-                '"descrption"',
-                '"product"',
-                '"item"',
-                '"name"',
-                '"product description"',
-                '"product description (en)"'
-            ],
-            footnote: 'Matching uses case-insensitive partial matching (includes).'
-        },
-        price: {
-            title: 'Price Column Auto-Mapping',
-            description: 'We auto-select the Price column when an Excel header includes one of these values (and header length is less than 25 characters):',
-            items: [
-                '"price"',
-                '"cost"',
-                '"unit aud"',
-                '"amount"',
-                '"value"',
-                '"precio"'
-            ],
-            footnote: 'Matching uses case-insensitive partial matching (includes) and requires header length < 25 characters.'
-        },
-        unit: {
-            title: 'Unit Column Auto-Mapping',
-            description: 'We auto-select the Unit column when an Excel header exactly matches one of these values:',
-            items: [
-                '"unit"',
-                '"units"',
-                '"uom"',
-                '"uoms"',
-                '"u.m."',
-                '"um"',
-                '"u.o.m."',
-                '"u m"'
-            ],
-            footnote: 'Matching is case-insensitive exact match (===) after trimming.'
-        },
-        remarks: {
-            title: 'Remarks Column Auto-Mapping',
-            description: 'We auto-select the Remarks column when an Excel header includes one of these values:',
-            items: [
-                '"remark"',
-                '"comment"',
-                '"comentarios"',
-                '"presentation"'
-            ],
-            footnote: 'Matching uses case-insensitive partial matching (includes).'
-        }
-    };
+            description: {
+                title: 'Description Column Auto-Mapping',
+                description: 'We auto-select the Description column when an Excel header includes one of these values:',
+                items: [
+                    '"description"',
+                    '"descrption"',
+                    '"product"',
+                    '"item"',
+                    '"name"',
+                    '"product description"',
+                    '"product description (en)"'
+                ],
+                footnote: 'Matching uses case-insensitive partial matching (includes).'
+            },
+            price: {
+                title: 'Price Column Auto-Mapping',
+                description: 'We auto-select the Price column when an Excel header includes one of these values (and header length is less than 25 characters):',
+                items: [
+                    '"price"',
+                    '"cost"',
+                    '"unit aud"',
+                    '"value"',
+                    '"precio"'
+                ],
+                footnote: 'Matching uses case-insensitive partial matching (includes) and requires header length < 25 characters.'
+            },
+            unit: {
+                title: 'Unit Column Auto-Mapping',
+                description: 'We auto-select the Unit column when an Excel header exactly matches one of these values:',
+                items: [
+                    '"unit"',
+                    '"units"',
+                    '"uom"',
+                    '"uoms"',
+                    '"u.m."',
+                    '"um"',
+                    '"u.o.m."',
+                    '"u m"'
+                ],
+                footnote: 'Matching is case-insensitive exact match (===) after trimming.'
+            },
+            remarks: {
+                title: 'Remarks Column Auto-Mapping',
+                description: 'We auto-select the Remarks column when an Excel header includes one of these values:',
+                items: [
+                    '"remark"',
+                    '"comment"',
+                    '"comentarios"',
+                    '"presentation"'
+                ],
+                footnote: 'Matching uses case-insensitive partial matching (includes).'
+            }
+        };
 
     constructor(private dataService: DataService, private loggingService: LoggingService) { }
 
@@ -728,7 +727,7 @@ export class SuppliersDocsComponent implements OnInit {
     private async reanalyzeFileWithTopLeft(fileInfo: SupplierFileInfo, topLeftCell: string): Promise<void> {
         try {
             await this.dataService.updateFileTopLeftCell(fileInfo.fileName, topLeftCell);
-            
+
             this.loggingService.logUserAction('top_left_cell_changed', {
                 fileName: fileInfo.fileName,
                 newTopLeftCell: topLeftCell
