@@ -106,6 +106,39 @@ export class PriceListComponent implements OnInit, OnDestroy {
         return typeof price === 'number' && !isNaN(price) && isFinite(price);
     }
 
+    isInvalidRow(row: ProcessedDataRow): boolean {
+        // Check if row has description but no valid price
+        if (!row.description || !this.isPriceValid(row.price)) {
+            const descLower = row.description?.toLowerCase().trim() || '';
+            
+            // Exclude rows that look like headers/footers
+            const invalidPatterns = [
+                /^director$/i,
+                /^master$/i,
+                /@.*\.(com|net|org|edu|gov)/i, // Email addresses
+                /^nb:\s*email/i, // "NB: Email" patterns
+                /^email/i
+            ];
+            
+            // Check if description matches any invalid pattern
+            for (const pattern of invalidPatterns) {
+                if (pattern.test(descLower)) {
+                    return true;
+                }
+            }
+            
+            // Exclude rows with description but no price that are clearly not data
+            if (descLower && !this.isPriceValid(row.price) && !row.unit && !row.remarks) {
+                // If it's a single word or very short text, likely a header/footer
+                if (descLower.split(/\s+/).length <= 2 && descLower.length < 50) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
     validatePrices(): void {
         this.invalidPriceRecords = this.processedData.filter(row => 
             !this.isPriceValid(row.price) && !this.isSectionHeading(row)
@@ -210,6 +243,9 @@ export class PriceListComponent implements OnInit, OnDestroy {
 
     applyFilters(): void {
         let filtered = [...this.processedData];
+
+        // First, filter out invalid rows (like "DIRECTOR", email addresses, etc.)
+        filtered = filtered.filter(row => !this.isInvalidRow(row));
 
         // Filter by file name
         if (this.selectedFileName) {

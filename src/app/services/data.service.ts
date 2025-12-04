@@ -217,6 +217,7 @@ export class DataService {
                                 if (descriptionColumn !== 'NOT FOUND' && priceColumn !== 'NOT FOUND') {
                                     const descColIndex = XLSX.utils.decode_col(descriptionColumn);
                                     const priceColIndex = XLSX.utils.decode_col(priceColumn);
+                                    let consecutiveBlankDescriptions = 0;
 
                                     for (let dataRow = row + 1; dataRow <= range.e.r; dataRow++) {
                                         const descAddress = XLSX.utils.encode_cell({ r: dataRow, c: descColIndex });
@@ -225,10 +226,53 @@ export class DataService {
                                         const descCell = worksheet[descAddress];
                                         const priceCell = worksheet[priceAddress];
 
-                                        // Count rows that have description (even if price is missing)
-                                        if (descCell && descCell.v) {
-                                            rowCount++;
+                                        const hasDescription = descCell && descCell.v && String(descCell.v).trim() !== '';
+                                        const hasPrice = priceCell && priceCell.v && String(priceCell.v).trim() !== '';
+
+                                        // Check for 3 consecutive blank descriptions
+                                        if (!hasDescription) {
+                                            consecutiveBlankDescriptions++;
+                                            if (consecutiveBlankDescriptions >= 3) {
+                                                break;
+                                            }
+                                            continue;
                                         }
+
+                                        // Reset consecutive blank descriptions counter when we find a description
+                                        consecutiveBlankDescriptions = 0;
+
+                                        // Check if this row has only description (no price)
+                                        if (hasDescription && !hasPrice) {
+                                            // Look ahead to the next row
+                                            const nextRow = dataRow + 1;
+                                            let shouldExcludeAndStop = false;
+                                            
+                                            if (nextRow <= range.e.r) {
+                                                const nextDescAddress = XLSX.utils.encode_cell({ r: nextRow, c: descColIndex });
+                                                const nextPriceAddress = XLSX.utils.encode_cell({ r: nextRow, c: priceColIndex });
+                                                const nextDescCell = worksheet[nextDescAddress];
+                                                const nextPriceCell = worksheet[nextPriceAddress];
+                                                
+                                                const nextHasDescription = nextDescCell && nextDescCell.v && String(nextDescCell.v).trim() !== '';
+                                                const nextHasPrice = nextPriceCell && nextPriceCell.v && String(nextPriceCell.v).trim() !== '';
+                                                
+                                                // If next row has no price and no description, exclude current row and stop
+                                                if (!nextHasPrice && !nextHasDescription) {
+                                                    shouldExcludeAndStop = true;
+                                                }
+                                            } else {
+                                                // If we're at the end of the range and this row only has description (no price),
+                                                // exclude it as it's likely not a valid data row
+                                                shouldExcludeAndStop = true;
+                                            }
+                                            
+                                            if (shouldExcludeAndStop) {
+                                                break;
+                                            }
+                                        }
+
+                                        // Count this row
+                                        rowCount++;
                                     }
                                 }
 
@@ -316,6 +360,8 @@ export class DataService {
                 }
 
                 // Start from the row after the header
+                let consecutiveBlankDescriptions = 0;
+                
                 for (let row = topLeftCellRef.r + 1; row <= range.e.r; row++) {
                     const descAddress = XLSX.utils.encode_cell({ r: row, c: descColIndex });
                     const priceAddress = XLSX.utils.encode_cell({ r: row, c: priceColIndex });
@@ -327,37 +373,80 @@ export class DataService {
                     const unitCell = worksheet[unitAddress];
                     const remarksCell = worksheet[remarksAddress];
 
-                    if (descCell && descCell.v) {
-                        // Extract original row data
-                        const originalRowData: any[] = [];
-                        for (let col = range.s.c; col <= range.e.c; col++) {
-                            const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-                            const cell = worksheet[cellAddress];
-                            originalRowData.push(cell && cell.v ? cell.v : '');
-                        }
+                    const hasDescription = descCell && descCell.v && String(descCell.v).trim() !== '';
+                    const hasPrice = priceCell && priceCell.v && String(priceCell.v).trim() !== '';
 
-                        // Apply price divider to the price
-                        let adjustedPrice = NaN;
-                        if (priceCell && priceCell.v) {
-                             const originalPrice = Number(priceCell.v);
-                             const priceDivider = this.getPriceDividerForCategory(fileInfo.category);
-                             const safeDivider = priceDivider > 0 ? priceDivider : 1;
-                             adjustedPrice = originalPrice / safeDivider;
+                    // Check for 3 consecutive blank descriptions
+                    if (!hasDescription) {
+                        consecutiveBlankDescriptions++;
+                        if (consecutiveBlankDescriptions >= 3) {
+                            break;
                         }
-
-                        rows.push({
-                            fileName: fileInfo.fileName,
-                            description: String(descCell.v),
-                            price: adjustedPrice,
-                            unit: unitCell && unitCell.v ? String(unitCell.v) : '',
-                            remarks: remarksCell && remarksCell.v ? String(remarksCell.v) : '',
-                            count: 0,
-                            included: true, // Default to included
-                            category: fileInfo.category,
-                            originalData: originalRowData,
-                            originalHeaders: originalHeaders
-                        });
+                        continue;
                     }
+
+                    // Reset consecutive blank descriptions counter when we find a description
+                    consecutiveBlankDescriptions = 0;
+
+                    // Check if this row has only description (no price)
+                    if (hasDescription && !hasPrice) {
+                        // Look ahead to the next row
+                        const nextRow = row + 1;
+                        let shouldExcludeAndStop = false;
+                        
+                        if (nextRow <= range.e.r) {
+                            const nextDescAddress = XLSX.utils.encode_cell({ r: nextRow, c: descColIndex });
+                            const nextPriceAddress = XLSX.utils.encode_cell({ r: nextRow, c: priceColIndex });
+                            const nextDescCell = worksheet[nextDescAddress];
+                            const nextPriceCell = worksheet[nextPriceAddress];
+                            
+                            const nextHasDescription = nextDescCell && nextDescCell.v && String(nextDescCell.v).trim() !== '';
+                            const nextHasPrice = nextPriceCell && nextPriceCell.v && String(nextPriceCell.v).trim() !== '';
+                            
+                            // If next row has no price and no description, exclude current row and stop
+                            if (!nextHasPrice && !nextHasDescription) {
+                                shouldExcludeAndStop = true;
+                            }
+                        } else {
+                            // If we're at the end of the range and this row only has description (no price),
+                            // exclude it as it's likely not a valid data row
+                            shouldExcludeAndStop = true;
+                        }
+                        
+                        if (shouldExcludeAndStop) {
+                            break;
+                        }
+                    }
+
+                    // Extract original row data
+                    const originalRowData: any[] = [];
+                    for (let col = range.s.c; col <= range.e.c; col++) {
+                        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+                        const cell = worksheet[cellAddress];
+                        originalRowData.push(cell && cell.v ? cell.v : '');
+                    }
+
+                    // Apply price divider to the price
+                    let adjustedPrice = NaN;
+                    if (priceCell && priceCell.v) {
+                         const originalPrice = Number(priceCell.v);
+                         const priceDivider = this.getPriceDividerForCategory(fileInfo.category);
+                         const safeDivider = priceDivider > 0 ? priceDivider : 1;
+                         adjustedPrice = originalPrice / safeDivider;
+                    }
+
+                    rows.push({
+                        fileName: fileInfo.fileName,
+                        description: String(descCell.v),
+                        price: adjustedPrice,
+                        unit: unitCell && unitCell.v ? String(unitCell.v) : '',
+                        remarks: remarksCell && remarksCell.v ? String(remarksCell.v) : '',
+                        count: 0,
+                        included: true, // Default to included
+                        category: fileInfo.category,
+                        originalData: originalRowData,
+                        originalHeaders: originalHeaders
+                    });
                 }
 
                 resolve(rows);
@@ -590,6 +679,7 @@ export class DataService {
                 if (descriptionColumn !== 'NOT FOUND' && priceColumn !== 'NOT FOUND') {
                     const descColIndex = XLSX.utils.decode_col(descriptionColumn);
                     const priceColIndex = XLSX.utils.decode_col(priceColumn);
+                    let consecutiveBlankDescriptions = 0;
 
                     for (let dataRow = topLeftCellRef.r + 1; dataRow <= range.e.r; dataRow++) {
                         const descAddress = XLSX.utils.encode_cell({ r: dataRow, c: descColIndex });
@@ -598,14 +688,57 @@ export class DataService {
                         const descCell = worksheet[descAddress];
                         const priceCell = worksheet[priceAddress];
 
-                        if (descCell && descCell.v) {
-                            rowCount++;
-                        } else {
-                            break;
+                        const hasDescription = descCell && descCell.v && String(descCell.v).trim() !== '';
+                        const hasPrice = priceCell && priceCell.v && String(priceCell.v).trim() !== '';
+
+                        // Check for 3 consecutive blank descriptions
+                        if (!hasDescription) {
+                            consecutiveBlankDescriptions++;
+                            if (consecutiveBlankDescriptions >= 3) {
+                                break;
+                            }
+                            continue;
                         }
+
+                        // Reset consecutive blank descriptions counter when we find a description
+                        consecutiveBlankDescriptions = 0;
+
+                        // Check if this row has only description (no price)
+                        if (hasDescription && !hasPrice) {
+                            // Look ahead to the next row
+                            const nextRow = dataRow + 1;
+                            let shouldExcludeAndStop = false;
+                            
+                            if (nextRow <= range.e.r) {
+                                const nextDescAddress = XLSX.utils.encode_cell({ r: nextRow, c: descColIndex });
+                                const nextPriceAddress = XLSX.utils.encode_cell({ r: nextRow, c: priceColIndex });
+                                const nextDescCell = worksheet[nextDescAddress];
+                                const nextPriceCell = worksheet[nextPriceAddress];
+                                
+                                const nextHasDescription = nextDescCell && nextDescCell.v && String(nextDescCell.v).trim() !== '';
+                                const nextHasPrice = nextPriceCell && nextPriceCell.v && String(nextPriceCell.v).trim() !== '';
+                                
+                                // If next row has no price and no description, exclude current row and stop
+                                if (!nextHasPrice && !nextHasDescription) {
+                                    shouldExcludeAndStop = true;
+                                }
+                            } else {
+                                // If we're at the end of the range and this row only has description (no price),
+                                // exclude it as it's likely not a valid data row
+                                shouldExcludeAndStop = true;
+                            }
+                            
+                            if (shouldExcludeAndStop) {
+                                break;
+                            }
+                        }
+
+                        // Count this row
+                        rowCount++;
                     }
                 } else {
                     // Count rows based on any data
+                    let consecutiveBlankRows = 0;
                     for (let dataRow = topLeftCellRef.r + 1; dataRow <= range.e.r; dataRow++) {
                         let hasData = false;
                         for (let col = range.s.c; col <= range.e.c; col++) {
@@ -618,8 +751,12 @@ export class DataService {
                         }
                         if (hasData) {
                             rowCount++;
+                            consecutiveBlankRows = 0;
                         } else {
-                            break;
+                            consecutiveBlankRows++;
+                            if (consecutiveBlankRows >= 3) {
+                                break;
+                            }
                         }
                     }
                 }

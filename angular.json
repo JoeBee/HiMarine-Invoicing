@@ -77,6 +77,11 @@
                 },
                 "serve": {
                     "builder": "@angular-devkit/build-angular:dev-server",
+                    "options": {
+                        "open": true,
+                        "host": "localhost",
+                        "port": 4200
+                    },
                     "configurations": {
                         "production": {
                             "buildTarget": "hi-marine-invoicing:build:production"
