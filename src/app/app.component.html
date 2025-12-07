@@ -1,0 +1,64 @@
+<div class="app-container">
+    <header>
+        <!-- Main Navigation Row -->
+        <nav class="nav-tabs main-nav">
+            <a (click)="onMainTabClick('rfq')" [class.active]="activeMainTab === 'rfq'">📋 Request for Quotation
+                (RFQ)</a>
+            <a (click)="onMainTabClick('suppliers')" [class.active]="activeMainTab === 'suppliers'">🏢 Suppliers</a>
+            <a (click)="onMainTabClick('invoicing')" [class.active]="activeMainTab === 'invoicing'">📄 Invoicing</a>
+            <a (click)="onMainTabClick('supplier-analysis')" [class.active]="activeMainTab === 'supplier-analysis'">📊
+                Supplier Analysis</a>
+            <a *ngIf="showHistoryTab" (click)="onMainTabClick('history')"
+                [class.active]="activeMainTab === 'history'">&#x23F3; History</a>
+        </nav>
+        <div class="info-icon" (click)="openInfoModal()">
+            &#9432;
+        </div>
+
+        <!-- Sub Navigation Row - RFQ -->
+        <nav class="nav-tabs sub-nav" *ngIf="activeMainTab === 'rfq'">
+            <a routerLink="/rfq/captains-request" routerLinkActive="active">Captain's Request</a>
+            <a routerLink="/rfq/proposal" routerLinkActive="active">Our Quote</a>
+        </nav>
+
+        <!-- Sub Navigation Row - Suppliers -->
+        <nav class="nav-tabs sub-nav" *ngIf="activeMainTab === 'suppliers'">
+            <a routerLink="/suppliers/supplier-docs" routerLinkActive="active">Supplier Docs</a>
+            <a routerLink="/suppliers/price-list" routerLinkActive="active">Price List</a>
+        </nav>
+
+        <!-- Sub Navigation Row - Invoicing -->
+        <nav class="nav-tabs sub-nav" *ngIf="activeMainTab === 'invoicing'">
+            <a routerLink="/invoicing/captains-order" routerLinkActive="active">Captain's Order</a>
+            <a routerLink="/invoicing/invoice" routerLinkActive="active">Invoice</a>
+        </nav>
+
+        <!-- Sub Navigation Row - Supplier Analysis -->
+        <nav class="nav-tabs sub-nav" *ngIf="activeMainTab === 'supplier-analysis'">
+            <a routerLink="/supplier-analysis/inputs" routerLinkActive="active">Inputs</a>
+            <a routerLink="/supplier-analysis/analysis" routerLinkActive="active">Analysis</a>
+        </nav>
+    </header>
+
+    <div class="password-input-container">
+        <div class="password-input-wrapper">
+            <input [type]="showPassword ? 'text' : 'password'" class="password-input" [(ngModel)]="passwordInput"
+                (input)="onPasswordInput($event)" [readonly]="showHistoryTab" placeholder="" autocomplete="off" />
+            <button *ngIf="!showHistoryTab" type="button" class="password-toggle" (mousedown)="showPassword = true"
+                (mouseup)="showPassword = false" (mouseleave)="showPassword = false" (touchstart)="showPassword = true"
+                (touchend)="showPassword = false" aria-label="Show password">
+                <span>👁</span>
+            </button>
+        </div>
+        <button *ngIf="showHistoryTab" type="button" class="logout-button" (click)="logout()" aria-label="Logout"
+            title="Logout">
+            🚪
+        </button>
+    </div>
+
+    <app-information-modal *ngIf="showInfoModal" (close)="closeInfoModal()"></app-information-modal>
+
+    <main class="container">
+        <router-outlet></router-outlet>
+    </main>
+</div>

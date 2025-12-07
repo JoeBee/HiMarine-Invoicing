@@ -1,0 +1,860 @@
+.invoice-container {
+    background-color: #f0f7ff;
+    /* Very light blue background - lighter than #e3f2fd */
+    min-height: calc(100vh - 120px);
+    margin: -40px -20px;
+    padding: 60px 40px;
+    font-family: Arial, sans-serif;
+    color: #000;
+
+    .content-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .selection-fees-section {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 30px;
+
+        .left-column-container {
+            flex: 0 0 50%; // Increased from 40%
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .bank-selection-section {
+            // flex-basis handled by parent container
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+
+            h3 {
+                font-size: 18px;
+                font-weight: bold;
+                margin: 0 0 15px 0;
+                color: #000;
+            }
+        }
+
+        .currency-section {
+            flex: 1 1 auto;
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+
+
+            .currency-toggle-row {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                flex-wrap: wrap;
+
+                .currency-toggle-group {
+                    .currency-toggle-switch {
+                        position: relative;
+                        display: inline-block;
+                        width: 120px;
+                        height: 32px;
+                        cursor: pointer;
+
+                        .toggle-input {
+                            opacity: 0;
+                            width: 0;
+                            height: 0;
+                        }
+
+                        .toggle-slider {
+                            position: absolute;
+                            cursor: pointer;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background-color: #ccc;
+                            transition: 0.3s;
+                            border-radius: 32px;
+                            display: flex;
+                            align-items: center;
+                            padding: 0 12px;
+
+                            span {
+                                z-index: 2;
+                                font-weight: 600;
+                                font-size: 14px;
+                                color: #333;
+                            }
+
+                            &::before {
+                                position: absolute;
+                                content: "";
+                                height: 24px;
+                                width: 24px;
+                                left: 4px;
+                                bottom: 4px;
+                                background-color: white;
+                                transition: 0.3s;
+                                border-radius: 50%;
+                                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                            }
+                        }
+
+                        .toggle-input:checked + .toggle-slider {
+                            background-color: #4CAF50;
+
+                            &::before {
+                                transform: translateX(88px);
+                            }
+
+                            span {
+                                color: white;
+                            }
+                        }
+
+                        .toggle-input:focus + .toggle-slider {
+                            box-shadow: 0 0 1px #4CAF50;
+                        }
+                    }
+                }
+
+                .currency-text {
+                    font-size: 16px;
+                    font-weight: 500;
+                    color: #000;
+                    flex: 1;
+                }
+            }
+
+            .exchange-rate-group {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                margin-top: 8px;
+
+                .exchange-rate-input-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    flex-wrap: wrap;
+                }
+
+                .exchange-rate-label {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #000;
+                    white-space: nowrap;
+                }
+
+                .exchange-rate-input {
+                    padding: 8px 12px;
+                    border: 1px solid #ccc;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    width: 75px;
+                    background-color: #fff;
+
+                    &:focus {
+                        outline: none;
+                        border-color: #007bff;
+                        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+                    }
+                }
+
+                .exchange-rate-description {
+                    font-size: 12px;
+                    color: #666;
+                    font-style: italic;
+                    line-height: 1.4;
+                    flex: 1;
+                }
+            }
+        }
+
+        .fees-section {
+            flex: 0 0 50%; // Reduced from 60% to balance with left column
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+
+            h3 {
+                font-size: 18px;
+                font-weight: bold;
+                margin: 0 0 15px 0;
+                color: #000;
+            }
+        }
+
+        .bank-selection-section {
+            .radio-group {
+                display: flex;
+                gap: 20px;
+                flex-wrap: wrap;
+
+                .radio-option {
+                    display: flex;
+                    align-items: center;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: 500;
+
+                    input[type="radio"] {
+                        margin-right: 8px;
+                        transform: scale(1.2);
+                    }
+
+                    .radio-label {
+                        color: #000;
+                    }
+
+                    &:hover {
+                        .radio-label {
+                            color: #007bff;
+                        }
+                    }
+                }
+            }
+        }
+
+        .currency-section {
+            .radio-group.currency-group {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px; // Add gap to separate radio buttons
+
+                .radio-option {
+                    font-size: 12px; // Further reduced font size
+                    font-weight: 500;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px; // Space between radio input and label
+
+                    input[type="radio"] {
+                        transform: scale(1); // Standard scale
+                        margin: 0;
+                    }
+                }
+            }
+        }
+
+        .fees-section {
+            .fees-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                column-gap: 0; // no gap between columns
+                row-gap: 2px; // reduced spacing between rows
+
+                .fee-field {
+                    display: flex;
+                    align-items: center;
+                    gap: 0px; // minimal spacing inside each row
+
+                    label {
+                        font-weight: bold;
+                        font-size: 14px;
+                        color: #000;
+                        min-width: 95px;
+                        flex-shrink: 0;
+                    }
+
+                    .editable-field {
+                        padding: 5px 6px;
+                        border: 1px solid #ccc;
+                        background-color: #ffffcc;
+                        font-size: 11px;
+                        border-radius: 3px;
+                        width: 60px;
+                        flex-shrink: 0;
+                    }
+
+                    // Right column fields - move left and align
+                    &:nth-child(2n) {
+                        margin-left: -52px; // Move right column fields closer
+
+                        .editable-field {
+                            width: 60px; // Ensure consistent width for alignment
+                        }
+                    }
+
+                    // Discount field styling - rectangle border and slight background shading
+                    &.discount-field {
+                        padding: 4px;
+                        border: 1px solid #d0d0d0;
+                        border-radius: 4px;
+                        background-color: #f5f5f5;
+                        margin-left: -52px; // Align with other right column fields
+                        width: fit-content; // Fit content to reduce container width
+
+                        .discount-input {
+                            background-color: #fafafa;
+                            border: 1px solid #ccc;
+                            width: 40px; // Slightly smaller width for the input itself
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .top-section {
+        margin-bottom: 30px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 20px;
+
+        .top-section-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .company-logo {
+            .top-logo {
+                height: 80px;
+                width: auto;
+            }
+        }
+
+        .export-buttons-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+
+            .toggle-group {
+                .toggle-switch {
+                    position: relative;
+                    display: inline-block;
+                    width: 220px;
+                    height: 52px;
+                    cursor: pointer;
+                    margin: 0;
+                }
+
+                .toggle-input {
+                    opacity: 0;
+                    width: 0;
+                    height: 0;
+                }
+
+                .toggle-slider {
+                    position: absolute;
+                    cursor: pointer;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: #e0e0e0;
+                    border: 2px solid #ccc;
+                    transition: .4s;
+                    border-radius: 52px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0 14px;
+
+                    &::before {
+                        position: absolute;
+                        content: "";
+                        height: 40px;
+                        width: 98px;
+                        left: 4px;
+                        bottom: 4px;
+                        background-color: #2E7D32; // Default darker green for US/UK
+                        transition: .4s;
+                        border-radius: 40px;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                    }
+                }
+
+                // Darker green for US/UK
+                &.us-uk-toggle {
+                    .toggle-slider::before {
+                        background-color: #2E7D32; // Darker green
+                    }
+
+                    .toggle-input:focus+.toggle-slider {
+                        box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.3);
+                    }
+                }
+
+                // Darker blue for EOS
+                &.eos-toggle {
+                    .toggle-slider::before {
+                        background-color: #1976D2; // Darker blue
+                    }
+
+                    .toggle-input:focus+.toggle-slider {
+                        box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.3);
+                    }
+                }
+
+                .toggle-label-left,
+                .toggle-label-right {
+                    z-index: 2;
+                    font-weight: 600;
+                    font-size: 16px;
+                    transition: color 0.3s, font-weight 0.3s;
+                    position: relative;
+                    width: 90px;
+                    text-align: center;
+                }
+
+                .toggle-label-left {
+                    color: #333;
+                }
+
+                .toggle-label-right {
+                    color: #666;
+                }
+
+                // When unchecked (Split invoices is selected)
+                .toggle-input:not(:checked)+.toggle-slider {
+                    .toggle-label-left {
+                        color: white;
+                        font-weight: 700;
+                    }
+
+                    .toggle-label-right {
+                        color: #999;
+                        font-weight: 500;
+                    }
+                }
+
+                // When checked (One invoice is selected)
+                .toggle-input:checked+.toggle-slider {
+                    background-color: #e0e0e0;
+
+                    &::before {
+                        transform: translateX(98px);
+                    }
+
+                    .toggle-label-left {
+                        color: #999;
+                        font-weight: 500;
+                    }
+
+                    .toggle-label-right {
+                        color: white;
+                        font-weight: 700;
+                    }
+                }
+
+            }
+
+            .export-btn {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 12px 24px;
+                border: none;
+                border-radius: 6px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+                .btn-icon {
+                    font-size: 18px;
+                }
+
+                &:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+                }
+
+                &:active {
+                    transform: translateY(0);
+                }
+
+                &.excel-btn {
+                    background-color: #217346;
+                    color: white;
+
+                    &:hover {
+                        background-color: #1a5a36;
+                    }
+
+                    &.eos-blue {
+                        background-color: #0B2E66;
+                        color: white;
+
+                        &:hover:not(:disabled) {
+                            background-color: #0a2548;
+                        }
+
+                        &:disabled {
+                            background-color: #6c757d;
+                            cursor: not-allowed;
+                            opacity: 0.6;
+                        }
+                    }
+
+                    &:disabled {
+                        background-color: #6c757d;
+                        cursor: not-allowed;
+                        opacity: 0.6;
+                    }
+                }
+
+                &.pdf-btn {
+                    background-color: #d32f2f;
+                }
+            }
+        }
+
+        .export-filename-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: flex-end;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #fafafa;
+
+            label {
+                font-size: 14px;
+                font-weight: 500;
+                color: #333;
+                white-space: nowrap;
+            }
+
+            .filename-label {
+                font-weight: bold;
+            }
+
+            .filename-input {
+                width: 630px;
+                padding: 8px 12px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                font-size: 14px;
+                transition: border-color 0.3s ease;
+
+                &:focus {
+                    outline: none;
+                    border-color: #217346;
+                    box-shadow: 0 0 0 2px rgba(33, 115, 70, 0.1);
+                }
+
+                &:hover {
+                    border-color: #999;
+                }
+            }
+
+            .file-extension-label {
+                font-size: 14px;
+                font-weight: bold;
+                color: #333;
+                white-space: nowrap;
+                margin-left: 0;
+            }
+        }
+
+        .company-info {
+            text-align: right;
+
+            h1 {
+                font-size: 24px;
+                font-weight: bold;
+                margin: 0 0 10px 0;
+                color: #000;
+            }
+
+            p {
+                margin: 2px 0;
+                font-size: 14px;
+                color: #000;
+            }
+        }
+    }
+
+    .main-content {
+        display: flex;
+        gap: 40px;
+        margin-bottom: 30px;
+
+        .left-section {
+            flex: 1;
+
+            .section-box {
+                border: 2px solid #dee2e6;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 20px;
+                background-color: #f8f9fa;
+
+                .section-title {
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin: 0 0 15px 0;
+                    color: #000;
+                    border-bottom: 2px solid #007bff;
+                    padding-bottom: 8px;
+                }
+            }
+
+            .company-details,
+            .vessel-details,
+            .bank-details,
+            .uk-domestic-wires {
+                margin-bottom: 20px;
+
+                h3 {
+                    font-size: 16px;
+                    font-weight: bold;
+                    margin: 0 0 10px 0;
+                    color: #000;
+                }
+
+                .detail-field,
+                .bank-field {
+                    margin-bottom: 8px;
+                    display: flex;
+                    align-items: center;
+
+                    label {
+                        font-weight: bold;
+                        margin-right: 10px;
+                        min-width: 120px;
+                        color: #000;
+                    }
+
+                    .editable-field {
+                        flex: 1;
+                        padding: 4px 8px;
+                        border: 1px solid #ccc;
+                        background-color: #ffffcc;
+                        font-size: 14px;
+                    }
+                }
+            }
+        }
+
+        .right-section {
+            flex: 1;
+
+            .section-box {
+                border: 2px solid #dee2e6;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 20px;
+                background-color: #f8f9fa;
+
+                .section-title {
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin: 0 0 15px 0;
+                    color: #000;
+                    border-bottom: 2px solid #007bff;
+                    padding-bottom: 8px;
+                }
+            }
+
+            .vessel-details,
+            .invoice-details {
+
+                .detail-field,
+                .invoice-field {
+                    margin-bottom: 8px;
+                    display: flex;
+                    align-items: center;
+
+                    label {
+                        font-weight: bold;
+                        margin-right: 10px;
+                        min-width: 100px;
+                        color: #000;
+                    }
+
+                    .editable-field {
+                        flex: 1;
+                        padding: 4px 8px;
+                        border: 1px solid #ccc;
+                        background-color: #ffffcc;
+                        font-size: 14px;
+                    }
+                }
+
+                .imo-field {
+                    .imo-input-wrapper {
+                        position: relative;
+                        flex: 1;
+                        display: flex;
+                        align-items: center;
+
+                        .editable-field {
+                            background-color: #e6e6b3; // Slightly darker shade
+                            padding-right: 30px; // Make room for clear button
+                        }
+
+                        .imo-clear-btn {
+                            position: absolute;
+                            right: 8px;
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                            font-size: 20px;
+                            line-height: 1;
+                            color: #666;
+                            padding: 0;
+                            width: 20px;
+                            height: 20px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            z-index: 1;
+
+                            &:hover {
+                                color: #000;
+                            }
+
+                            &:focus {
+                                outline: none;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .items-section {
+        margin-bottom: 30px;
+
+        // EOS theme: parent class applied in template when EOS selected
+        &.eos-theme {
+            .items-table {
+                th {
+                    background-color: #0B2E66;
+                }
+            }
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+
+            th,
+            td {
+                border: 1px solid #000;
+                padding: 8px;
+                text-align: left;
+                font-size: 14px;
+            }
+
+            th {
+                background-color: #808080;
+                color: #ffffff;
+                font-weight: bold;
+                text-align: center;
+            }
+
+            // EOS theme: match header background to EOS navy (#0B2E66)
+
+
+            td {
+                background-color: white;
+
+                &:first-child,
+                &:nth-child(2) {
+                    text-align: center;
+                }
+
+                &:nth-child(6),
+                &:nth-child(7),
+                &:nth-child(8) {
+                    text-align: right;
+                }
+            }
+        }
+    }
+
+    .totals-section {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 30px;
+
+        .totals-right {
+            .total-line {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 5px;
+                font-size: 16px;
+
+                &.grand-total {
+                    font-weight: bold;
+                    font-size: 18px;
+                    border-top: 2px solid #000;
+                    padding-top: 5px;
+                    margin-top: 10px;
+                }
+            }
+        }
+    }
+
+    .terms-section {
+        margin-bottom: 30px;
+
+        h3 {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            color: #000;
+        }
+
+        ol {
+            margin: 0;
+            padding-left: 20px;
+
+            li {
+                margin-bottom: 8px;
+                font-size: 14px;
+                color: #000;
+            }
+        }
+    }
+
+
+    .bottom-section {
+        border-top: 2px solid #000;
+        padding-top: 20px;
+
+        .bottom-logo-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    }
+
+    // EOS highlight for targeted inputs
+    .editable-field.eos-highlight {
+        background-color: #d9edf7; // light blue
+    }
+
+    // When EOS is selected at the root, shade all editable fields light blue
+    &.eos-theme {
+        background-color: #e6eefc;
+
+        .editable-field {
+            background-color: #d9edf7 !important;
+        }
+    }
+
+    // Hi Marine theme styles
+    &.hi-marine-theme {
+        background-color: #f0f7ff;
+    }
+}

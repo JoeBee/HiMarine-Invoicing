@@ -1,0 +1,104 @@
+<div class="supplier-analysis-analysis-container">
+    <div class="content-wrapper">
+        <h1>Supplier Analysis</h1>
+
+        <div *ngIf="!isLoading && analysisSets.length > 0" class="export-controls">
+            <div class="export-input-group">
+                <label for="exportFileName">Export File Name:</label>
+                <input type="text" id="exportFileName" [(ngModel)]="exportFileName" class="export-filename-input" />
+            </div>
+            <div class="export-button-wrapper">
+                <button type="button" class="export-button" (click)="exportToExcel()"
+                    [disabled]="!exportFileName || exportFileName.trim() === ''">
+                    Export to Excel
+                </button>
+                <p class="export-note">Note, to force an Excel update press 'F9'.</p>
+            </div>
+        </div>
+
+        <div *ngIf="isLoading" class="loading-message">
+            <p>Loading data...</p>
+        </div>
+
+        <ng-container *ngFor="let set of analysisSets">
+            <div *ngIf="!isLoading && !set.rowCountsMatch" class="error-message">
+                <p>Data row count between all input Excel files must match (Group {{set.id}}).</p>
+                <p class="error-details">
+                    Invoice files: {{ set.invoiceFiles.length }} file(s)
+                    <span *ngFor="let file of set.invoiceFiles"> - {{ file.fileName }} ({{ file.rowCount }} rows)</span>
+                </p>
+                <p class="error-details">
+                    Supplier Quotation files: {{ set.supplierQuotationFiles.length }} file(s)
+                    <span *ngFor="let file of set.supplierQuotationFiles"> - {{ file.fileName }} ({{ file.rowCount }}
+                        rows)</span>
+                </p>
+            </div>
+
+            <div *ngIf="!isLoading && set.rowCountsMatch && set.invoiceData.length > 0" class="comparison-table-container">
+                <div class="table-collapsible-section">
+                    <div class="table-header" (click)="toggleTable(set)">
+                        <div class="table-header-info">
+                            <span>Group {{set.id}} | Records: {{ getRecordCount(set) }} | Files: {{ getFileCount(set) }}</span>
+                            <span class="invoice-label-display">
+                                Section:<input type="text" [(ngModel)]="set.invoiceLabel" class="invoice-label-input-inline" />
+                            </span>
+                        </div>
+                        <span class="expand-icon" [class.expanded]="set.tableExpanded">▼</span>
+                    </div>
+                    <div class="table-content" [class.expanded]="set.tableExpanded">
+                        <div class="table-wrapper">
+                            <table class="comparison-table">
+                                <thead>
+                                    <tr>
+                                        <th [attr.colspan]="set.invoiceHeaders.length" class="invoice-column">
+                                            <div class="invoice-header-container">
+                                                <span>INVOICE</span>
+                                            </div>
+                                        </th>
+                                        <th *ngFor="let file of set.supplierQuotationFiles; let i = index"
+                                            [attr.colspan]="getSupplierQuotationHeaderLength(set, i)"
+                                            [class]="i % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">
+                                            <span *ngIf="!file.isBlank">{{ file.fileName }}</span>
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th *ngFor="let header of set.invoiceHeaders" class="invoice-column" [class.right-aligned]="isRightAlignedHeader(header)">{{ header }}</th>
+                                        <ng-container
+                                            *ngFor="let headers of set.supplierQuotationHeaders; let fileIndex = index">
+                                            <th *ngFor="let header of getFilteredHeaders(set, fileIndex, headers)"
+                                                [class]="fileIndex % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">
+                                                <span *ngIf="!set.supplierQuotationFiles[fileIndex].isBlank">{{ header }}</span>
+                                            </th>
+                                        </ng-container>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let invoiceRow of set.invoiceData; let rowIndex = index">
+                                        <td *ngFor="let header of set.invoiceHeaders" class="invoice-column" [class.right-aligned]="isRightAlignedHeader(header)">
+                                            {{ getCellValue(invoiceRow, header) }}
+                                        </td>
+                                        <ng-container
+                                            *ngFor="let fileHeaders of set.supplierQuotationHeaders; let fileIndex = index">
+                                            <td *ngFor="let header of getFilteredHeaders(set, fileIndex, fileHeaders)"
+                                                [ngClass]="{
+                                                    'supplier-column': fileIndex % 2 === 0,
+                                                    'supplier-column-alt': fileIndex % 2 !== 0,
+                                                    'highlight-difference': shouldHighlightCell(set, fileIndex, rowIndex, header)
+                                                }">
+                                                {{ getSupplierQuotationValue(set, fileIndex, rowIndex, header) }}
+                                            </td>
+                                        </ng-container>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+
+        <div *ngIf="!isLoading && analysisSets.length === 0" class="no-data-message">
+            <p>No data available. Please upload files on the Inputs page.</p>
+        </div>
+    </div>
+</div>

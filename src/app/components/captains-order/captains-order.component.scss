@@ -1,0 +1,279 @@
+.captains-order-container {
+    background-color: #f0f7ff;
+    /* Very light blue background - lighter than #e3f2fd */
+    min-height: calc(100vh - 120px);
+    margin: -40px -20px;
+    padding: 60px 40px;
+    max-width: none;
+
+    .content-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    h1 {
+        color: #0066cc;
+        margin-bottom: 30px;
+        font-size: 32px;
+        text-align: center;
+    }
+
+    p {
+        color: #666;
+        font-size: 16px;
+        line-height: 1.5;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+}
+
+// Dropzone styles
+.dropzone-container {
+    margin: 30px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.dropzone {
+    border: 3px dashed #ccc;
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #fafafa;
+    min-width: 400px;
+    max-width: 600px;
+    width: 100%;
+
+    &:hover {
+        border-color: #0066cc;
+        background-color: #f0f8ff;
+    }
+
+    &.drag-over {
+        border-color: #0066cc;
+        background-color: #e6f3ff;
+        transform: scale(1.02);
+    }
+
+    .dropzone-content {
+        .upload-icon {
+            font-size: 144px;
+            margin-bottom: 16px;
+            display: block;
+            font-style: normal;
+            line-height: 1;
+        }
+
+        .dropzone-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .dropzone-subtext {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+    }
+}
+
+// Processing status
+.processing-status {
+    text-align: center;
+    margin: 30px 0;
+    padding: 20px;
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #0066cc;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 16px;
+    }
+
+    p {
+        color: #0066cc;
+        font-size: 16px;
+        font-weight: 500;
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+// Results display
+.results-container {
+    margin-top: 40px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+
+    h2 {
+        color: #0066cc;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 24px;
+    }
+
+    .results-table-container {
+        overflow-x: auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
+
+            thead {
+                background-color: #0066cc;
+                color: white;
+
+                th {
+                    padding: 15px 20px;
+                    text-align: left;
+                    font-weight: 600;
+                    font-size: 16px;
+                    border: none;
+
+                    &:first-child {
+                        border-top-left-radius: 8px;
+                    }
+
+                    &:last-child {
+                        border-top-right-radius: 8px;
+                    }
+                }
+            }
+
+            tbody {
+                tr {
+                    border-bottom: 1px solid #e9ecef;
+                    transition: background-color 0.2s ease;
+
+                    &:hover {
+                        background-color: #f8f9fa;
+                    }
+
+                    &:last-child {
+                        border-bottom: none;
+                    }
+
+                    td {
+                        padding: 15px 20px;
+                        vertical-align: middle;
+
+                        &.tab-name {
+                            font-weight: 600;
+                            color: #333;
+                        }
+
+                        &.records-count {
+                            text-align: center;
+                            color: #0066cc;
+                            font-weight: 600;
+                        }
+
+                        &.total-amount {
+                            text-align: right;
+                            color: #28a745;
+                            font-weight: 600;
+                        }
+                    }
+                }
+            }
+
+            tfoot {
+                background-color: #e9ecef;
+                border-top: 2px solid #0066cc;
+
+                .total-row {
+                    td {
+                        padding: 15px 20px;
+                        font-size: 18px;
+                        color: #333;
+
+                        &:first-child {
+                            border-bottom-left-radius: 8px;
+                        }
+
+                        &:last-child {
+                            border-bottom-right-radius: 8px;
+                        }
+
+                        &:nth-child(2) {
+                            text-align: center;
+                            color: #0066cc;
+                        }
+
+                        &:last-child {
+                            text-align: right;
+                            color: #28a745;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Error message
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 16px;
+    border-radius: 6px;
+    margin: 20px 0;
+    text-align: center;
+    border: 1px solid #f5c6cb;
+
+    p {
+        margin: 0;
+        font-weight: 500;
+    }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+    .captains-order-container {
+        padding: 10px;
+    }
+
+    .dropzone {
+        min-width: 300px;
+        padding: 30px 20px;
+    }
+
+    .results-container {
+        .results-table-container {
+            .results-table {
+                font-size: 14px;
+
+                thead th,
+                tbody td,
+                tfoot td {
+                    padding: 10px 12px;
+                }
+
+                tfoot .total-row td {
+                    font-size: 16px;
+                }
+            }
+        }
+    }
+}
+

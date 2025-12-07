@@ -1,0 +1,329 @@
+<div class="proposal-container"
+    [ngClass]="{ 'eos-theme': selectedCompany === 'EOS', 'hi-marine-theme': selectedCompany === 'HI US' || selectedCompany === 'HI UK' }">
+    <div class="content-wrapper">
+        <div class="top-section" *ngIf="proposalTables.length > 0">
+            <div class="top-section-content">
+                <div class="company-logo">
+                    <img [src]="selectedCompany === 'EOS' ? 'assets/images/EosSupplyLtd.png' : 'assets/images/HIMarineTopImage_sm.png'"
+                        alt="Company Logo" class="top-logo">
+                </div>
+                <div class="export-buttons-section">
+                    <!-- Space reserved for future export controls -->
+                </div>
+            </div>
+            <div class="export-filename-group">
+                <label class="filename-label">Export File Name:</label>
+                <input type="text" [(ngModel)]="exportFileName" (ngModelChange)="onExportFileNameChange()"
+                    class="filename-input">
+                <label class="file-extension-label">.xlsx</label>
+            </div>
+        </div>
+
+        <div class="selection-section">
+            <div class="bank-selection-section">
+                <div class="company-actions">
+                    <div class="radio-groups">
+                        <div class="radio-group">
+                            <input type="radio" id="quoteCompanyHIUS" name="company" value="HI US"
+                                [(ngModel)]="selectedCompany">
+                            <label for="quoteCompanyHIUS">HI US</label>
+
+                            <input type="radio" id="quoteCompanyHIUK" name="company" value="HI UK"
+                                [(ngModel)]="selectedCompany">
+                            <label for="quoteCompanyHIUK">HI UK</label>
+
+                            <input type="radio" id="quoteCompanyEOS" name="company" value="EOS"
+                                [(ngModel)]="selectedCompany">
+                            <label for="quoteCompanyEOS">EOS</label>
+                        </div>
+                        <div class="radio-group currency-group">
+                            <ng-container *ngFor="let option of currencyOptions">
+                                <input type="radio" [id]="'quoteCurrency' + option.code" name="currency"
+                                    [value]="option.code" [(ngModel)]="selectedCurrency">
+                                <label [attr.for]="'quoteCurrency' + option.code">{{ option.label }}</label>
+                            </ng-container>
+                        </div>
+                    </div>
+                    <div class="company-buttons">
+                        <div class="export-filename-inline">
+                            <label class="filename-label" for="inlineExportFileName">Export File Name:</label>
+                            <div class="filename-input-wrapper">
+                                <input id="inlineExportFileName" type="text" [(ngModel)]="exportFileName"
+                                    (ngModelChange)="onExportFileNameChange()" class="filename-input">
+                                <span class="file-extension-label">.xlsx</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="create-rfq-bar">
+                        <!-- <p class="help-text">Disabled until all required columns are identified or tabs are excluded.
+                        </p> -->
+                        <button class="create-rfq-button" (click)="createRFQs()"
+                            [disabled]="proposalTableCount === 0 || !selectedCompany || !selectedCurrency">
+                            Create {{ proposalTableCount }} RFQ(s)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Section -->
+        <div class="main-content">
+            <!-- Left Side - Our Company Details and Bank Details -->
+            <div class="left-section">
+                <!-- Our Company Details Section -->
+                <div class="section-box">
+                    <h2 class="section-title">Our Company Details</h2>
+                    <div class="company-details">
+                        <div class="detail-field">
+                            <label>Name:</label>
+                            <input type="text" [(ngModel)]="rfqData.ourCompanyName"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Address:</label>
+                            <input type="text" [(ngModel)]="rfqData.ourCompanyAddress"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Address 2:</label>
+                            <input type="text" [(ngModel)]="rfqData.ourCompanyAddress2"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>City:</label>
+                            <input type="text" [(ngModel)]="rfqData.ourCompanyCity"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Country:</label>
+                            <input type="text" [(ngModel)]="rfqData.ourCompanyCountry"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Phone:</label>
+                            <input type="text" [(ngModel)]="rfqData.ourCompanyPhone"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Email:</label>
+                            <input type="text" [(ngModel)]="rfqData.ourCompanyEmail"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bank Details Section -->
+                <div class="section-box">
+                    <h2 class="section-title">Bank Details</h2>
+                    <div class="bank-details">
+                        <div class="bank-field">
+                            <label>Bank Name:</label>
+                            <input type="text" [(ngModel)]="rfqData.bankName" (ngModelChange)="onProposalDetailChange()"
+                                class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>Bank Address:</label>
+                            <input type="text" [(ngModel)]="rfqData.bankAddress"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>IBAN:</label>
+                            <input type="text" [(ngModel)]="rfqData.iban" (ngModelChange)="onProposalDetailChange()"
+                                class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>Swift Code:</label>
+                            <input type="text" [(ngModel)]="rfqData.swiftCode"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>Title on Account:</label>
+                            <input type="text" [(ngModel)]="rfqData.accountTitle"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="bank-field" *ngIf="selectedCompany === 'HI US'">
+                            <label>ACH Routing:</label>
+                            <input type="text" [(ngModel)]="rfqData.achRouting"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="bank-field" *ngIf="selectedCompany === 'EOS'">
+                            <label>Intermediary BIC:</label>
+                            <input type="text" [(ngModel)]="rfqData.intermediaryBic"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                    </div>
+
+                    <div class="uk-domestic-wires" *ngIf="selectedCompany === 'HI UK'">
+                        <h3>UK DOMESTIC WIRES:</h3>
+                        <div class="bank-field">
+                            <label>Account number:</label>
+                            <input type="text" [(ngModel)]="rfqData.accountNumber"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>Sort code:</label>
+                            <input type="text" [(ngModel)]="rfqData.sortCode" (ngModelChange)="onProposalDetailChange()"
+                                class="editable-field">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side - Billing Information and Invoice Details -->
+            <div class="right-section">
+                <!-- Billing Information Section -->
+                <div class="section-box">
+                    <h2 class="section-title">Billing Information</h2>
+                    <div class="vessel-details">
+                        <div class="detail-field">
+                            <label>Name:</label>
+                            <input type="text" [(ngModel)]="rfqData.vesselName"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Name 2:</label>
+                            <input type="text" [(ngModel)]="rfqData.vesselName2"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Address:</label>
+                            <input type="text" [(ngModel)]="rfqData.vesselAddress"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Address 2:</label>
+                            <input type="text" [(ngModel)]="rfqData.vesselAddress2"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>City:</label>
+                            <input type="text" [(ngModel)]="rfqData.vesselCity"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Country:</label>
+                            <input type="text" [(ngModel)]="rfqData.vesselCountry"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice Details Section -->
+                <div class="section-box">
+                    <h2 class="section-title">Invoice Details</h2>
+                    <div class="invoice-details">
+                        <div class="invoice-field">
+                            <label>No</label>
+                            <input type="text" [(ngModel)]="rfqData.invoiceNumber"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="invoice-field">
+                            <label>Invoice Date</label>
+                            <input type="date" [(ngModel)]="rfqData.invoiceDate"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="invoice-field">
+                            <label>Vessel</label>
+                            <input type="text" [(ngModel)]="rfqData.vessel" (ngModelChange)="onProposalDetailChange()"
+                                class="editable-field">
+                        </div>
+                        <div class="invoice-field">
+                            <label>Country</label>
+                            <select [(ngModel)]="rfqData.country" (ngModelChange)="onCountryChange()"
+                                class="editable-field">
+                                <option value="">Select Country</option>
+                                <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
+                            </select>
+                        </div>
+                        <div class="invoice-field">
+                            <label>Port</label>
+                            <!-- Text input with datalist for suggestions -->
+                            <input type="text" [(ngModel)]="rfqData.port" class="editable-field"
+                                placeholder="Enter or select port name"
+                                [attr.list]="availablePorts.length > 0 ? 'port-suggestions' : null"
+                                (ngModelChange)="onProposalDetailChange()">
+                            <!-- Datalist for port suggestions when country is selected -->
+                            <datalist *ngIf="availablePorts.length > 0" id="port-suggestions">
+                                <option *ngFor="let port of availablePorts" [value]="port">
+                            </datalist>
+                        </div>
+                        <div class="invoice-field">
+                            <label>Invoice Due</label>
+                            <select [(ngModel)]="rfqData.invoiceDue" (ngModelChange)="onProposalDetailChange()"
+                                class="editable-field">
+                                <option value=""></option>
+                                <option value="CASH">CASH</option>
+                                <option value="CREDIT">CREDIT</option>
+                                <option value="30 DAYS">30 DAYS</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing status -->
+        <div *ngIf="isProcessing" class="processing-status">
+            <div class="spinner"></div>
+            <p>Processing Excel files...</p>
+        </div>
+
+        <!-- Error display -->
+        <div *ngIf="errorMessage" class="error-message">
+            <p>{{ errorMessage }}</p>
+        </div>
+
+        <div *ngIf="proposalTables.length > 0" class="items-section"
+            [ngClass]="{ 'eos-theme': selectedCompany === 'EOS' }">
+            <div *ngFor="let table of proposalTables" class="proposal-table">
+                <details class="proposal-details">
+                    <summary class="table-summary">
+                        <span class="summary-file" title="{{ table.fileName }}">{{ table.fileName }}</span>
+                        <span class="summary-divider">•</span>
+                        <span class="summary-tab">Tab: {{ table.tabName }}</span>
+                        <span class="summary-divider">•</span>
+                        <span class="summary-rows">Rows: {{ table.rowCount }}</span>
+                    </summary>
+                    <div class="category-input-section">
+                        <label>Category</label>
+                        <input type="text" [(ngModel)]="table.category" (ngModelChange)="onTableCategoryChange(table)"
+                            class="editable-field">
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>Pos</th>
+                                    <th>Tab</th>
+                                    <th class="mapped-column">Product</th>
+                                    <th class="mapped-column">Qty</th>
+                                    <th class="mapped-column">Unit</th>
+                                    <th class="mapped-column">Remark</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of table.items">
+                                    <td>{{ item.pos }}</td>
+                                    <td>{{ item.tabName }}</td>
+                                    <td class="mapped-column">{{ item.description }}</td>
+                                    <td class="mapped-column">{{ item.qty }}</td>
+                                    <td class="mapped-column">{{ item.unit }}</td>
+                                    <td class="mapped-column">{{ item.remark }}</td>
+                                    <td>{{ formatCurrency(item.price) }}</td>
+                                    <td>{{ formatCurrency(item.total) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <div class="bottom-section" *ngIf="proposalTables.length > 0">
+            <img [src]="selectedCompany === 'EOS' ? 'assets/images/EosSupplyLtdBottomBorder.png' : 'assets/images/HIMarineBottomBorder.png'"
+                alt="Company Bottom Border" class="bottom-logo-image">
+        </div>
+    </div>
+</div>

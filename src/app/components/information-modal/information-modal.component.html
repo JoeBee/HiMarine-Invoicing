@@ -1,0 +1,297 @@
+<div class="modal-overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="closeModal()" aria-label="Close modal">&times;</button>
+        <!-- <h2>Invoicing - User Instructions</h2> -->
+
+        <!-- Tab Navigation -->
+        <nav class="info-tabs">
+            <button class="info-tab" [class.active]="activeTab === 'rfq'" (click)="selectTab('rfq')">
+                📋 Request for Quotation (RFQ)
+            </button>
+            <button class="info-tab" [class.active]="activeTab === 'suppliers'" (click)="selectTab('suppliers')">
+                🏢 Suppliers
+            </button>
+            <button class="info-tab" [class.active]="activeTab === 'invoicing'" (click)="selectTab('invoicing')">
+                📄 Invoicing
+            </button>
+            <button *ngIf="hasHistoryAccess" class="info-tab" [class.active]="activeTab === 'history'" (click)="selectTab('history')">
+                📊 History
+            </button>
+        </nav>
+
+        <!-- Tab Content -->
+        <div class="tab-content" [class.tab-rfq]="activeTab === 'rfq'" [class.tab-suppliers]="activeTab === 'suppliers'" [class.tab-invoicing]="activeTab === 'invoicing'" [class.tab-history]="activeTab === 'history'">
+            <!-- RFQ Tab -->
+            <div *ngIf="activeTab === 'rfq'" class="tab-panel">
+                <h3>📋 Request for Quotation (RFQ)</h3>
+
+                <h4>Captain's Request</h4>
+                <ul>
+                    <li><strong>Excel File Upload:</strong> Drag and drop or click to browse for Excel files
+                        (.xlsx/.xls/.xlsm)</li>
+                    <li><strong>File Processing:</strong> Automatically analyzes Excel files and detects all tabs within
+                        each file</li>
+                    <li><strong>File Analysis:</strong> The system automatically detects:
+                        <ul>
+                            <li>File name (without extension)</li>
+                            <li>Tab names within each Excel file (including hidden tabs)</li>
+                            <li>Top left cell where the data table starts (can be manually adjusted)</li>
+                            <li>Product column - Auto-mapped when header matches "Product Name", "Description", or "Equipment Description" (case-insensitive)</li>
+                            <li>Quantity column - Auto-mapped when header matches "Requested Qty", "Quantity", or "Qty" (case-insensitive)</li>
+                            <li>Unit column - Auto-mapped when header matches "Unit Type", "Unit", "UOM", or "UN" (case-insensitive). Supports composite selections (primary/secondary/tertiary)</li>
+                            <li>Price column (optional) - Auto-mapped when header matches "Price" (case-insensitive)</li>
+                            <li>Remark column (optional) - Auto-mapped when header matches "Product No", "Product No.", "Remark", "Remarks", or "Impa" (case-insensitive). Supports composite selections (primary/secondary/tertiary)</li>
+                            <li>Number of data rows found</li>
+                        </ul>
+                    </li>
+                    <li><strong>Column Auto-Mapping:</strong> Click the ℹ icon next to column headers to see auto-mapping rules and matching criteria</li>
+                    <li><strong>Top Left Cell Adjustment:</strong> Manually set or adjust the top left cell reference (e.g., A1, A16) with dropdown suggestions</li>
+                    <li><strong>Composite Column Mapping:</strong> Unit and Remark columns support combining multiple columns using primary, secondary, and tertiary dropdowns</li>
+                    <li><strong>Tab Management:</strong> Include or exclude specific tabs from processing using checkboxes</li>
+                    <li><strong>Column Mapping:</strong> View, verify, and manually adjust detected columns for each tab using dropdown menus</li>
+                    <li><strong>Tab Preview:</strong> Click "View" button to preview tab data with highlighted mapped columns</li>
+                    <li><strong>File Preview:</strong> Click on any filename to open the original Excel file in a new tab</li>
+                    <li><strong>Status Indicators:</strong> View processing status for each file and tab</li>
+                    <li><strong>Clear All Files:</strong> Remove all uploaded files and processed data with confirmation
+                        dialog</li>
+                </ul>
+
+                <h4>Our Quote</h4>
+                <ul>
+                    <li><strong>Quote Generation:</strong> Create professional quotes based on processed Captain's Request data</li>
+                    <li><strong>Company Selection:</strong> Choose between HI US, HI UK, or EOS company branding (affects theme colors, logos, and bank details)</li>
+                    <li><strong>Currency Selection:</strong> Select from GBP (£), EUR (€), AUD (A$), NZD (NZ$), USD ($), or CAD (C$). All prices are formatted according to selected currency</li>
+                    <li><strong>Export Filename:</strong> Customize export filename with separate .xlsx label. Filename auto-updates based on company, vessel, port, and category selections</li>
+                    <li><strong>Country & Port Selection:</strong> Choose country from dropdown with automatic port suggestions. Port field supports text input with autocomplete suggestions</li>
+                    <li><strong>Company Branding:</strong> Dynamic company logos (top and bottom images) are automatically displayed when proposal tables exist</li>
+                    <li><strong>Data Review:</strong> Review all processed items from Captain's Request organized by file and tab in collapsible sections</li>
+                    <li><strong>Item Selection:</strong> Use checkboxes to include/exclude items from quotes</li>
+                    <li><strong>Quote Export:</strong> Generate comprehensive quote documents in Excel format with professional formatting</li>
+                    <li><strong>Professional Formatting:</strong> Company headers, branding, bank details, and professional layout included in exports</li>
+                </ul>
+            </div>
+
+            <!-- Suppliers Tab -->
+            <div *ngIf="activeTab === 'suppliers'" class="tab-panel">
+                <h3>🏢 Suppliers Tab</h3>
+
+                <h4>Supplier Docs</h4>
+                <ul>
+                    <li><strong>File Upload:</strong> Drag and drop Excel files (.xlsx/.xls) into the categorized drop
+                        zones:
+                        <ul>
+                            <li><strong>Bonded:</strong> For bonded/restricted items (alcohol, tobacco, etc.)</li>
+                            <li><strong>Provisions:</strong> For general provisions and fresh provisions</li>
+                        </ul>
+                    </li>
+                    <li><strong>Automatic Processing:</strong> Files are automatically analyzed and processed
+                        immediately upon upload</li>
+                    <li><strong>File Analysis:</strong> The system automatically detects:
+                        <ul>
+                            <li>File name (without extension)</li>
+                            <li>Top left cell where the data table starts</li>
+                            <li>Description column (searches for "description", "product", "item", "name")</li>
+                            <li>Price column (searches for "price", "cost", "amount", "value" - headers must be less
+                                than 25 characters)</li>
+                            <li>Unit column (searches for "unit", "units")</li>
+                            <li>Remarks column (searches for "remark", "comment")</li>
+                            <li>Number of data rows found</li>
+                        </ul>
+                    </li>
+                    <li><strong>Price Divider:</strong> Set a price divisor (default: 0.9 for ~11% markup). Changes
+                        automatically reprocess all files</li>
+                    <li><strong>File Management:</strong> View all uploaded files in a sortable table with status
+                        indicators (✓ success, ✗ error, - pending)</li>
+                    <li><strong>File Preview:</strong> Click on any filename to open the original Excel file in a new
+                        tab</li>
+                    <li><strong>Clear All Files:</strong> Remove all uploaded files and processed data with confirmation
+                        dialog</li>
+                </ul>
+
+                <h4>Price List</h4>
+                <ul>
+                    <li><strong>Data Review:</strong> Review all processed data from uploaded files</li>
+                    <li><strong>Item Selection:</strong> Use checkboxes to include/exclude items from exports</li>
+                    <li><strong>Bulk Selection:</strong> Use "Select All" checkbox for bulk operations on filtered results</li>
+                    <li><strong>Company Selection:</strong> Choose EOS or Hi Marine company branding for exports (affects theme colors, logos, and formatting)</li>
+                    <li><strong>Currency Selection:</strong> Select from GBP (£), EUR (€), AUD (A$), NZD (NZ$), USD ($), or CAD (C$). All prices are formatted according to selected currency</li>
+                    <li><strong>Country Selection:</strong> Choose country from dropdown for export documents</li>
+                    <li><strong>Export Filename:</strong> Customize export filename with separate .xlsx label for flexible width input</li>
+                    <li><strong>Company Branding:</strong> Dynamic company logos (top and bottom images) are automatically displayed when processed files exist</li>
+                    <li><strong>Advanced Filtering:</strong>
+                        <ul>
+                            <li>Filter by file name (dropdown with all uploaded files)</li>
+                            <li>Filter by common descriptions (Beer, Cheese, Ice, Provision)</li>
+                            <li>Search within descriptions using text input</li>
+                            <li>Clear all filters with one click</li>
+                        </ul>
+                    </li>
+                    <li><strong>Column Sorting:</strong> Click any column header to sort (ascending/descending)</li>
+                    <li><strong>Row Expansion:</strong> Click any row to view complete original Excel data in original format</li>
+                    <li><strong>Excel Export:</strong> Generate comprehensive Excel workbook with:
+                        <ul>
+                            <li>Cover sheet with totals by category and company branding</li>
+                            <li>PROVISIONS sheet (general provisions items)</li>
+                            <li>FRESH PROVISIONS sheet (fresh produce items detected automatically)</li>
+                            <li>BOND sheet (bonded items)</li>
+                            <li>Professional formatting with formulas for automatic calculations</li>
+                        </ul>
+                    </li>
+                    <li><strong>Invalid Price Detection:</strong> View and manage records with invalid pricing data</li>
+                </ul>
+            </div>
+
+            <!-- Invoicing Tab -->
+            <div *ngIf="activeTab === 'invoicing'" class="tab-panel">
+                <h3>📄 Invoicing Tab</h3>
+
+                <h4>Captain's Order</h4>
+                <ul>
+                    <li><strong>Excel File Upload:</strong> Drag and drop or click to browse for Excel files
+                        (.xlsx/.xls)</li>
+                    <li><strong>File Processing:</strong> Automatically analyzes Excel files with tabs: COVER SHEET,
+                        PROVISIONS, FRESH PROVISIONS, BOND</li>
+                    <li><strong>Data Analysis:</strong> Displays:
+                        <ul>
+                            <li>Count of items with totals > 0 for each tab</li>
+                            <li>Sum of all totals for each tab</li>
+                            <li>Grand total across all tabs</li>
+                        </ul>
+                    </li>
+                    <li><strong>Currency Detection:</strong> Automatically detects currency symbols ($, €, £) from price
+                        and total columns</li>
+                    <li><strong>Successive Uploads:</strong> New uploads override previous ones</li>
+                    <li><strong>Data Transfer:</strong> Processed items automatically populate the Invoice tab</li>
+                </ul>
+
+                <h4>Invoice</h4>
+                <ul>
+                    <li><strong>Invoice Generation:</strong> Create professional invoices in two formats:
+                        <ul>
+                            <li><strong>Excel Format:</strong> Comprehensive Excel invoice with formulas, company
+                                branding, and bank details</li>
+                            <li><strong>PDF Format:</strong> Print-ready PDF invoice</li>
+                        </ul>
+                    </li>
+                    <li><strong>Split Invoices Toggle:</strong> Toggle between "Split Invoices" (default) and "One
+                        Invoice" modes:
+                        <ul>
+                            <li><strong>Split Invoices:</strong> Creates separate Excel files for 'Bonded' and
+                                'Provisions' categories. If a category has no items, that file is not created. When both
+                                categories exist, the 'Provisions' invoice number will have an "A" appended.</li>
+                            <li><strong>One Invoice:</strong> Creates a single Excel file containing all items
+                                regardless of category</li>
+                        </ul>
+                    </li>
+                    <li><strong>Company Selection:</strong> Choose between HM US, HM UK, or EOS company/bank details (affects theme colors, logos, bank details, and formatting)</li>
+                    <li><strong>Currency Display:</strong> Primary currency is automatically detected from uploaded files. Toggle "Show USD" to display USD amounts alongside primary currency with customizable exchange rate</li>
+                    <li><strong>Dynamic Content:</strong> Company details, bank information, billing information, and invoice information all auto-populate based on company selection</li>
+                    <li><strong>Export Filename:</strong> Customize export filename with separate .xlsx label. Filename auto-updates based on company, invoice number, and date</li>
+                    <li><strong>Invoice Items:</strong> Items populated from Captain's Order with multi-currency support (USD, EUR, GBP, AUD, NZD, CAD)</li>
+                    <li><strong>Fees & Discounts:</strong> Configure:
+                        <ul>
+                            <li>Delivery fee</li>
+                            <li>Port fee</li>
+                            <li>Agency fee</li>
+                            <li>Transport, Customs, Launch fees</li>
+                            <li>Launch fee</li>
+                            <li>Discount percentage</li>
+                        </ul>
+                    </li>
+                    <li><strong>Country & Port Selection:</strong> Choose from extensive lists with automatic port
+                        suggestions</li>
+                    <li><strong>Terms & Conditions:</strong> Professional terms automatically included in invoice</li>
+                    <li><strong>Excel Export Features:</strong>
+                        <ul>
+                            <li>Billing information exported as values only (no labels)</li>
+                            <li>Tab column excluded from export for cleaner format</li>
+                            <li>Items automatically renumbered starting from 1 in each exported file</li>
+                        </ul>
+                    </li>
+                    <li><strong>File Naming:</strong> Invoices automatically named with company prefix, invoice number,
+                        and date</li>
+                    <li><strong>Professional Formatting:</strong> Company headers, bank details, and branding included
+                        in exports</li>
+                </ul>
+            </div>
+
+            <!-- History Tab -->
+            <div *ngIf="activeTab === 'history'" class="tab-panel">
+                <h3>📊 History Tab</h3>
+
+                <h4>Application Logs</h4>
+                <ul>
+                    <li><strong>Log Viewing:</strong> View comprehensive application activity logs with detailed information about all user actions, file operations, data processing, exports, and system events</li>
+                    <li><strong>Advanced Filtering:</strong>
+                        <ul>
+                            <li>Filter by category: user_action, file_upload, data_processing, export, error, system</li>
+                            <li>Filter by level: info, warn, error, debug</li>
+                            <li>Filter by component (automatically populated from logs)</li>
+                            <li>Filter by IP address (shows most recent IPs first)</li>
+                            <li>Search across actions, details, and component names</li>
+                            <li>Filter by date range (from/to dates)</li>
+                            <li>Clear all filters with one click</li>
+                        </ul>
+                    </li>
+                    <li><strong>Pagination:</strong> Browse logs in pages (50 items per page) with navigation controls and page jump functionality</li>
+                    <li><strong>Log Details:</strong> Each log entry displays:
+                        <ul>
+                            <li>Timestamp with full date and time</li>
+                            <li>Level badge (INFO, WARN, ERROR, DEBUG)</li>
+                            <li>Category with icon (👤 user action, 📁 file upload, ⚙️ data processing, 📤 export, ❌ error, 🔧 system)</li>
+                            <li>Component name</li>
+                            <li>Formatted action description</li>
+                            <li>IP address (🌐 badge)</li>
+                            <li>Detailed information in key-value format</li>
+                        </ul>
+                    </li>
+                    <li><strong>Refresh Logs:</strong> Click "Refresh" button to reload latest logs from database</li>
+                    <li><strong>Export Logs:</strong> Export filtered logs to CSV format for external analysis. Filename includes current date</li>
+                    <li><strong>Audit Trail:</strong> Complete audit trail of all application activities for troubleshooting and compliance</li>
+                    <li><strong>Error Tracking:</strong> Easily identify and filter error-level logs for debugging</li>
+                    <li><strong>User Activity Monitoring:</strong> Track all user actions including button clicks, form submissions, file uploads, and navigation</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>🔧 Key Features & Tips</h3>
+        <ul>
+            <li><strong>Automatic Processing:</strong> Files are processed immediately upon upload - no manual
+                processing required</li>
+            <li><strong>Category Management:</strong> Use Bonded vs Provisions drop zones to organize items by type</li>
+            <li><strong>Fresh Provisions Detection:</strong> Items with fresh produce keywords are automatically
+                categorized into FRESH PROVISIONS sheet</li>
+            <li><strong>Price Validation:</strong> Invalid price records are identified and excluded from exports</li>
+            <li><strong>Data Integrity:</strong> Original Excel data is preserved and accessible for verification</li>
+            <li><strong>Multi-Currency Support:</strong> Automatic currency detection and formatting ($, €, £)</li>
+            <li><strong>Real-time Calculations:</strong> Automatic totals, discount application, and fee inclusion</li>
+            <li><strong>Responsive Design:</strong> Works on desktop and mobile devices</li>
+            <li><strong>File Compatibility:</strong> Supports both .xlsx and .xls Excel formats</li>
+            <li><strong>Real-time Updates:</strong> All changes are immediately reflected across tabs</li>
+            <li><strong>Export Options:</strong> Multiple export formats (Excel workbooks, PDF invoices, CSV logs)</li>
+            <li><strong>Professional Branding:</strong> Company logos, headers, and footers in all exports</li>
+            <li><strong>Error Handling:</strong> Clear status indicators and error messages guide troubleshooting</li>
+            <li><strong>Comprehensive Logging:</strong> Track all actions for audit and debugging purposes</li>
+        </ul>
+
+        <h3>📋 Workflow Summary</h3>
+        <ol>
+            <li><strong>Upload Supplier Files:</strong> Drag Excel files to appropriate drop zones (Bonded/Provisions)
+                in Supplier Docs tab</li>
+            <li><strong>Review Analysis:</strong> Check file analysis results and pricing in Supplier Docs tab</li>
+            <li><strong>Select Items:</strong> Use Price List tab to select items for inclusion and export price lists
+            </li>
+            <li><strong>Captain's Order:</strong> Upload processed price lists in Captain's Order tab</li>
+            <li><strong>Configure Invoice:</strong> Select company, fill in billing information, add fees, and review items
+            </li>
+            <li><strong>Choose Export Mode:</strong> Use the Split Invoices toggle to choose between creating separate
+                files for each category (default) or a single combined invoice file</li>
+            <li><strong>Generate Invoice:</strong> Export professional invoices in Excel or PDF format with automatic
+                formatting and calculations</li>
+            <li><strong>Monitor Activity:</strong> Review logs in History tab with advanced filtering and pagination for
+                audit and troubleshooting</li>
+        </ol>
+
+        <button class="primary close-button" (click)="closeModal()">Close</button>
+    </div>
+</div>

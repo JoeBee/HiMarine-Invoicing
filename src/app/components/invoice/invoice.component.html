@@ -1,0 +1,454 @@
+<div class="invoice-container"
+    [ngClass]="{ 'eos-theme': selectedBank === 'EOS', 'hi-marine-theme': selectedBank === 'US' || selectedBank === 'UK' }">
+    <div class="content-wrapper">
+        <!-- Top Logo Section with Export Buttons -->
+        <div class="top-section" *ngIf="invoiceData.items.length > 0">
+            <div class="top-section-content">
+                <div class="company-logo">
+                    <img [src]="selectedBank === 'EOS' ? 'assets/images/EosSupplyLtd.png' : 'assets/images/HIMarineTopImage_sm.png'"
+                        alt="Company Logo" class="top-logo">
+                </div>
+                <div class="export-buttons-section">
+                    <!-- Toggle Switch for Split Invoices / One Invoice -->
+                    <div class="toggle-group"
+                        [ngClass]="{ 'eos-toggle': selectedBank === 'EOS', 'us-uk-toggle': selectedBank === 'US' || selectedBank === 'UK' }">
+                        <label class="toggle-switch">
+                            <input type="checkbox" [(ngModel)]="splitFileMode" (change)="onToggleChange()"
+                                class="toggle-input">
+                            <span class="toggle-slider">
+                                <span class="toggle-label-left">Split Invoices</span>
+                                <span class="toggle-label-right">One Invoice</span>
+                            </span>
+                        </label>
+                    </div>
+                    <button class="export-btn excel-btn" [ngClass]="{ 'eos-blue': selectedBank === 'EOS' }"
+                        [disabled]="isExportDisabled" (click)="exportInvoiceToExcel()">
+                        <span class="btn-icon">📊</span>
+                        Export Invoice
+                    </button>
+                    <button class="export-btn pdf-btn" *ngIf="false" [disabled]="invoiceData.items.length === 0"
+                        (click)="generateInvoicePDF()">
+                        <span class="btn-icon">📄</span>
+                        Export to PDF
+                    </button>
+                </div>
+            </div>
+            <!-- Export File Name Input -->
+            <div class="export-filename-group">
+                <label class="filename-label">Export File Name:</label>
+                <input type="text" [(ngModel)]="invoiceData.exportFileName" class="filename-input">
+                <label class="file-extension-label">.xlsx</label>
+            </div>
+        </div>
+
+        <!-- Selection and Fees Section -->
+        <div class="selection-fees-section">
+            <!-- Left Column Container -->
+            <div class="left-column-container">
+                <!-- Company Selection Radio Buttons -->
+                <div class="bank-selection-section">
+                    <h3>Companies:</h3>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="companySelection" value="US" [(ngModel)]="selectedBank"
+                                (change)="onCompanySelectionChange()">
+                            <span class="radio-label">HM US</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="companySelection" value="UK" [(ngModel)]="selectedBank"
+                                (change)="onCompanySelectionChange()">
+                            <span class="radio-label">HM UK</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="companySelection" value="EOS" [(ngModel)]="selectedBank"
+                                (change)="onCompanySelectionChange()">
+                            <span class="radio-label">EOS</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Currency Display and Toggle Section -->
+                <div class="currency-section">
+                    <!-- Currency Radio Buttons -->
+                    <div class="radio-group currency-group">
+                        <ng-container *ngFor="let option of currencyOptions">
+                            <label class="radio-option" [for]="'invoiceCurrency' + option.code">
+                                <input type="radio" [id]="'invoiceCurrency' + option.code" name="invoiceCurrency"
+                                    [value]="option.code" [(ngModel)]="selectedCurrency" (change)="onCurrencySelectionChange()">
+                                <span class="radio-label">{{ option.label }}</span>
+                            </label>
+                        </ng-container>
+                    </div>
+
+                    <div class="currency-toggle-row">
+                        <div class="currency-toggle-group">
+                            <label class="currency-toggle-switch">
+                                <input type="checkbox" class="toggle-input" [(ngModel)]="showUSD">
+                                <span class="toggle-slider">
+                                    <span>Show USD</span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="currency-text">
+                            Current Currency: <span *ngIf="primaryCurrency && invoiceData.items.length > 0">{{
+                                primaryCurrency }}</span>
+                        </div>
+                    </div>
+                    <div class="exchange-rate-group" *ngIf="showUSD">
+                        <div class="exchange-rate-input-row">
+                            <label class="exchange-rate-label">Exchange Rate:</label>
+                            <input type="number" step="0.01" [(ngModel)]="exchangeRate" class="exchange-rate-input"
+                                placeholder="e.g. 0.73">
+                            <div class="exchange-rate-description">
+                                <span *ngIf="primaryCurrency">
+                                    1 {{ primaryCurrency }} = {{ exchangeRate || 1 | number:'1.2-2' }} USD
+                                </span>
+                                <span *ngIf="!primaryCurrency">
+                                    Enter the exchange rate to convert from current currency to USD.
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fees Section - Right Half -->
+            <div class="fees-section">
+                <h3>Fees & Discounts:</h3>
+                <div class="fees-grid">
+                    <div class="fee-field">
+                        <label>Delivery fee:</label>
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.deliveryFee"
+                            (ngModelChange)="calculateTotals()" class="editable-field"
+                            [ngClass]="selectedBank === 'EOS' ? 'eos-highlight' : ''">
+                    </div>
+                    <div class="fee-field">
+                        <label>Port fee:</label>
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.portFee"
+                            (ngModelChange)="calculateTotals()" class="editable-field"
+                            [ngClass]="selectedBank === 'EOS' ? 'eos-highlight' : ''">
+                    </div>
+                    <div class="fee-field">
+                        <label>Agency fee:</label>
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.agencyFee"
+                            (ngModelChange)="calculateTotals()" class="editable-field"
+                            [ngClass]="selectedBank === 'EOS' ? 'eos-highlight' : ''">
+                    </div>
+                    <div class="fee-field">
+                        <label>Transport, Customs, Launch fees:</label>
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.transportCustomsLaunchFees"
+                            (ngModelChange)="calculateTotals()" class="editable-field"
+                            [ngClass]="selectedBank === 'EOS' ? 'eos-highlight' : ''">
+                    </div>
+                    <div class="fee-field">
+                        <label>Launch:</label>
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.launchFee"
+                            (ngModelChange)="calculateTotals()" class="editable-field">
+                    </div>
+                    <div class="fee-field discount-field">
+                        <label>Discount (%):</label>
+                        <input type="number" step="0.1" [(ngModel)]="invoiceData.discountPercent"
+                            (ngModelChange)="calculateTotals()" class="editable-field discount-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Section -->
+        <div class="main-content">
+            <!-- Left Side - Our Company Details and Bank Details -->
+            <div class="left-section">
+                <!-- Our Company Details Section -->
+                <div class="section-box">
+                    <h2 class="section-title">Our Company Details</h2>
+                    <div class="company-details">
+                        <div class="detail-field">
+                            <label>Name:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyName" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Address:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyAddress" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Address 2:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyAddress2" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>City:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyCity" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Country:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyCountry" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Phone:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyPhone" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Email:</label>
+                            <input type="text" [(ngModel)]="invoiceData.ourCompanyEmail" class="editable-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bank Details Section -->
+                <div class="section-box">
+                    <h2 class="section-title">Bank Details</h2>
+                    <div class="bank-details">
+                        <div class="bank-field">
+                            <label>Bank Name:</label>
+                            <input type="text" [(ngModel)]="invoiceData.bankName" class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>Bank Address:</label>
+                            <input type="text" [(ngModel)]="invoiceData.bankAddress" class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>IBAN:</label>
+                            <input type="text" [(ngModel)]="invoiceData.iban" class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>Swift Code:</label>
+                            <input type="text" [(ngModel)]="invoiceData.swiftCode" class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>Title on Account:</label>
+                            <input type="text" [(ngModel)]="invoiceData.accountTitle" class="editable-field">
+                        </div>
+                        <div class="bank-field" *ngIf="selectedBank === 'US'">
+                            <label>ACH Routing:</label>
+                            <input type="text" [(ngModel)]="invoiceData.achRouting" class="editable-field">
+                        </div>
+                        <div class="bank-field" *ngIf="selectedBank === 'EOS'">
+                            <label>Intermediary BIC:</label>
+                            <input type="text" [(ngModel)]="invoiceData.intermediaryBic" class="editable-field">
+                        </div>
+                    </div>
+
+                    <div class="uk-domestic-wires" *ngIf="selectedBank === 'UK'">
+                        <h3>UK DOMESTIC WIRES:</h3>
+                        <div class="bank-field">
+                            <label>Account number:</label>
+                            <input type="text" [(ngModel)]="invoiceData.accountNumber" class="editable-field">
+                        </div>
+                        <div class="bank-field">
+                            <label>Sort code:</label>
+                            <input type="text" [(ngModel)]="invoiceData.sortCode" class="editable-field">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side - Billing Information and Invoice Details -->
+            <div class="right-section">
+                <!-- Billing Information Section -->
+                <div class="section-box">
+                    <h2 class="section-title">Billing Information</h2>
+                    <div class="vessel-details">
+                        <div class="detail-field">
+                            <label>Name:</label>
+                            <input type="text" [(ngModel)]="invoiceData.vesselName"
+                                (ngModelChange)="onInvoiceDetailChange()" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Name 2:</label>
+                            <input type="text" [(ngModel)]="invoiceData.vesselName2" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Address:</label>
+                            <input type="text" [(ngModel)]="invoiceData.vesselAddress" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Address 2:</label>
+                            <input type="text" [(ngModel)]="invoiceData.vesselAddress2" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>City:</label>
+                            <input type="text" [(ngModel)]="invoiceData.vesselCity" class="editable-field">
+                        </div>
+                        <div class="detail-field">
+                            <label>Country:</label>
+                            <input type="text" [(ngModel)]="invoiceData.vesselCountry" class="editable-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice Details Section -->
+                <div class="section-box">
+                    <h2 class="section-title">Invoice Details</h2>
+                    <div class="invoice-details">
+                        <div class="invoice-field imo-field">
+                            <label>IMO:</label>
+                            <div class="imo-input-wrapper">
+                                <!-- Text input with datalist for suggestions -->
+                                <input type="text" [(ngModel)]="invoiceData.imo" (ngModelChange)="onImoChange()"
+                                    (keypress)="onImoKeyPress($event)" class="editable-field"
+                                    placeholder="Enter or select IMO number"
+                                    [attr.list]="availableImos.length > 0 ? 'imo-suggestions' : null">
+                                <!-- Clear button -->
+                                <button type="button" *ngIf="invoiceData.imo" class="imo-clear-btn" (click)="clearImo()"
+                                    aria-label="Clear IMO">
+                                    ×
+                                </button>
+                            </div>
+                            <!-- Datalist for IMO suggestions -->
+                            <datalist *ngIf="availableImos.length > 0" id="imo-suggestions">
+                                <option *ngFor="let imo of availableImos" [value]="imo">
+                            </datalist>
+                        </div>
+                        <div class="invoice-field">
+                            <label>No:</label>
+                            <input type="text" [(ngModel)]="invoiceData.invoiceNumber"
+                                (ngModelChange)="onInvoiceDetailChange()" class="editable-field">
+                        </div>
+                        <div class="invoice-field">
+                            <label>Invoice Date:</label>
+                            <input type="date" [(ngModel)]="invoiceData.invoiceDate"
+                                (ngModelChange)="onInvoiceDetailChange()" class="editable-field">
+                        </div>
+                        <div class="invoice-field">
+                            <label>Vessel:</label>
+                            <input type="text" [(ngModel)]="invoiceData.vessel"
+                                (ngModelChange)="onInvoiceDetailChange()" class="editable-field">
+                        </div>
+                        <div class="invoice-field">
+                            <label>Country:</label>
+                            <select [(ngModel)]="invoiceData.country" (ngModelChange)="onCountryChange()"
+                                class="editable-field">
+                                <option value="">Select Country</option>
+                                <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
+                            </select>
+                        </div>
+                        <div class="invoice-field">
+                            <label>Port:</label>
+                            <!-- Text input with datalist for suggestions -->
+                            <input type="text" [(ngModel)]="invoiceData.port" (ngModelChange)="onInvoiceDetailChange()"
+                                class="editable-field" placeholder="Enter or select port name"
+                                [attr.list]="availablePorts.length > 0 ? 'port-suggestions' : null">
+                            <!-- Datalist for port suggestions when country is selected -->
+                            <datalist *ngIf="availablePorts.length > 0" id="port-suggestions">
+                                <option *ngFor="let port of availablePorts" [value]="port">
+                            </datalist>
+                        </div>
+                        <div class="invoice-field">
+                            <label>Category:</label>
+                            <input type="text" [(ngModel)]="invoiceData.category" class="editable-field" readonly
+                                style="background-color: #f0f0f0; cursor: not-allowed;">
+                        </div>
+                        <div class="invoice-field">
+                            <label>Invoice Due:</label>
+                            <select [(ngModel)]="invoiceData.invoiceDue" (ngModelChange)="onInvoiceDetailChange()"
+                                class="editable-field">
+                                <option value=""></option>
+                                <option value="CASH">CASH</option>
+                                <option value="CREDIT">CREDIT</option>
+                                <option value="30 DAYS">30 DAYS</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="items-section" [ngClass]="{ 'eos-theme': selectedBank === 'EOS' }">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Pos</th>
+                        <th>Tab</th>
+                        <th>Description</th>
+                        <th>Remark</th>
+                        <th>Unit</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of invoiceData.items">
+                        <td>{{ item.pos }}</td>
+                        <td>{{ item.tabName }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.remark }}</td>
+                        <td>{{ item.unit }}</td>
+                        <td>{{ item.qty }}</td>
+                        <td>{{ primaryCurrency }} {{ item.price | number:'1.2-2' }}</td>
+                        <td>{{ primaryCurrency }} {{ item.total | number:'1.2-2' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totals Section -->
+        <div class="totals-section">
+            <div class="totals-right">
+                <div class="total-line">
+                    <span *ngIf="primaryCurrency">TOTAL {{ getCurrencyLabel(primaryCurrency) }}</span>
+                    <span *ngIf="primaryCurrency">{{ primaryCurrency }} {{ invoiceData.totalGBP | number:'1.2-2'
+                        }}</span>
+                </div>
+                <div class="total-line">
+                    <span *ngIf="(invoiceData.discountPercent || 0) > 0">Discount ({{ invoiceData.discountPercent || 0
+                        }} %)</span>
+                    <span *ngIf="(invoiceData.discountPercent || 0) > 0">- {{ primaryCurrency }} {{
+                        (invoiceData.totalGBP *
+                        (invoiceData.discountPercent || 0) / 100) | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-line" *ngIf="(invoiceData.deliveryFee || 0) > 0">
+                    <span>Delivery fee</span>
+                    <span>{{ primaryCurrency }} {{ invoiceData.deliveryFee | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-line" *ngIf="(invoiceData.portFee || 0) > 0">
+                    <span>Port fee</span>
+                    <span>{{ primaryCurrency }} {{ invoiceData.portFee | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-line" *ngIf="(invoiceData.agencyFee || 0) > 0">
+                    <span>Agency fee</span>
+                    <span>{{ primaryCurrency }} {{ invoiceData.agencyFee | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-line" *ngIf="(invoiceData.transportCustomsLaunchFees || 0) > 0">
+                    <span>Transport, Customs, Launch fees</span>
+                    <span>{{ primaryCurrency }} {{ invoiceData.transportCustomsLaunchFees | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-line" *ngIf="(invoiceData.launchFee || 0) > 0">
+                    <span>Launch</span>
+                    <span>{{ primaryCurrency }} {{ invoiceData.launchFee | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-line grand-total">
+                    <span></span>
+                    <span>{{ primaryCurrency }} {{ invoiceData.grandTotal | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-line grand-total" *ngIf="showUSD && primaryCurrency && primaryCurrency !== '$'">
+                    <span>TOTAL USD</span>
+                    <span>$ {{ getTotalUSD() | number:'1.2-2' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terms and Conditions -->
+        <div class="terms-section">
+            <h3>By placing the order according to the above quotation you are accepting the following terms:</h3>
+            <ol>
+                <li>Credit days: 30 calendar days.</li>
+                <li>Accounts not paid in this time frame will be charged 10% interest rate per month, any discount given
+                    will be null and void.</li>
+                <li>Should collection or legal action be required to collect past dues, fees for such action will be
+                    added
+                    to your account.</li>
+                <li>Subject to unsold. Final weights are subject to vendor packing standards.</li>
+                <li>If the transaction is canceled after the order is authorized, we have the right to collect the
+                    invoice
+                    without claim.</li>
+            </ol>
+        </div>
+
+        <!-- Bottom Logo Section -->
+        <div class="bottom-section" *ngIf="invoiceData.items.length > 0">
+            <img [src]="selectedBank === 'EOS' ? 'assets/images/EosSupplyLtdBottomBorder.png' : 'assets/images/HIMarineBottomBorder.png'"
+                alt="Company Bottom Border" class="bottom-logo-image">
+        </div>
+    </div>
+</div>

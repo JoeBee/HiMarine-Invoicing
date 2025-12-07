@@ -1,0 +1,333 @@
+<div class="rfq-container" [ngClass]="{ 'eos-theme': rfqState.selectedCompany === 'EOS' }">
+    <div class="content-wrapper">
+        <h1>Request for Quotation (RFQ)</h1>
+
+        <div class="dropzone-container">
+            <div class="dropzone" [class.drag-over]="isDragOver" (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="fileInput.click()">
+                <div class="dropzone-content">
+                    <span class="upload-icon" aria-hidden="true">📋</span>
+                    <p class="dropzone-text">Captains Quotation Request</p>
+                    <p class="dropzone-subtext">Drop Excel files here or click to browse</p>
+                    <p class="dropzone-subtext">Only .xlsx, .xls, and .xlsm files are accepted</p>
+                </div>
+            </div>
+            <input #fileInput type="file" accept=".xlsx,.xls,.xlsm" multiple (change)="onFileSelected($event)"
+                style="display: none;">
+        </div>
+
+        <div *ngIf="rfqState.isProcessing" class="processing-status">
+            <div class="spinner"></div>
+            <p>Processing Excel files...</p>
+        </div>
+
+        <div *ngIf="rfqState.errorMessage" class="error-message">
+            <p>{{ rfqState.errorMessage }}</p>
+        </div>
+
+        <div *ngIf="rfqState.fileAnalyses.length > 0 && !rfqState.isProcessing" class="results-container">
+            <div class="results-header">
+                <h2>File Analysis Results</h2>
+                <div class="header-actions">
+                    <button class="clear-button" (click)="rfqState.clearAllFiles()">Clear All Files</button>
+                </div>
+            </div>
+
+            <div class="results-table-container">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Tab Name</th>
+                            <th style="text-align: center;">TOP LEFT / #ROWS</th>
+                            <th class="mapped-column-header">
+                                <button type="button" class="column-info-button"
+                                    (click)="openColumnInfoDialog('product')">
+                                    <span>Product*</span>
+                                    <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                                </button>
+                            </th>
+                            <th class="mapped-column-header">
+                                <button type="button" class="column-info-button" (click)="openColumnInfoDialog('qty')">
+                                    <span>Qty*</span>
+                                    <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                                </button>
+                            </th>
+                            <th class="mapped-column-header">
+                                <button type="button" class="column-info-button" (click)="openColumnInfoDialog('unit')">
+                                    <span>Unit*</span>
+                                    <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                                </button>
+                            </th>
+                            <th class="mapped-column-header">
+                                <button type="button" class="column-info-button"
+                                    (click)="openColumnInfoDialog('price')">
+                                    <span>Price (Optional)</span>
+                                    <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                                </button>
+                            </th>
+                            <th class="mapped-column-header">
+                                <button type="button" class="column-info-button"
+                                    (click)="openColumnInfoDialog('remark')">
+                                    <span>Remark (Optional)</span>
+                                    <span class="column-info-icon" aria-hidden="true">ℹ</span>
+                                </button>
+                            </th>
+                            <th class="images-header">Images</th>
+                            <th class="status-header"></th>
+                            <th class="remove-column-header">Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <ng-container *ngFor="let analysis of rfqState.fileAnalyses; let fileIndex = index">
+                            <ng-container
+                                *ngFor="let tab of analysis.tabs; let isFirst = first; let isLast = last; let tabIndex = index">
+                                <tr [class.file-first-row]="isFirst" [class.excluded-row]="!tab.included"
+                                    [attr.data-file-index]="fileIndex" [attr.data-tab-index]="tabIndex">
+                                    <td *ngIf="isFirst" [attr.rowspan]="analysis.tabs.length + 1" class="file-name-cell"
+                                        (click)="rfqState.openFile(analysis)">
+                                        {{ analysis.fileName }}
+                                    </td>
+                                    <td class="tab-name-cell" [class.hidden-tab]="tab.isHidden">
+                                        <div class="tab-name-text">
+                                            {{ tab.tabName }}
+                                            <span *ngIf="tab.isHidden" class="hidden-label">(Hidden)</span>
+                                        </div>
+                                        <button type="button" class="preview-toggle"
+                                            (click)="rfqState.openPreviewDialog(analysis, tab)"
+                                            [disabled]="tab.previewRows.length === 0">
+                                            View
+                                        </button>
+                                    </td>
+                                    <td class="top-left-cell" style="text-align: center;">
+                                        <div
+                                            style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
+                                            <input type="text" [(ngModel)]="tab.topLeftCell"
+                                                (input)="rfqState.onTopLeftCellChange($event, tab)"
+                                                (blur)="rfqState.validateTopLeftCell(tab)"
+                                                (focus)="rfqState.onTopLeftCellFocus($event, fileIndex, tabIndex)"
+                                                [attr.list]="(!tab.topLeftCell || tab.topLeftCell.trim() === '') ? ('topLeftList-' + fileIndex + '-' + tabIndex) : null"
+                                                [disabled]="!tab.included" class="top-left-input" placeholder="e.g., A1"
+                                                maxlength="3" pattern="[A-Za-z][0-9]{1,2}">
+                                            <datalist *ngIf="!tab.topLeftCell || tab.topLeftCell.trim() === ''"
+                                                [attr.id]="'topLeftList-' + fileIndex + '-' + tabIndex">
+                                                <option *ngFor="let cell of rfqState.getTopLeftCellOptionsLimited()"
+                                                    [value]="cell">{{ cell }}</option>
+                                            </datalist>
+                                            <span class="row-count">{{ tab.rowCount }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="product-cell mapped-column-cell">
+                                        <select [(ngModel)]="tab.product"
+                                            (change)="rfqState.onColumnChange(analysis, tab, 'product')"
+                                            [disabled]="!tab.included" class="column-select">
+                                            <option value="">-- Select --</option>
+                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                [value]="header">
+                                                {{ header }}</option>
+                                        </select>
+                                    </td>
+                                    <td class="qty-cell mapped-column-cell">
+                                        <select [(ngModel)]="tab.qty"
+                                            (change)="rfqState.onColumnChange(analysis, tab, 'qty')"
+                                            [disabled]="!tab.included" class="column-select">
+                                            <option value="">-- Select --</option>
+                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                [value]="header">
+                                                {{ header }}</option>
+                                        </select>
+                                    </td>
+                                    <td class="unit-cell mapped-column-cell">
+                                        <div class="composite-select-group">
+                                            <select [(ngModel)]="tab.unitPrimary"
+                                                (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'unit', 0)"
+                                                [disabled]="!tab.included" class="column-select">
+                                                <option value="">-- Select --</option>
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                    [value]="header">
+                                                    {{ header }}</option>
+                                            </select>
+                                            <select [(ngModel)]="tab.unitSecondary"
+                                                (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'unit', 1)"
+                                                [disabled]="!tab.included || !tab.unitPrimary" class="column-select">
+                                                <option value="">-- Select --</option>
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                    [value]="header">
+                                                    {{ header }}</option>
+                                            </select>
+                                            <select [(ngModel)]="tab.unitTertiary"
+                                                (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'unit', 2)"
+                                                [disabled]="!tab.included || !tab.unitPrimary || !tab.unitSecondary"
+                                                class="column-select">
+                                                <option value="">-- Select --</option>
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                    [value]="header">
+                                                    {{ header }}</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                    <td class="price-cell mapped-column-cell">
+                                        <select [(ngModel)]="tab.price"
+                                            (change)="rfqState.onColumnChange(analysis, tab, 'price')"
+                                            [disabled]="!tab.included" class="column-select">
+                                            <option value="">-- Select --</option>
+                                            <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                [value]="header">
+                                                {{ header }}</option>
+                                        </select>
+                                    </td>
+                                    <td class="remark-cell mapped-column-cell">
+                                        <div class="composite-select-group">
+                                            <select [(ngModel)]="tab.remarkPrimary"
+                                                (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'remark', 0)"
+                                                [disabled]="!tab.included" class="column-select">
+                                                <option value="">-- Select --</option>
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                    [value]="header">
+                                                    {{ header }}</option>
+                                            </select>
+                                            <select [(ngModel)]="tab.remarkSecondary"
+                                                (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'remark', 1)"
+                                                [disabled]="!tab.included || !tab.remarkPrimary" class="column-select">
+                                                <option value="">-- Select --</option>
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                    [value]="header">
+                                                    {{ header }}</option>
+                                            </select>
+                                            <select [(ngModel)]="tab.remarkTertiary"
+                                                (change)="rfqState.onCompositeSelectionChanged(analysis, tab, 'remark', 2)"
+                                                [disabled]="!tab.included || !tab.remarkPrimary || !tab.remarkSecondary"
+                                                class="column-select">
+                                                <option value="">-- Select --</option>
+                                                <option *ngFor="let header of rfqState.getColumnOptions(tab)"
+                                                    [value]="header">
+                                                    {{ header }}</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                    <td class="images-cell" style="text-align: center; padding: 8px;">
+                                        <div *ngIf="tab.images && tab.images.length > 0"
+                                            style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center;">
+                                            <img *ngFor="let imageUrl of tab.images" [src]="imageUrl" alt="Excel image"
+                                                style="max-width: 60px; max-height: 60px; object-fit: contain; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                                                (click)="openImageModal(imageUrl)" title="Click to view full size">
+                                        </div>
+                                        <span *ngIf="tab.fileType"
+                                            style="color: #666; font-size: 12px; font-weight: 600;">{{ tab.fileType
+                                            }}</span>
+                                        <span *ngIf="!tab.fileType && (!tab.images || tab.images.length === 0)"
+                                            style="color: #999; font-size: 12px;">—</span>
+                                    </td>
+                                    <td class="status-cell">
+                                        <ng-container *ngIf="rfqState.isTabReady(tab); else statusIncomplete">
+                                            <span class="status-icon ready"
+                                                aria-label="Ready to generate table">✔</span>
+                                        </ng-container>
+                                        <ng-template #statusIncomplete>
+                                            <span class="status-icon not-ready"
+                                                aria-label="Missing required selections">✖</span>
+                                        </ng-template>
+                                    </td>
+                                    <td class="actions-cell" *ngIf="isFirst" [attr.rowspan]="analysis.tabs.length + 1">
+                                        <button type="button" class="remove-file-button"
+                                            (click)="openRemoveDialog(fileIndex)">
+                                            Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="isLast" class="workbook-divider-row">
+                                    <td class="workbook-divider-cell" colspan="9"
+                                        style="padding: 0; border-bottom: 1px solid #9aa3ab; height: 0;"></td>
+                                </tr>
+                            </ng-container>
+                        </ng-container>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div *ngIf="columnInfoDialogVisible" class="column-info-dialog-container">
+        <div class="column-info-dialog-backdrop" (click)="closeColumnInfoDialog()"></div>
+        <div class="column-info-dialog-content" role="dialog" aria-modal="true"
+            aria-labelledby="column-info-dialog-title" (click)="$event.stopPropagation()">
+            <div class="column-info-dialog-header">
+                <h3 id="column-info-dialog-title">{{ columnInfoDialogTitle }}</h3>
+                <button type="button" class="column-info-dialog-close" (click)="closeColumnInfoDialog()"
+                    aria-label="Close column info dialog">×</button>
+            </div>
+            <div class="column-info-dialog-body">
+                <p>{{ columnInfoDialogDescription }}</p>
+                <ul>
+                    <li *ngFor="let item of columnInfoDialogItems">{{ item }}</li>
+                </ul>
+                <p *ngIf="columnInfoDialogFootnote" class="column-info-dialog-footnote">
+                    {{ columnInfoDialogFootnote }}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div *ngIf="rfqState.previewDialogVisible" class="preview-dialog-container">
+        <div class="preview-dialog-backdrop" (click)="rfqState.closePreviewDialog()"></div>
+        <div class="preview-dialog-content" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+            <div class="preview-dialog-header">
+                <h3>Preview: {{ rfqState.previewDialogFileName }} / {{ rfqState.previewDialogTabName }}</h3>
+                <button type="button" class="preview-close-button" (click)="rfqState.closePreviewDialog()"
+                    aria-label="Close preview">×</button>
+            </div>
+            <div class="preview-dialog-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th *ngFor="let header of rfqState.previewDialogHeaders; let i = index"
+                                [class.highlight-column]="rfqState.isPreviewColumnHighlighted(i)">
+                                {{ header }}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let row of rfqState.previewDialogRows">
+                            <td *ngFor="let cell of row; let i = index"
+                                [class.highlight-column]="rfqState.isPreviewColumnHighlighted(i)">
+                                {{ cell }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="removeDialogVisible" class="confirm-remove-dialog-container">
+        <div class="confirm-remove-dialog-backdrop" (click)="cancelRemoveFile()"></div>
+        <div class="confirm-remove-dialog-content" role="dialog" aria-modal="true"
+            aria-labelledby="confirm-remove-title" aria-describedby="confirm-remove-description"
+            (click)="$event.stopPropagation()">
+            <div class="confirm-remove-dialog-body">
+                <div class="confirm-remove-dialog-icon" aria-hidden="true">⚠️</div>
+                <h3 id="confirm-remove-title">Remove workbook?</h3>
+                <p id="confirm-remove-description">
+                    {{ pendingRemovalFileName ? 'The workbook "' + pendingRemovalFileName + '" and all of its tabs will
+                    be removed.' : 'The selected workbook and all of its tabs will be removed.' }}
+                </p>
+                <div class="confirm-remove-dialog-actions">
+                    <button type="button" class="confirm-remove-secondary" (click)="cancelRemoveFile()">Cancel</button>
+                    <button type="button" class="confirm-remove-primary" (click)="confirmRemoveFile()">Remove</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="imageModalVisible" class="image-modal-container">
+        <div class="image-modal-backdrop" (click)="closeImageModal()"></div>
+        <div class="image-modal-content" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+            <div class="image-modal-header">
+                <button type="button" class="image-modal-close" (click)="closeImageModal()"
+                    aria-label="Close image modal">×</button>
+            </div>
+            <div class="image-modal-body">
+                <img [src]="imageModalUrl" alt="Excel image"
+                    style="max-width: 100%; max-height: 90vh; object-fit: contain;">
+            </div>
+        </div>
+    </div>
+</div>

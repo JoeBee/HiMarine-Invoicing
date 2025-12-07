@@ -1,0 +1,115 @@
+[
+  {
+    "imo": "9909663",
+    "vessel": "NORSE ANTWERP",
+    "vesselName": "Araw Shipping Agency, Inc.",
+    "vesselName2": "Oceanlink Maritime, Inc.",
+    "vesselAddress": "G/F Eastern Shipping Lines Building",
+    "vesselAddress2": "Anda Circle, Port Area",
+    "vesselCity": "Manila",
+    "vesselCountry": "Philippines"
+  },
+  {
+    "imo": "1030844",
+    "vessel": "ITHAKI I",
+    "vesselName": "C/O LASKARIDIS MARITIME S.A.",
+    "vesselAddress": "DILIGIANNI TH. 9, KIFISSIA,",
+    "vesselCity": "ATHENS",
+    "vesselCountry": "GREECE"
+  },
+  {
+    "imo": "9687576",
+    "vessel": "CISNES",
+    "vesselName": "Hapag-Lloyd AG",
+    "vesselAddress": "Ballindamm 25, 20095 Hamburg",
+    "vesselName2": "M/V Cisnes",
+    "vesselAddress2": "c/o Anglo Eastern (Germany) Gmb",
+    "vesselCity": "Raboisen 28, 20095 Hamburg",
+    "vesselCountry": "VAT-No.: DE8"
+  },
+  {
+    "imo": "9379870",
+    "vessel": "MAR DE CALIFORNIA",
+    "vesselName": "LINEA MARITIMA DEL PACIFICO, S.A.P.I. DE C.V.",
+    "vesselName2": "R.F.C. LMP1502041R4",
+    "vesselAddress": "RIO SAN JOAQUIN, 436/1009, Ampliación Granada, 11529",
+    "vesselCity": "Ciudad de México, Miguel",
+    "vesselCountry": "Hidalgo, Ciudad de México, México"
+  },
+  {
+    "imo": "9721437",
+    "vessel": "INTERLINK CELERITY",
+    "vesselName": "OCY INNUKSUAC 3 LIMITED",
+    "vesselName2": "Interlink Celerity",
+    "vesselAddress": "BERNHARD SCHULTE SHIPMANAGEMENT (HONG KONG) LIMITED PARTNERSHIP",
+    "vesselAddress2": "2602, K Wah Centre 191 Java Road",
+    "vesselCity": "North Point",
+    "vesselCountry": "Hong Kong"
+  },
+  {
+    "imo": "9935806",
+    "vessel": "ZALIV",
+    "vesselName": "TOUGH JENS MARITIME S.A.,",
+    "vesselName2": "M/V ZALIV",
+    "vesselAddress": "VIA ESPANA 122, DELTA TOWER FL 14 PANAMA",
+    "vesselAddress2": "C/O LASKARIDIS MARITIME S.A. DILIGIANNI TH. 9, KIFISSIA",
+    "vesselCity": "ATHENS",
+    "vesselCountry": "GREECE"
+  },
+  {
+    "imo": "9592446",
+    "vessel": "AANYA",
+    "vesselName": "AANYA MARITIME INC.",
+    "vesselName2": "Aquillino De La Guardia,",
+    "vesselAddress": "Orga Building,",
+    "vesselAddress2": "Street No. 8, P O Box 0823- – 02435 ,",
+    "vesselCity": "Panama",
+    "vesselCountry": "Republic of Panama"
+  },
+  {
+    "imo": "9650626",
+    "vessel": "AENEAS",
+    "vesselName": "RANGI MARINE S.A.  LIBERIA",
+    "vesselName2": "M/V AENEAS",
+    "vesselAddress": "C/O MESSRS. LASKARIDIS SHIPPING CO. LTD",
+    "vesselAddress2": "5, XENIAS STR. - KIFISSIA - 14562",
+    "vesselCity": "ATHENS",
+    "vesselCountry": "GREECE"
+  },
+  {
+    "imo": "8105088",
+    "vessel": "ERATO",
+    "vesselName": "C/O LASKARIDIS MARITIME S.A.",
+    "vesselAddress": "DILIGIANNI TH. 9, KIFISSIA,",
+    "vesselCity": "ATHENS",
+    "vesselCountry": "GREECE"
+  },
+  {
+    "imo": "9670901",
+    "vessel": "AEOLOS",
+    "vesselName": "NESTUS NAVIGATION INC.",
+    "vesselName2": "M/V AEOLOS",
+    "vesselAddress": "C/O MESSRS. LASKARIDIS SHIPPING CO. LTD",
+    "vesselAddress2": "5, XENIAS STR. - KIFISSIA - 14562",
+    "vesselCity": "ATHENS",
+    "vesselCountry": "GREECE"
+  },
+  {
+    "imo": "9078488",
+    "vessel": "FRIO PACIFIC",
+    "vesselName": "OCEAN PRINCE OVERSEAS S.A .BAHAMAS",
+    "vesselName2": "MV FRIO PACIFIC",
+    "vesselAddress": "C/O MESSRS BALTMED REEFER SERVICES LTD",
+    "vesselAddress2": "5, XENIAS STR. - KIFISSIA - 14562",
+    "vesselCity": "ATHENS",
+    "vesselCountry": "GREECE"
+  },
+  {
+    "imo": "9181170",
+    "vessel": "INVINCIBLE",
+    "vesselName": "LASKARIDIS SHIPPING CO. LTD.",
+    "vesselAddress": "5, XENIAS STR. & CH. TRIKUOPI 14562 KIFISSIA",
+    "vesselCity": "ATHENS",
+    "vesselCountry": "GREECE"
+  }
+]

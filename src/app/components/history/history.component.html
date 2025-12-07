@@ -1,0 +1,232 @@
+<div class="history-container">
+    <div class="content-wrapper">
+        <div class="history-header">
+            <h1>📊 Application Logs</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" (click)="refreshLogs()" [disabled]="isLoading">
+                    {{ isLoading ? 'Loading...' : '🔄 Refresh' }}
+                </button>
+                <button class="btn btn-primary" (click)="exportLogs()" [disabled]="filteredLogs.length === 0">
+                    📥 Export CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="error" class="error-message">
+            <p>{{ error }}</p>
+            <button class="btn btn-secondary" (click)="refreshLogs()">Try Again</button>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div *ngIf="isLoading" class="loading-indicator">
+            <p>Loading logs...</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-section" *ngIf="!isLoading && logs.length > 0">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label for="categoryFilter">Category:</label>
+                    <select id="categoryFilter" [(ngModel)]="selectedCategory" (change)="onFilterChange()">
+                        <option value="">All Categories</option>
+                        <option *ngFor="let category of categories" [value]="category">
+                            {{ getCategoryIcon(category) }} {{ category.replace('_', ' ').toUpperCase() }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="levelFilter">Level:</label>
+                    <select id="levelFilter" [(ngModel)]="selectedLevel" (change)="onFilterChange()">
+                        <option value="">All Levels</option>
+                        <option *ngFor="let level of levels" [value]="level">
+                            {{ level.toUpperCase() }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="componentFilter">Component:</label>
+                    <select id="componentFilter" [(ngModel)]="selectedComponent" (change)="onFilterChange()">
+                        <option value="">All Components</option>
+                        <option *ngFor="let component of components" [value]="component">
+                            {{ component }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="searchInput">Search:</label>
+                    <input type="text" id="searchInput" [(ngModel)]="searchText" (input)="onFilterChange()"
+                        placeholder="Search logs...">
+                </div>
+
+                <div class="filter-group">
+                    <label for="startDate">From Date:</label>
+                    <input type="date" id="startDate" [(ngModel)]="dateRange.start" (change)="onFilterChange()">
+                </div>
+
+                <div class="filter-group">
+                    <label for="endDate">To Date:</label>
+                    <input type="date" id="endDate" [(ngModel)]="dateRange.end" (change)="onFilterChange()">
+                </div>
+
+                <div class="filter-group clear-filters-container">
+                    <div class="ip-display-box">
+                        <span class="ip-label">My public IP:</span>
+                        <span class="ip-value">{{ userIpAddress }}</span>
+                    </div>
+                    <button class="btn btn-secondary" (click)="clearFilters()">Clear Filters</button>
+                </div>
+            </div>
+
+            <div class="filter-summary">
+                <p>Showing {{ filteredLogs.length }} of {{ logs.length }} logs</p>
+            </div>
+        </div>
+
+        <!-- Logs Table -->
+        <div class="logs-section" *ngIf="!isLoading && filteredLogs.length > 0">
+            <div class="logs-table-container">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Category</th>
+                            <th>Action</th>
+                            <th>
+                                <div class="ip-filter-header">
+                                    <label for="ipAddressFilter" class="sr-only">Filter by IP Address</label>
+                                    <select id="ipAddressFilter" [(ngModel)]="selectedIpAddress"
+                                        (change)="onFilterChange()" class="ip-filter-dropdown">
+                                        <option value="">All IPs</option>
+                                        <option *ngFor="let ip of ipAddresses" [value]="ip">{{ ip }}</option>
+                                    </select>
+                                    <div class="ip-header-label">IP Address</div>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="ip-filter-header">
+                                    <label for="timezoneFilter" class="sr-only">Filter by Timezone</label>
+                                    <select id="timezoneFilter" [(ngModel)]="selectedTimezone"
+                                        (change)="onFilterChange()" class="ip-filter-dropdown">
+                                        <option value="">All Timezones</option>
+                                        <option *ngFor="let tz of timezones" [value]="tz">{{ tz }}</option>
+                                    </select>
+                                    <div class="ip-header-label">Timezone</div>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="ip-filter-header">
+                                    <label for="languageFilter" class="sr-only">Filter by Language</label>
+                                    <select id="languageFilter" [(ngModel)]="selectedLanguage"
+                                        (change)="onFilterChange()" class="ip-filter-dropdown">
+                                        <option value="">All</option>
+                                        <option *ngFor="let lang of languages" [value]="lang">{{ lang }}</option>
+                                    </select>
+                                    <div class="ip-header-label">Language</div>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="ip-filter-header">
+                                    <label for="adminFilter" class="sr-only">Filter by Admin</label>
+                                    <select id="adminFilter" [(ngModel)]="selectedAdmin"
+                                        (change)="onFilterChange()" class="ip-filter-dropdown">
+                                        <option value="">All</option>
+                                        <option value="true">true</option>
+                                        <option value="false">false</option>
+                                    </select>
+                                    <div class="ip-header-label">Admin</div>
+                                </div>
+                            </th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let log of paginatedLogs" [class]="getLevelClass(log.level)">
+                            <td class="timestamp">
+                                <div class="timestamp-date">{{ formatTimestampDate(log.timestamp) }}</div>
+                                <div class="timestamp-time">{{ formatTimestampTime(log.timestamp) }}</div>
+                            </td>
+                            <td class="category">
+                                <span class="category-icon">{{ getCategoryIcon(log.category) }}</span>
+                                {{ log.category.replace('_', ' ').toUpperCase() }}
+                            </td>
+                            <td class="action">
+                                <div class="action-component">{{ log.component }}</div>
+                                <div class="action-detail">{{ formatAction(log.action, log.category, log.details) }}</div>
+                            </td>
+                            <td class="ip-address">
+                                <span class="ip-badge" [title]="log.ipAddress">{{ formatIpAddress(log.ipAddress)
+                                    }}</span>
+                            </td>
+                            <td class="timezone">
+                                <span class="timezone-badge" [title]="log.timezone || 'Unknown'">
+                                    {{ formatTimezone(log.timezone) }}
+                                </span>
+                            </td>
+                            <td class="language">
+                                <span class="language-badge" [title]="log.language || 'Unknown'">
+                                    {{ formatLanguage(log.language) }}
+                                </span>
+                            </td>
+                            <td class="admin">{{ log.isAdmin ? 'true' : 'false' }}</td>
+                            <td class="details">
+                                <div class="details-content" *ngIf="log.details">
+                                    <div class="key-value-pairs">{{ formatDetails(log.details) }}</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" *ngIf="totalPages > 1">
+                <button class="btn btn-secondary" (click)="onPageChange(currentPage - 1)"
+                    [disabled]="currentPage === 1">
+                    Previous
+                </button>
+
+                <span class="page-info">
+                    Page {{ currentPage }} of {{ totalPages }}
+                </span>
+
+                <div class="page-jump">
+                    <label for="pageJumpInput">Go to:</label>
+                    <input type="number" id="pageJumpInput" [value]="currentPage" min="1" [max]="totalPages"
+                        (keyup.enter)="onPageJump($any($event.target).value)"
+                        (blur)="onPageJump($any($event.target).value)" class="page-jump-input">
+                    <span class="page-jump-max">/ {{ totalPages }}</span>
+                </div>
+
+                <button class="btn btn-secondary" (click)="onPageChange(currentPage + 1)"
+                    [disabled]="currentPage === totalPages">
+                    Next
+                </button>
+            </div>
+        </div>
+
+        <!-- No Logs Message -->
+        <div class="no-logs-message" *ngIf="!isLoading && logs.length === 0">
+            <div class="no-logs-content">
+                <h3>📝 Are you offline?</h3>
+                <p>No application logs have been recorded yet. Logs will appear here as you use the application.</p>
+                <div class="historical-image">
+                    <img src="images/HandingInvoiceToShipCaptain.png" alt="Handing Invoice to Ship Captain"
+                        class="historical-image">
+                </div>
+            </div>
+        </div>
+
+        <!-- No Filtered Results -->
+        <div class="no-results-message" *ngIf="!isLoading && logs.length > 0 && filteredLogs.length === 0">
+            <div class="no-results-content">
+                <h3>🔍 No Results Found</h3>
+                <p>No logs match your current filter criteria. Try adjusting your filters.</p>
+                <button class="btn btn-primary" (click)="clearFilters()">Clear Filters</button>
+            </div>
+        </div>
+    </div>
+</div>

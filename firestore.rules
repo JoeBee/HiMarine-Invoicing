@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write access to application logs
+    // In production, you should implement proper authentication
+    match /application_logs/{document} {
+      allow read, write: if true;
+    }
+    
+    // Allow read/write access to any other collections for this application
+    // This is permissive for development - restrict in production
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
