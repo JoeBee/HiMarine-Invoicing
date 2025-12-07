@@ -1,0 +1,35 @@
+{
+  // Use external browser instead of embedded browser
+  "workbench.editor.enablePreview": false,
+  
+  // Browser preview settings - use external browser
+  "browser-preview.startUrl": "http://localhost:4200",
+  "browser-preview.chromeExecutable": "",
+  
+  // Live Preview settings - use external browser
+  "livePreview.settings.useWebExt": false,
+  "livePreview.settings.port": 4200,
+  
+  // General settings for opening URLs in external browser
+  "window.openFilesInNewWindow": "off",
+  
+  // Cursor/VS Code specific - force external browser
+  "workbench.editor.centeredLayoutAutoResize": false,
+  
+  // Prevent Cursor from intercepting browser opening
+  "terminal.integrated.openUrl": "external",
+  "workbench.editorAssociations": {
+    "*.html": "default"
+  },
+  
+  // Angular-specific: ensure dev server opens in external browser
+  "angular.experimental-ivy": true,
+  
+  // Terminal settings - ensure URLs open externally
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  
+  // Force external browser for all URL opening
+  "workbench.editor.enablePreviewFromQuickOpen": false,
+  "workbench.editor.enablePreviewFromCodeNavigation": false
+}
+
