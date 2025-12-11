@@ -105,13 +105,51 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 headerLower.includes('description') || headerLower.includes('remark') || headerLower.includes('unit') ||
                                 headerLower.includes('price') || headerLower.includes('total');
                         });
-                        analysisSet.supplierQuotationHeaders.push(filteredHeaders);
+
+                        // Check if Remark and Unit columns exist, if not add them
+                        const hasRemark = filteredHeaders.some(h => h.toLowerCase().trim().includes('remark'));
+                        const hasUnit = filteredHeaders.some(h => h.toLowerCase().trim().includes('unit'));
+
+                        // Insert missing columns in the expected order: Description, Remark, Unit, Price, Total
+                        const orderedHeaders: string[] = [];
+                        
+                        // Add Description if it exists
+                        const descHeader = filteredHeaders.find(h => h.toLowerCase().trim().includes('description'));
+                        if (descHeader) orderedHeaders.push(descHeader);
+
+                        // Add Remark (existing or new)
+                        const remarkHeader = filteredHeaders.find(h => h.toLowerCase().trim().includes('remark'));
+                        if (remarkHeader) {
+                            orderedHeaders.push(remarkHeader);
+                        } else {
+                            orderedHeaders.push('Remark');
+                        }
+
+                        // Add Unit (existing or new)
+                        const unitHeader = filteredHeaders.find(h => h.toLowerCase().trim().includes('unit'));
+                        if (unitHeader) {
+                            orderedHeaders.push(unitHeader);
+                        } else {
+                            orderedHeaders.push('Unit');
+                        }
+
+                        // Add Price and Total if they exist
+                        const priceHeader = filteredHeaders.find(h => h.toLowerCase().trim().includes('price'));
+                        if (priceHeader) orderedHeaders.push(priceHeader);
+                        
+                        const totalHeader = filteredHeaders.find(h => h.toLowerCase().trim().includes('total'));
+                        if (totalHeader) orderedHeaders.push(totalHeader);
+
+                        analysisSet.supplierQuotationHeaders.push(orderedHeaders);
 
                         const filteredRows = result.rows.map(row => {
                             const filteredRow: ExcelRowData = {};
-                            filteredHeaders.forEach(header => {
+                            orderedHeaders.forEach(header => {
                                 if (row[header] !== undefined) {
                                     filteredRow[header] = row[header];
+                                } else {
+                                    // Add empty value for missing columns
+                                    filteredRow[header] = '';
                                 }
                             });
                             return filteredRow;
@@ -407,6 +445,13 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
     getFilteredHeaders(set: AnalysisSet, fileIndex: number, headers: string[]): string[] {
         return headers.filter(header => {
+            const headerLower = header.toLowerCase().trim();
+            
+            // Always include Remark and Unit columns (even if empty)
+            if (headerLower.includes('remark') || headerLower === 'remark') return true;
+            if (headerLower.includes('unit') || headerLower === 'unit') return true;
+            
+            // For other columns, use existing logic
             if (!this.isDescriptionRemarkOrUnitColumn(header)) return true;
             return this.hasColumnDifferences(set, fileIndex, header);
         });

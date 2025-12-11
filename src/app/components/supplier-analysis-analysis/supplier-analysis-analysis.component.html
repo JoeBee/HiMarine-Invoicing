@@ -12,7 +12,6 @@
                     [disabled]="!exportFileName || exportFileName.trim() === ''">
                     Export to Excel
                 </button>
-                <p class="export-note">Note, to force an Excel update press 'F9'.</p>
             </div>
         </div>
 
@@ -34,13 +33,16 @@
                 </p>
             </div>
 
-            <div *ngIf="!isLoading && set.rowCountsMatch && set.invoiceData.length > 0" class="comparison-table-container">
+            <div *ngIf="!isLoading && set.rowCountsMatch && set.invoiceData.length > 0"
+                class="comparison-table-container">
                 <div class="table-collapsible-section">
                     <div class="table-header" (click)="toggleTable(set)">
                         <div class="table-header-info">
-                            <span>Group {{set.id}} | Records: {{ getRecordCount(set) }} | Files: {{ getFileCount(set) }}</span>
+                            <span>Group {{set.id}} | Records: {{ getRecordCount(set) }} | Files: {{ getFileCount(set)
+                                }}</span>
                             <span class="invoice-label-display">
-                                Section:<input type="text" [(ngModel)]="set.invoiceLabel" class="invoice-label-input-inline" />
+                                Section:<input type="text" [(ngModel)]="set.invoiceLabel"
+                                    class="invoice-label-input-inline" />
                             </span>
                         </div>
                         <span class="expand-icon" [class.expanded]="set.tableExpanded">▼</span>
@@ -62,19 +64,22 @@
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th *ngFor="let header of set.invoiceHeaders" class="invoice-column" [class.right-aligned]="isRightAlignedHeader(header)">{{ header }}</th>
+                                        <th *ngFor="let header of set.invoiceHeaders" class="invoice-column"
+                                            [class.right-aligned]="isRightAlignedHeader(header)">{{ header }}</th>
                                         <ng-container
                                             *ngFor="let headers of set.supplierQuotationHeaders; let fileIndex = index">
                                             <th *ngFor="let header of getFilteredHeaders(set, fileIndex, headers)"
                                                 [class]="fileIndex % 2 === 0 ? 'supplier-column' : 'supplier-column-alt'">
-                                                <span *ngIf="!set.supplierQuotationFiles[fileIndex].isBlank">{{ header }}</span>
+                                                <span *ngIf="!set.supplierQuotationFiles[fileIndex].isBlank">{{ header
+                                                    }}</span>
                                             </th>
                                         </ng-container>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr *ngFor="let invoiceRow of set.invoiceData; let rowIndex = index">
-                                        <td *ngFor="let header of set.invoiceHeaders" class="invoice-column" [class.right-aligned]="isRightAlignedHeader(header)">
+                                        <td *ngFor="let header of set.invoiceHeaders" class="invoice-column"
+                                            [class.right-aligned]="isRightAlignedHeader(header)">
                                             {{ getCellValue(invoiceRow, header) }}
                                         </td>
                                         <ng-container
