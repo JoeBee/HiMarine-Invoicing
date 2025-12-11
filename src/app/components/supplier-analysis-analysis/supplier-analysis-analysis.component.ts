@@ -112,7 +112,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
                         // Insert missing columns in the expected order: Description, Remark, Unit, Price, Total
                         const orderedHeaders: string[] = [];
-                        
+
                         // Add Description if it exists
                         const descHeader = filteredHeaders.find(h => h.toLowerCase().trim().includes('description'));
                         if (descHeader) orderedHeaders.push(descHeader);
@@ -136,7 +136,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         // Add Price and Total if they exist
                         const priceHeader = filteredHeaders.find(h => h.toLowerCase().trim().includes('price'));
                         if (priceHeader) orderedHeaders.push(priceHeader);
-                        
+
                         const totalHeader = filteredHeaders.find(h => h.toLowerCase().trim().includes('total'));
                         if (totalHeader) orderedHeaders.push(totalHeader);
 
@@ -446,11 +446,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
     getFilteredHeaders(set: AnalysisSet, fileIndex: number, headers: string[]): string[] {
         return headers.filter(header => {
             const headerLower = header.toLowerCase().trim();
-            
+
             // Always include Remark and Unit columns (even if empty)
             if (headerLower.includes('remark') || headerLower === 'remark') return true;
             if (headerLower.includes('unit') || headerLower === 'unit') return true;
-            
+
             // For other columns, use existing logic
             if (!this.isDescriptionRemarkOrUnitColumn(header)) return true;
             return this.hasColumnDifferences(set, fileIndex, header);
@@ -1011,21 +1011,48 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     labelCell.font = { name: 'Cambria', size: 11, bold: true };
                     labelCell.alignment = { horizontal: 'right' };
 
-                    // Calculate Row Total (sum of items won by this supplier)
-                    let rowTotal = 0;
+                    // Column G: Total Sum - Use SumByColor formula to sum yellowed values
+                    const totalCell = matrixRow.getCell(7);
+
+                    // Get winnerStats for this supplier (needed for matrix calculations)
                     const winnerStats = matrixStats.get(winFileIdx);
-                    if (winnerStats) {
-                        // Only sum the values where targetFileIdx is the winning file (the yellowed cells)
-                        // This represents the cost of the items won by this supplier, payable to this supplier
-                        const selfStats = winnerStats.get(winFileIdx);
-                        if (selfStats) {
-                            rowTotal = selfStats.sum;
+
+                    // Get this supplier's Total column from the main data table
+                    const supplierTotalCol = supplierTotalCols.get(winFileIdx);
+
+                    if (supplierTotalCol) {
+                        // Calculate data range for this supplier's Total column
+                        const dataEndRow = totalRow - 4;
+                        const dataStartRow = dataEndRow - set.invoiceData.length + 1;
+
+                        const totalColLetter = worksheet.getColumn(supplierTotalCol).letter;
+                        const rangeStart = `${totalColLetter}${dataStartRow}`;
+                        const rangeEnd = `${totalColLetter}${dataEndRow}`;
+                        const currentCellRef = `G${matrixStartRow}`;
+
+                        // console.log('dataEndRow:', dataEndRow);
+                        // console.log('dataStartRow:', dataStartRow);
+                        // console.log('totalColLetter:', totalColLetter);
+                        // console.log('rangeStart:', rangeStart);
+                        // console.log('rangeEnd:', rangeEnd);
+                        // console.log('currentCellRef:', currentCellRef);
+                        // console.log('*** TEST:', `${totalColLetter}${matrixStartRow}`);
+
+                        // Use SumByColor formula to sum yellowed cells in this supplier's Total column
+                        // totalCell.value = { formula: `SumByColor(${rangeStart}:${rangeEnd},${currentCellRef})` };
+                        totalCell.value = { formula: `${totalColLetter}${matrixStartRow}` };
+                    } else {
+                        // Fallback to static value if column not found
+                        let rowTotal = 0;
+                        if (winnerStats) {
+                            const selfStats = winnerStats.get(winFileIdx);
+                            if (selfStats) {
+                                rowTotal = selfStats.sum;
+                            }
                         }
+                        totalCell.value = rowTotal;
                     }
 
-                    // Column G: Total Sum
-                    const totalCell = matrixRow.getCell(7);
-                    totalCell.value = rowTotal;
                     totalCell.numFmt = '$#,##0.00';
                     totalCell.font = { name: 'Cambria', size: 11, bold: true };
                     totalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
