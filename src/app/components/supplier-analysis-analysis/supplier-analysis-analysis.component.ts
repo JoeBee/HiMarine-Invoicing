@@ -900,13 +900,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         totalRowCellsWithContent.push(checkCol);
                     }
                     if (hLower.includes('total')) {
-                        let totalSum = 0;
-                        for (let r = 0; r < set.invoiceData.length; r++) {
-                            const val = this.getCellValue(set.invoiceData[r], header);
-                            if (val) totalSum += Number(val) || 0;
-                        }
                         const sumCell = totalRowObj.getCell(checkCol);
-                        sumCell.value = totalSum;
+                        const colLetter = worksheet.getColumn(checkCol).letter;
+                        const rangeStart = `${colLetter}${dataStartRow}`;
+                        const rangeEnd = `${colLetter}${dataStartRow + set.invoiceData.length - 1}`;
+                        sumCell.value = { formula: `SUM(${rangeStart}:${rangeEnd})` };
                         sumCell.numFmt = '$#,##0.00';
                         sumCell.font = { name: 'Cambria', size: 11, bold: true };
                         totalRowCellsWithContent.push(checkCol);
@@ -936,13 +934,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         if (hLower.includes('total')) {
                             // Only calculate and show total sum if not a blank file
                             if (!isBlankFile) {
-                                let totalSum = 0;
-                                for (let r = 0; r < set.invoiceData.length; r++) {
-                                    const val = this.getSupplierQuotationValue(set, fileIndex, r, header);
-                                    if (val) totalSum += Number(val) || 0;
-                                }
                                 const sumCell = totalRowObj.getCell(checkCol);
-                                sumCell.value = totalSum;
+                                const colLetter = worksheet.getColumn(checkCol).letter;
+                                const rangeStart = `${colLetter}${dataStartRow}`;
+                                const rangeEnd = `${colLetter}${dataStartRow + set.invoiceData.length - 1}`;
+                                sumCell.value = { formula: `SUM(${rangeStart}:${rangeEnd})` };
                                 sumCell.numFmt = '$#,##0.00';
                                 sumCell.font = { name: 'Cambria', size: 11, bold: true };
                                 totalRowCellsWithContent.push(checkCol);
