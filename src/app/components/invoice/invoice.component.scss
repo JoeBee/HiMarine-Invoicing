@@ -1,6 +1,5 @@
 .invoice-container {
     background-color: #f0f7ff;
-    /* Very light blue background - lighter than #e3f2fd */
     min-height: calc(100vh - 120px);
     margin: -40px -20px;
     padding: 60px 40px;
@@ -22,7 +21,7 @@
         margin-bottom: 30px;
 
         .left-column-container {
-            flex: 0 0 50%; // Increased from 40%
+            flex: 0 0 50%;
             display: flex;
             flex-direction: column;
             gap: 15px;

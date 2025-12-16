@@ -22,6 +22,7 @@
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     animation: slideUp 0.3s ease;
     position: relative;
+    outline: none;
 
     h2 {
         color: #0066cc;
@@ -102,7 +103,6 @@
     }
 }
 
-// Tab Navigation Styling
 .info-tabs {
     display: flex;
     gap: 0;
@@ -130,8 +130,7 @@
             background-color: rgba(0, 0, 0, 0.05);
         }
 
-        // RFQ tab - Dark Green theme
-        &:first-child {
+        &.rfq {
             color: #1b5e20;
 
             &:hover {
@@ -147,8 +146,7 @@
             }
         }
 
-        // Suppliers tab - Red theme
-        &:nth-child(2) {
+        &.suppliers {
             color: #b71c1c;
 
             &:hover {
@@ -164,8 +162,7 @@
             }
         }
 
-        // Invoicing tab - Blue theme
-        &:nth-child(3) {
+        &.invoicing {
             color: #0d47a1;
 
             &:hover {
@@ -181,8 +178,7 @@
             }
         }
 
-        // History tab - Purple theme
-        &:nth-child(4) {
+        &.supplier-analysis {
             color: #4a148c;
 
             &:hover {
@@ -193,6 +189,22 @@
             &.active {
                 color: #ffffff;
                 background-color: #4a148c;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                font-weight: 600;
+            }
+        }
+
+        &.history {
+            color: #2e7d32;
+
+            &:hover {
+                color: #1b5e20;
+                background-color: #e0f2e0;
+            }
+
+            &.active {
+                color: #ffffff;
+                background-color: #2e7d32;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
                 font-weight: 600;
             }
@@ -211,26 +223,25 @@
     transition: background-color 0.3s ease;
 }
 
-// Apply background colors to tab panels based on active tab
 .tab-content {
-    // RFQ tab active - Light green background
     &.tab-rfq .tab-panel {
         background-color: rgba(232, 245, 233, 0.4);
     }
 
-    // Suppliers tab active - Light red background
     &.tab-suppliers .tab-panel {
         background-color: rgba(255, 235, 238, 0.4);
     }
 
-    // Invoicing tab active - Light blue background
     &.tab-invoicing .tab-panel {
         background-color: rgba(227, 242, 253, 0.4);
     }
 
-    // History tab active - Light purple background
-    &.tab-history .tab-panel {
+    &.tab-supplier-analysis .tab-panel {
         background-color: rgba(243, 229, 245, 0.4);
+    }
+
+    &.tab-history .tab-panel {
+        background-color: rgba(232, 245, 233, 0.4);
     }
 }
 

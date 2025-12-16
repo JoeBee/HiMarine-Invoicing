@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { filter } from 'rxjs/operators';
+import { filter } from 'rxjs';
 import { LoggingService } from './services/logging.service';
 import { InformationModalComponent } from './components/information-modal/information-modal.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
     selector: 'app-root',
@@ -18,20 +19,19 @@ export class AppComponent implements OnInit {
     showInfoModal = false;
     activeMainTab = '';
     showHistoryTab = false;
-    showSupplierAnalysisTab = true;
     passwordInput = '';
     showPassword = false;
     private readonly SECRET_WORD = 'drakemaye';
     private readonly STORAGE_KEY = 'history_access_granted';
+    private readonly destroyRef = inject(DestroyRef);
 
     constructor(private router: Router, private loggingService: LoggingService) {
-        // Listen to route changes to determine active main tab
         this.router.events
-            .pipe(filter(event => event instanceof NavigationEnd))
-            .subscribe((event) => {
-                const navigationEvent = event as NavigationEnd;
-                this.updateActiveMainTab(navigationEvent.urlAfterRedirects);
-            });
+            .pipe(
+                filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+                takeUntilDestroyed(this.destroyRef)
+            )
+            .subscribe((event) => this.updateActiveMainTab(event.urlAfterRedirects));
 
         this.activeMainTab = this.getMainTabFromUrl(this.router.url);
     }
@@ -59,7 +59,7 @@ export class AppComponent implements OnInit {
 
         if (tab === 'suppliers') {
             this.router.navigate(['/suppliers/supplier-docs']);
-        } else         if (tab === 'invoicing') {
+        } else if (tab === 'invoicing') {
             this.router.navigate(['/invoicing/captains-order']);
         } else if (tab === 'supplier-analysis') {
             this.router.navigate(['/supplier-analysis/inputs']);

@@ -272,21 +272,10 @@ Routes use lazy loading with `loadComponent()` for optimal performance:
 - Filters applied client-side
 - Pagination handles large datasets
 
-#### 8. InvoicingComponent
+#### 8. Notes on legacy routes
 
-**Location:** `src/app/components/invoicing/`
-
-**Route:** `/invoicing` (legacy/alternative route)
-
-**Purpose:** Alternative invoicing interface
-
-#### 9. SuppliersComponent
-
-**Location:** `src/app/components/suppliers/`
-
-**Route:** `/suppliers-new` (legacy/alternative route)
-
-**Purpose:** Alternative supplier interface
+Older placeholder/legacy routes/components have been removed in favor of canonical sub-routes:
+`/invoicing/*` and `/suppliers/*`.
 
 ## Services Architecture
 
@@ -505,8 +494,7 @@ HiMarine-Invoicing/
 │   │   │   ├── invoice/                 # Invoice generation
 │   │   │   ├── history/                 # Log viewing
 │   │   │   ├── information-modal/       # Information/help modal
-│   │   │   ├── invoicing/               # Alternative invoicing (legacy)
-│   │   │   ├── suppliers/                # Alternative suppliers (legacy)
+│   │   │   ├── (legacy placeholders removed)
 │   │   │   └── process-data/            # (Empty/unused)
 │   │   ├── services/
 │   │   │   ├── data.service.ts          # Core data management

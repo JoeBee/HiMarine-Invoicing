@@ -1,8 +1,4 @@
-/* 
-If includes anthing from 'FRESH_PROVISIONS_LIST'
-but does not include anything from 'NOT_FRESH'
-then it is 'PROVISIONS' (NOT  'FRESH PROVISIONS')
-*/
+// Used to categorize items as FRESH PROVISIONS vs PROVISIONS based on keyword matches.
 
 export const NOT_FRESH = [
     'BAKED',
@@ -147,7 +143,7 @@ export const FRESH_PROVISIONS_LIST = [
     'MELON',
     'MINT',
     'MUSHROOM',
-    'MURPHY USA', // that’s a gas station chain :)
+    'MURPHY USA',
     'MUSTARD LEAVES',
     'NAPA',
     'NECTARINE',
@@ -169,17 +165,6 @@ export const FRESH_PROVISIONS_LIST = [
     'PECHAY',
     'PEPERMINT',
     'PEPPER',
-    // 'PEPPER BELL GREEN',
-    // 'PEPPER BELL RED',
-    // 'PEPPER BELL YELLOW',
-    // 'PEPPER CHILI HOT GREEN',
-    // 'PEPPER CHILI HOT RED',
-    // 'PEPPER GREEN',
-    // 'PEPPER GREEN ITALIAN',
-    // 'PEPPER RED',
-    // 'PEPPER SPANISH PADRON',
-    // 'PEPPER THAI CHILI GREEN HOT (RAWIT)',
-    // 'PEPPER YELLOW',
     'PINEAPPLE',
     'PITAHAYA',
     'PLANTAIN',
@@ -234,8 +219,8 @@ export const FRESH_PROVISIONS_LIST = [
     'TARRAGON',
     'THYME',
     'TURNIPS',
-    'TORONJA', // Spanish for “grapefruit,”
-    'TOFU SOFT X 500 GRM', // processed product, not a “fresh provision”
+    'TORONJA',
+    'TOFU SOFT X 500 GRM',
     'WATER MELON',
     'WATERCRESS',
     'WATERMELON',

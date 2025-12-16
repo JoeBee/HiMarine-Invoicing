@@ -1,29 +1,37 @@
 <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal" (click)="$event.stopPropagation()">
-        <button class="modal-close" (click)="closeModal()" aria-label="Close modal">&times;</button>
-        <!-- <h2>Invoicing - User Instructions</h2> -->
+    <div #modal class="modal" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle" tabindex="-1" (click)="$event.stopPropagation()">
+        <button type="button" class="modal-close" (click)="closeModal()" aria-label="Close">&times;</button>
+        <h2 id="infoModalTitle">Help &amp; Workflow</h2>
 
         <!-- Tab Navigation -->
-        <nav class="info-tabs">
-            <button class="info-tab" [class.active]="activeTab === 'rfq'" (click)="selectTab('rfq')">
-                📋 Request for Quotation (RFQ)
+        <nav class="info-tabs" role="tablist" aria-label="Help sections">
+            <button type="button" class="info-tab rfq" role="tab" id="tab-rfq" aria-controls="panel-rfq"
+                [attr.aria-selected]="activeTab === 'rfq'" [class.active]="activeTab === 'rfq'" (click)="selectTab('rfq')">
+                Request for Quotation (RFQ)
             </button>
-            <button class="info-tab" [class.active]="activeTab === 'suppliers'" (click)="selectTab('suppliers')">
-                🏢 Suppliers
+            <button type="button" class="info-tab suppliers" role="tab" id="tab-suppliers" aria-controls="panel-suppliers"
+                [attr.aria-selected]="activeTab === 'suppliers'" [class.active]="activeTab === 'suppliers'" (click)="selectTab('suppliers')">
+                Suppliers
             </button>
-            <button class="info-tab" [class.active]="activeTab === 'invoicing'" (click)="selectTab('invoicing')">
-                📄 Invoicing
+            <button type="button" class="info-tab invoicing" role="tab" id="tab-invoicing" aria-controls="panel-invoicing"
+                [attr.aria-selected]="activeTab === 'invoicing'" [class.active]="activeTab === 'invoicing'" (click)="selectTab('invoicing')">
+                Invoicing
             </button>
-            <button *ngIf="hasHistoryAccess" class="info-tab" [class.active]="activeTab === 'history'" (click)="selectTab('history')">
-                📊 History
+            <button type="button" class="info-tab supplier-analysis" role="tab" id="tab-supplier-analysis" aria-controls="panel-supplier-analysis"
+                [attr.aria-selected]="activeTab === 'supplier-analysis'" [class.active]="activeTab === 'supplier-analysis'" (click)="selectTab('supplier-analysis')">
+                Supplier Analysis
+            </button>
+            <button *ngIf="hasHistoryAccess" type="button" class="info-tab history" role="tab" id="tab-history" aria-controls="panel-history"
+                [attr.aria-selected]="activeTab === 'history'" [class.active]="activeTab === 'history'" (click)="selectTab('history')">
+                History
             </button>
         </nav>
 
         <!-- Tab Content -->
-        <div class="tab-content" [class.tab-rfq]="activeTab === 'rfq'" [class.tab-suppliers]="activeTab === 'suppliers'" [class.tab-invoicing]="activeTab === 'invoicing'" [class.tab-history]="activeTab === 'history'">
+        <div class="tab-content" [class.tab-rfq]="activeTab === 'rfq'" [class.tab-suppliers]="activeTab === 'suppliers'" [class.tab-invoicing]="activeTab === 'invoicing'" [class.tab-supplier-analysis]="activeTab === 'supplier-analysis'" [class.tab-history]="activeTab === 'history'">
             <!-- RFQ Tab -->
-            <div *ngIf="activeTab === 'rfq'" class="tab-panel">
-                <h3>📋 Request for Quotation (RFQ)</h3>
+            <div *ngIf="activeTab === 'rfq'" class="tab-panel" role="tabpanel" id="panel-rfq" aria-labelledby="tab-rfq">
+                <h3>Request for Quotation (RFQ)</h3>
 
                 <h4>Captain's Request</h4>
                 <ul>
@@ -72,8 +80,8 @@
             </div>
 
             <!-- Suppliers Tab -->
-            <div *ngIf="activeTab === 'suppliers'" class="tab-panel">
-                <h3>🏢 Suppliers Tab</h3>
+            <div *ngIf="activeTab === 'suppliers'" class="tab-panel" role="tabpanel" id="panel-suppliers" aria-labelledby="tab-suppliers">
+                <h3>Suppliers</h3>
 
                 <h4>Supplier Docs</h4>
                 <ul>
@@ -142,8 +150,8 @@
             </div>
 
             <!-- Invoicing Tab -->
-            <div *ngIf="activeTab === 'invoicing'" class="tab-panel">
-                <h3>📄 Invoicing Tab</h3>
+            <div *ngIf="activeTab === 'invoicing'" class="tab-panel" role="tabpanel" id="panel-invoicing" aria-labelledby="tab-invoicing">
+                <h3>Invoicing</h3>
 
                 <h4>Captain's Order</h4>
                 <ul>
@@ -215,9 +223,19 @@
                 </ul>
             </div>
 
+            <!-- Supplier Analysis Tab -->
+            <div *ngIf="activeTab === 'supplier-analysis'" class="tab-panel" role="tabpanel" id="panel-supplier-analysis" aria-labelledby="tab-supplier-analysis">
+                <h3>Supplier Analysis</h3>
+                <ul>
+                    <li><strong>Inputs:</strong> Upload/prepare supplier datasets and configure analysis settings</li>
+                    <li><strong>Analysis:</strong> Compare suppliers side-by-side and export analysis workbooks</li>
+                    <li><strong>Excel Compatibility:</strong> Analysis exports can use macro-enabled templates (when provided)</li>
+                </ul>
+            </div>
+
             <!-- History Tab -->
-            <div *ngIf="activeTab === 'history'" class="tab-panel">
-                <h3>📊 History Tab</h3>
+            <div *ngIf="activeTab === 'history'" class="tab-panel" role="tabpanel" id="panel-history" aria-labelledby="tab-history">
+                <h3>History</h3>
 
                 <h4>Application Logs</h4>
                 <ul>
@@ -254,7 +272,7 @@
             </div>
         </div>
 
-        <h3>🔧 Key Features & Tips</h3>
+        <h3>Key Features & Tips</h3>
         <ul>
             <li><strong>Automatic Processing:</strong> Files are processed immediately upon upload - no manual
                 processing required</li>
@@ -274,7 +292,7 @@
             <li><strong>Comprehensive Logging:</strong> Track all actions for audit and debugging purposes</li>
         </ul>
 
-        <h3>📋 Workflow Summary</h3>
+        <h3>Workflow Summary</h3>
         <ol>
             <li><strong>Upload Supplier Files:</strong> Drag Excel files to appropriate drop zones (Bonded/Provisions)
                 in Supplier Docs tab</li>
@@ -292,6 +310,6 @@
                 audit and troubleshooting</li>
         </ol>
 
-        <button class="primary close-button" (click)="closeModal()">Close</button>
+        <button type="button" class="primary close-button" (click)="closeModal()">Close</button>
     </div>
 </div>

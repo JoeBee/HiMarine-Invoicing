@@ -43,12 +43,14 @@
                         "allowedCommonJsDependencies": [
                             "file-saver",
                             "exceljs",
+                            "jszip",
+                            "xlsx",
+                            "jspdf",
                             "html2canvas",
                             "canvg",
                             "rgbcolor",
                             "raf",
-                            "core-js",
-                            "jszip"
+                            "core-js"
                         ]
                     },
                     "configurations": {

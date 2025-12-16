@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, OnInit, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, OnDestroy, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -10,14 +10,17 @@ import { CommonModule } from '@angular/common';
 })
 export class InformationModalComponent implements OnInit, OnDestroy {
     @Output() close = new EventEmitter<void>();
-    activeTab: 'rfq' | 'suppliers' | 'invoicing' | 'history' = 'rfq';
+    activeTab: 'rfq' | 'suppliers' | 'invoicing' | 'supplier-analysis' | 'history' = 'rfq';
     hasHistoryAccess = false;
     private readonly STORAGE_KEY = 'history_access_granted';
     private storageListener?: (event: StorageEvent) => void;
     private historyAccessChangedListener?: () => void;
 
+    @ViewChild('modal', { static: false }) modal?: ElementRef<HTMLElement>;
+
     ngOnInit(): void {
         this.checkHistoryAccess();
+        queueMicrotask(() => this.modal?.nativeElement.focus());
         
         // Listen for storage changes (e.g., when user logs out in another tab)
         this.storageListener = (event: StorageEvent) => {
@@ -59,7 +62,12 @@ export class InformationModalComponent implements OnInit, OnDestroy {
         this.close.emit();
     }
 
-    selectTab(tab: 'rfq' | 'suppliers' | 'invoicing' | 'history'): void {
+    @HostListener('document:keydown.escape')
+    onEscapeKey(): void {
+        this.closeModal();
+    }
+
+    selectTab(tab: 'rfq' | 'suppliers' | 'invoicing' | 'supplier-analysis' | 'history'): void {
         // Only allow selecting history tab if user has access
         if (tab === 'history' && !this.hasHistoryAccess) {
             return;

@@ -8,23 +8,22 @@ export const routes: Routes = [
     },
     {
         path: 'suppliers',
-        loadComponent: () => import('./components/suppliers-docs/suppliers-docs.component').then(m => m.SuppliersDocsComponent)
+        redirectTo: '/suppliers/supplier-docs',
+        pathMatch: 'full'
     },
     {
         path: 'invoice',
-        loadComponent: () => import('./components/invoice/invoice.component').then(m => m.InvoiceComponent)
+        redirectTo: '/invoicing/invoice',
+        pathMatch: 'full'
     },
     {
         path: 'history',
         loadComponent: () => import('./components/history/history.component').then(m => m.HistoryComponent)
     },
     {
-        path: 'suppliers-new',
-        loadComponent: () => import('./components/suppliers/suppliers.component').then(m => m.SuppliersComponent)
-    },
-    {
         path: 'invoicing',
-        loadComponent: () => import('./components/invoicing/invoicing.component').then(m => m.InvoicingComponent)
+        redirectTo: '/invoicing/captains-order',
+        pathMatch: 'full'
     },
     {
         path: 'suppliers/supplier-docs',

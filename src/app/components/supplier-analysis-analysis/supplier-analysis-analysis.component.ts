@@ -1115,98 +1115,13 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 const rangeStart = `${priceColLetter}${dataStartRow}`;
                                 const rangeEnd = `${priceColLetter}${dataEndRow}`;
 
-                                // For CountByColor: Count items in the Price column that are highlighted (green/yellow)
-                                // Reference cell: The cell itself if it has the color, or we need to know what "Winning Color" is.
-                                // The requirement says "use 'SumByColor' formula... 2nd references a cell".
-                                // If the matrix cell itself is yellow (winner), we use it.
-                                // If it's not yellow, what color are we looking for?
-                                // The main table highlights the *lowest* price.
-                                // If we want to count how many times THIS supplier won, we are looking for the highlight color.
-                                // The highlight color in the main table is 'FFC6EFCE' (greenish) or 'FFFFFF00' (yellow) depending on duplicates.
-                                // But SumByColor usually works by matching the background color of the reference cell.
-                                // If the matrix summary cell is highlighted yellow (because it's the winner row/col), 
-                                // then SumByColor(Range, MatrixCell) will sum things that match the MatrixCell's yellow color.
-                                // But the main table highlights are 'FFC6EFCE' (if unique winner) or 'FFFFFF00' (if tied).
-                                // This might be tricky if colors don't match exactly.
-                                // However, the user prompt implies using the cell itself as reference.
-
-                                // Let's assume the macro handles color matching robustly or the user ensures colors match.
-                                // The prompt example: "=SumByColor(G210:G213,G215)" where G215 is the cell itself.
-
                                 // Apply formulas
                                 const countCellRef = `${worksheet.getColumn(priceCol).letter}${matrixRow.number}`;
                                 const sumCellRef = `${worksheet.getColumn(priceCol + 1).letter}${matrixRow.number}`;
 
-                                // NOTE: We need to handle the case where the matrix cell is NOT colored (non-diagonal cells).
-                                // If the matrix cell is white/transparent, SumByColor(Range, MatrixCell) would sum uncolored cells?
-                                // That's probably not what's intended for the non-diagonal cells.
-                                // Usually the matrix shows how many times Supplier X beat Supplier Y?
-                                // Or is it just a summary of Supplier X?
-                                // The code structure suggests:
-                                // "Matrix Stats: WinnerFileIndex -> TargetFileIndex -> Stats"
-                                // It counts how many times WinnerFileIndex was best, summed up by TargetFileIndex's prices?
-                                // Wait, if I am Supplier A, and I won 5 items.
-                                // Row "Supplier A":
-                                // Col "Supplier A": 5 items, Sum $100 (My price)
-                                // Col "Supplier B": 5 items, Sum $120 (B's price for the items I won)
-                                //
-                                // To calculate this via SumByColor in VBA:
-                                // We would need to look at Supplier A's column in the main table and count/sum highlighted cells?
-                                // But that only works for the diagonal (My Wins, My Price).
-                                // For off-diagonal (My Wins, Competitor Price), we can't use SumByColor on the Competitor Column based on highlighting,
-                                // because the Competitor Column is NOT highlighted for the items *I* won.
-                                //
-                                // UNLESS: The requirement "use the 'SumByColor' formula in every table summation section" 
-                                // applies specifically to the columns/rows that HAVE color.
-                                // The image shows "TOTAL ALL SPLIT" (Yellow) and "Summation Quotations" (Yellow).
-                                // It seems we only apply this to the yellow cells?
-                                //
-                                // User instruction: "Add a similar formula for 'Summation Quotations' columns" (circled in red/blue).
-                                // The image circles the diagonal cells (where count/sum is).
-                                // AND the text says "use 'SumByColor' formula in EVERY table summation section".
-                                //
-                                // If I strictly follow the request:
-                                // "The 'TOTAL ALL SPLIT' calculation should be '=SumByColor(xx:yy, zz)'"
-                                // "Add a similar formula for 'Summation Quotations' columns... circled in red/blue"
-                                //
-                                // The red/blue circles are on the diagonal (Winner vs Self).
-                                // These cells ARE colored yellow in the code:
-                                // `if (winFileIdx === targetFileIdx) { ... countCell.fill = yellow; ... }`
-                                //
-                                // So for these diagonal cells, we can use the formula pointing to the main table's price/total column.
-                                // For non-diagonal cells, we should probably leave the static value or use a different logic?
-                                // The prompt only explicitly mentions the "Summation Quotations" columns and shows the diagonal ones circled.
-                                // It doesn't explicitly say "ONLY" the diagonal ones, but the "SumByColor" implies color matching.
-                                // Since off-diagonal cells aren't colored, SumByColor wouldn't work to count "Winners" there.
-                                //
-                                // Conclusion: I will apply the formula ONLY to the diagonal cells (where winFileIdx === targetFileIdx).
-                                // The static values calculated by JS (`targetStats.count`, `targetStats.sum`) will remain for off-diagonal 
-                                // unless the user wants those dynamic too (which would require a different VBA function like SumIfOtherColIsColor).
-                                // Given the specific instruction and the nature of SumByColor, I'll target the diagonal yellow cells.
-
                                 if (winFileIdx === targetFileIdx) {
-                                    // CountByColor for the 'items' cell
-                                    // We want to count highlighted cells in the Price column of this file in the main table.
-                                    // But wait, in the main table, the Price column IS highlighted if it's the winner.
-                                    // So CountByColor(PriceColumnRange, ThisCell) should work if ThisCell is yellow and PriceCol cells are yellow/green.
-                                    // Note: Main table highlight is 'FFC6EFCE' (light green) or 'FFFFFF00' (yellow).
-                                    // Matrix cell is 'FFFFFF00' (yellow).
-                                    // If the VBA function is strict about color matching, Yellow != Light Green.
-                                    // However, we must assume the VBA function handles this or the user is aware.
-                                    // I will construct the formula.
-
+                                    // Use color-based formulas on diagonal summary cells; keep static values off-diagonal.
                                     countCell.value = { formula: `CountByColor(${rangeStart}:${rangeEnd},${countCellRef})` };
-
-                                    // SumByColor for the 'sum' cell
-                                    // We want to sum the Total (or Price) column in the main table where it's highlighted.
-                                    // We used 'priceCol' for the range above.
-                                    // Ideally we should sum the 'Total' column if it exists, or 'Price' if not.
-                                    // In the loop, `sumCell` is `matrixRow.getCell(priceCol + 1)`.
-                                    // Let's assume priceCol + 1 is the Total column in the main table too.
-                                    // We can verify if the column at priceCol + 1 in main table is indeed a 'Total' column?
-                                    // In `rowPriceValues` logic:
-                                    // `const totalColIndex = entry.col + 1; ... totalCell.fill = highlightFill;`
-                                    // So yes, the Total column is also highlighted.
 
                                     const totalColLetter = worksheet.getColumn(priceCol + 1).letter;
                                     const sumRangeStart = `${totalColLetter}${dataStartRow}`;
