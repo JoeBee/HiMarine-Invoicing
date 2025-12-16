@@ -52,11 +52,6 @@ export class AppComponent implements OnInit {
     }
 
     onMainTabClick(tab: string): void {
-        this.loggingService.logButtonClick(`main_tab_${tab}`, 'AppComponent', {
-            previousTab: this.activeMainTab,
-            newTab: tab
-        });
-
         if (tab === 'suppliers') {
             this.router.navigate(['/suppliers/supplier-docs']);
         } else if (tab === 'invoicing') {

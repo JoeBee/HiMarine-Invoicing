@@ -124,13 +124,13 @@ The History tab (`src/app/components/history/history.component.ts`) provides:
 
 #### Automatic Cleanup
 - Cloud Function runs daily at 2 AM
-- Automatically deletes logs older than 1 week (7 days)
+- Automatically deletes logs older than 5 days
 - Maintains database performance and storage costs
 
 #### Cloud Function (`functions/index.js`)
 ```javascript
 exports.cleanupOldLogs = functions.pubsub.schedule('0 2 * * *').onRun(async (context) => {
-  // Deletes logs older than 7 days
+  // Deletes logs older than 5 days
 });
 ```
 

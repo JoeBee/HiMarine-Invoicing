@@ -114,13 +114,6 @@ export class SupplierAnalysisInputsComponent implements OnInit {
     onFileSelect(event: Event, category: 'Invoice' | 'Supplier Quotations', setIndex: number): void {
         const input = event.target as HTMLInputElement;
         if (input.files) {
-            this.loggingService.logUserAction('files_selected', {
-                category: category,
-                filesCount: input.files.length,
-                fileNames: Array.from(input.files).map(f => f.name),
-                setIndex: setIndex
-            }, 'SupplierAnalysisInputsComponent');
-
             this.processFiles(input.files, category, setIndex);
         }
     }
@@ -350,11 +343,6 @@ export class SupplierAnalysisInputsComponent implements OnInit {
     }
 
     triggerFileInput(category: 'Invoice' | 'Supplier Quotations', setIndex: number): void {
-        this.loggingService.logButtonClick('file_input_triggered', 'SupplierAnalysisInputsComponent', {
-            category: category,
-            setIndex: setIndex
-        });
-
         const fileInput = document.getElementById(`fileInput-${category}-${setIndex}`) as HTMLInputElement;
         fileInput?.click();
     }
@@ -678,11 +666,6 @@ export class SupplierAnalysisInputsComponent implements OnInit {
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData('text/plain', file.fileName);
         }
-
-        this.loggingService.logUserAction('file_drag_start', {
-            fileName: file.fileName,
-            setIndex: setIndex
-        }, 'SupplierAnalysisInputsComponent');
     }
 
     onFileDragEnd(event: DragEvent): void {
@@ -734,13 +717,6 @@ export class SupplierAnalysisInputsComponent implements OnInit {
 
         // Update service with new order
         this.updateServiceFileSet(set);
-
-        this.loggingService.logUserAction('file_reordered', {
-            fileName: this.draggedFile.fileName,
-            fromIndex: draggedIndex,
-            toIndex: targetIndex,
-            setIndex: setIndex
-        }, 'SupplierAnalysisInputsComponent');
 
         this.onFileDragEnd(event);
     }

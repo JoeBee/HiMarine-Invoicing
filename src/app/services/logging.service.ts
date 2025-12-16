@@ -32,7 +32,7 @@ export class LoggingService {
     private isOnline: boolean = navigator.onLine;
     private batchSize: number = 10;
     private batchTimeout: number = 5000; // 5 seconds
-    private retentionDays: number = 7; // Logs are retained for 1 week
+    private retentionDays: number = 5; // Logs are retained for 5 days
     private batchTimer: any;
     private cachedIpAddress: string | null = null;
     private ipFetchInProgress: boolean = false;

@@ -354,7 +354,7 @@ Older placeholder/legacy routes/components have been removed in favor of canonic
 - Offline queue with sync on reconnect
 - IP address detection
 - Session tracking
-- Automatic cleanup (7-day retention)
+- Automatic cleanup (5-day retention)
 
 **Methods:**
 - `logUserAction()` - General user actions
@@ -593,7 +593,7 @@ All state is managed through RxJS Observables in services:
 
 ### Data Persistence
 - **Session-based:** Data persists during browser session
-- **Firebase Firestore:** Logs persist across sessions (7-day retention)
+- **Firebase Firestore:** Logs persist across sessions (5-day retention)
 - **No database:** Invoice data and file contents are in-memory only
 - **Reset on refresh:** Application state clears on page reload
 

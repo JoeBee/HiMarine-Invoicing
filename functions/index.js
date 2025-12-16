@@ -3,17 +3,17 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
-// Cloud Function to clean up old logs (older than 1 week)
+// Cloud Function to clean up old logs (older than 5 days)
 exports.cleanupOldLogs = functions.pubsub.schedule('0 2 * * *').onRun(async (context) => {
     const db = admin.firestore();
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7); // 7 days ago
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - 5); // 5 days ago
 
-    console.log('Starting cleanup of logs older than:', oneWeekAgo);
+    console.log('Starting cleanup of logs older than:', cutoffDate);
 
     try {
         const logsRef = db.collection('application_logs');
-        const oldLogsQuery = logsRef.where('timestamp', '<', admin.firestore.Timestamp.fromDate(oneWeekAgo));
+        const oldLogsQuery = logsRef.where('timestamp', '<', admin.firestore.Timestamp.fromDate(cutoffDate));
 
         const snapshot = await oldLogsQuery.get();
 

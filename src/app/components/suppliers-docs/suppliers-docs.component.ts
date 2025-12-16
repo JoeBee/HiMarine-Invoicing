@@ -178,12 +178,6 @@ export class SuppliersDocsComponent implements OnInit {
     onFileSelect(event: Event, category?: string): void {
         const input = event.target as HTMLInputElement;
         if (input.files) {
-            this.loggingService.logUserAction('files_selected', {
-                category: category || 'unknown',
-                filesCount: input.files.length,
-                fileNames: Array.from(input.files).map(f => f.name)
-            }, 'SuppliersDocsComponent');
-
             this.processFiles(input.files, category);
         }
     }
@@ -243,10 +237,6 @@ export class SuppliersDocsComponent implements OnInit {
     }
 
     triggerFileInput(category?: string): void {
-        this.loggingService.logButtonClick('file_input_triggered', 'SuppliersDocsComponent', {
-            category: category || 'unknown'
-        });
-
         const fileInput = document.getElementById(category ? `fileInput-${category}` : 'fileInput') as HTMLInputElement;
         fileInput?.click();
     }
