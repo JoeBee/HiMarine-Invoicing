@@ -139,7 +139,7 @@ export class RfqStateService {
         sortCode: '',
         achRouting: '',
         intermediaryBic: '',
-        invoiceNumber: '',
+        invoiceNumber: 'Invoice ',
         invoiceDate: this.getTodayDate(),
         vessel: '',
         country: '',

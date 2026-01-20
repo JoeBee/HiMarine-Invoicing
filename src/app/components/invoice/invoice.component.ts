@@ -131,7 +131,7 @@ export class InvoiceComponent implements OnInit {
 
     invoiceData: InvoiceData = {
         imo: '',
-        invoiceNumber: '',
+        invoiceNumber: 'Invoice ',
         invoiceDate: this.getTodayDate(),
         vessel: '',
         country: '',
@@ -191,12 +191,17 @@ export class InvoiceComponent implements OnInit {
     private generateAutoFileName(): void {
         const parts: string[] = [];
 
-        // Invoice prefix
-        parts.push('Invoice');
+        const invNum = (this.invoiceData.invoiceNumber || '').trim();
+        const startsWithInvoice = invNum.toLowerCase().startsWith('invoice');
+
+        // Invoice prefix (only if not already in invoiceNumber)
+        if (!startsWithInvoice) {
+            parts.push('Invoice');
+        }
 
         // Invoice Number
-        if (this.invoiceData.invoiceNumber) {
-            parts.push(this.invoiceData.invoiceNumber);
+        if (invNum) {
+            parts.push(invNum);
         }
 
         // Today's Date
@@ -1148,11 +1153,11 @@ export class InvoiceComponent implements OnInit {
 
         // Export each category if it has items
         if (bondedItems.length > 0) {
-            await this.exportSingleInvoiceFile(bondedItems, 'Bond', false, bondShouldGetFees);
+            // Append "A" to invoice number for bonds if both categories exist
+            await this.exportSingleInvoiceFile(bondedItems, 'Bond', hasBothCategories, bondShouldGetFees);
         }
         if (provisionsItems.length > 0) {
-            // Append "A" to invoice number for provisions if both categories exist
-            await this.exportSingleInvoiceFile(provisionsItems, 'Provisions', hasBothCategories, provisionsShouldGetFees);
+            await this.exportSingleInvoiceFile(provisionsItems, 'Provisions', false, provisionsShouldGetFees);
         }
 
         // Log export

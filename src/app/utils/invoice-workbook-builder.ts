@@ -113,7 +113,7 @@ function applyCambriaFontToWorkbook(workbook: ExcelJS.Workbook): void {
         worksheet.eachRow({ includeEmpty: true }, row => {
             row.eachCell({ includeEmpty: true }, cell => {
                 const cellFont = cell.font || {};
-                cell.font = { ...cellFont, name: 'Cambria', size: 11 };
+                cell.font = { ...cellFont, name: 'Cambria', size: cellFont.size || 11 };
 
                 const value = cell.value;
                 if (value && typeof value === 'object' && 'richText' in value && Array.isArray((value as ExcelJS.CellRichTextValue).richText)) {
@@ -414,6 +414,15 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
     });
 
     const tableStartRow = Math.max(bankRow, invoiceRow) + 2;
+    
+    // Add centered category title 2 rows above the table
+    const titleRow = tableStartRow - 2;
+    worksheet.mergeCells(`A${titleRow}:G${titleRow}`);
+    const titleCell = worksheet.getCell(`A${titleRow}`);
+    titleCell.value = toUpperCaseText(categoryToUse);
+    titleCell.font = { name: 'Cambria', size: 22, bold: true, italic: true };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    worksheet.getRow(titleRow).height = 30; // 30 points = 40 pixels at 96 DPI
     const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
     headers.forEach((header, index) => {
         const cell = worksheet.getCell(tableStartRow, index + 1);
@@ -511,8 +520,8 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
 
     let totalsStartRow: number;
     let grandTotalRow: number = 0; // Initialize to avoid TypeScript error
+    const subtotalRow = tableStartRow + items.length + 2;
     if (shouldShowSubtotal) {
-        const subtotalRow = tableStartRow + items.length + 2;
         const subtotalLabelCell = worksheet.getCell(`F${subtotalRow}`);
         subtotalLabelCell.value = `TOTAL ${getCurrencyLabel(primaryCurrency)}`;
         subtotalLabelCell.font = { size: 11, name: 'Calibri', bold: true };
@@ -526,24 +535,29 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
 
         totalsStartRow = tableStartRow + items.length + 4;
     } else {
-        const totalRow = tableStartRow + items.length + 2;
-        const totalLabelCell = worksheet.getCell(`F${totalRow}`);
+        const totalLabelCell = worksheet.getCell(`F${subtotalRow}`);
         totalLabelCell.value = `TOTAL ${getCurrencyLabel(primaryCurrency)}`;
         totalLabelCell.font = { size: 11, name: 'Calibri', bold: true };
         totalLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
-        const totalCell = worksheet.getCell(`G${totalRow}`);
+        const totalCell = worksheet.getCell(`G${subtotalRow}`);
         totalCell.value = { formula: `SUM(G${firstDataRow}:G${lastDataRow})` } as any;
         totalCell.font = { size: 11, name: 'Calibri', bold: true };
         totalCell.alignment = { horizontal: 'right', vertical: 'middle' };
         totalCell.numFmt = primaryCurrencyFormat;
 
-        totalsStartRow = totalRow + 1;
-        grandTotalRow = totalRow; // Track the grand total row for when no subtotal
+        totalsStartRow = subtotalRow + 1;
+        grandTotalRow = subtotalRow; // Track the grand total row for when no subtotal
     }
 
-    const feeLines: { label: string; value?: number; includeInSum?: boolean }[] = [];
-    if (discountAmount > 0) feeLines.push({ label: 'Discount:', value: -discountAmount, includeInSum: false });
+    const feeLines: { label: string; value?: number | { formula: string }; includeInSum?: boolean }[] = [];
+    if (discountAmount > 0) {
+        feeLines.push({ 
+            label: 'Discount:', 
+            value: { formula: `G${subtotalRow}*${data.discountPercent}/100` }, 
+            includeInSum: false 
+        });
+    }
     if (includeFees) {
         if (data.deliveryFee) feeLines.push({ label: 'Delivery fee:', value: data.deliveryFee, includeInSum: true });
         if (data.portFee) feeLines.push({ label: 'Port fee:', value: data.portFee, includeInSum: true });
@@ -574,10 +588,9 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
         worksheet.getCell(`F${totalsStartRow}`).value = '';
         worksheet.getCell(`F${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
 
-        const itemsSumFormula = `SUM(G${firstDataRow}:G${lastDataRow})`;
+        const discountPart = discountAmount > 0 ? `-G${totalsStartRow - feeLines.length}` : '';
         const feeSumPart = feeAmountRowRefs.length ? `+${feeAmountRowRefs.join('+')}` : '';
-        const discountFactor = data.discountPercent ? `(1-${data.discountPercent}/100)` : '1';
-        const totalFormula = `(${itemsSumFormula}*${discountFactor})${feeSumPart}`;
+        const totalFormula = `G${subtotalRow}${discountPart}${feeSumPart}`;
         worksheet.getCell(`G${totalsStartRow}`).value = { formula: totalFormula } as any;
         worksheet.getCell(`G${totalsStartRow}`).font = { bold: true, size: 11, name: 'Calibri' };
         worksheet.getCell(`G${totalsStartRow}`).alignment = { horizontal: 'right', vertical: 'middle' };
