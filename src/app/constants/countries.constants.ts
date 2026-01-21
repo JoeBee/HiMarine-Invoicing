@@ -7,7 +7,7 @@ export const COUNTRIES = [
     'Greece', 'Guatemala', 'Guinea', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq',
     'Ireland', 'Israel', 'Italy', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya',
     'Kuwait', 'Latvia', 'Lebanon', 'Lithuania', 'Luxembourg', 'Malaysia',
-    'Malta', 'Mexico', 'Morocco', 'Netherlands', 'New Zealand', 'Nigeria',
+    'Malta', 'Mexico', 'Morocco', 'Namibia', 'Netherlands', 'New Zealand', 'Nigeria',
     'Norway', 'Oman', 'Pakistan', 'Panama', 'Peru', 'Philippines', 'Poland', 'Portugal',
     'Qatar', 'Romania', 'Russia', 'Saudi Arabia', 'Singapore', 'Slovakia',
     'Slovenia', 'South Africa', 'South Korea', 'Spain', 'Sri Lanka', 'Sweden',
@@ -89,6 +89,7 @@ export const COUNTRY_PORTS: { [key: string]: string[] } = {
     'Jordan': ['Aqaba'],
     'Lebanon': ['Beirut', 'Tripoli'],
     'Angola': ['Luanda', 'Lobito', 'Cabinda', 'Namibe', 'Soyo'],
+    'Namibia': ['Walvis Bay', 'Lüderitz'],
     'Taiwan': ['Kaohsiung', 'Keelung', 'Taichung', 'Taipei', 'Hualien', 'Taoyuan']
 };
 
