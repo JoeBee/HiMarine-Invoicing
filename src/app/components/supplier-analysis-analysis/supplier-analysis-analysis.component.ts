@@ -102,15 +102,21 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             const headerLower = header.toLowerCase().trim();
                             return headerLower === 'description' || headerLower === 'remark' || headerLower === 'unit' ||
                                 headerLower === 'price' || headerLower === 'total' ||
+                                headerLower === 'qty' || headerLower === 'quantity' ||
                                 headerLower.includes('description') || headerLower.includes('remark') || headerLower.includes('unit') ||
-                                headerLower.includes('price') || headerLower.includes('total');
+                                headerLower.includes('price') || headerLower.includes('total') ||
+                                headerLower.includes('qty') || headerLower.includes('quantity');
                         });
 
-                        // Check if Remark and Unit columns exist, if not add them
+                        // Check if Remark, Unit and Quantity columns exist, if not add them
                         const hasRemark = filteredHeaders.some(h => h.toLowerCase().trim().includes('remark'));
                         const hasUnit = filteredHeaders.some(h => h.toLowerCase().trim().includes('unit'));
+                        const hasQty = filteredHeaders.some(h => {
+                            const hLower = h.toLowerCase().trim();
+                            return hLower === 'qty' || hLower === 'quantity' || hLower.includes('qty') || hLower.includes('quantity');
+                        });
 
-                        // Insert missing columns in the expected order: Description, Remark, Unit, Price, Total
+                        // Insert missing columns in the expected order: Description, Remark, Unit, Quantity, Price, Total
                         const orderedHeaders: string[] = [];
 
                         // Add Description if it exists
@@ -133,6 +139,17 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             orderedHeaders.push('Unit');
                         }
 
+                        // Add Quantity (existing or new)
+                        const qtyHeader = filteredHeaders.find(h => {
+                            const hLower = h.toLowerCase().trim();
+                            return hLower === 'qty' || hLower === 'quantity' || hLower.includes('qty') || hLower.includes('quantity');
+                        });
+                        if (qtyHeader) {
+                            orderedHeaders.push(qtyHeader);
+                        } else {
+                            orderedHeaders.push('Quantity');
+                        }
+
                         // Add Price and Total if they exist
                         const priceHeader = filteredHeaders.find(h => h.toLowerCase().trim().includes('price'));
                         if (priceHeader) orderedHeaders.push(priceHeader);
@@ -145,7 +162,14 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         const filteredRows = result.rows.map(row => {
                             const filteredRow: ExcelRowData = {};
                             orderedHeaders.forEach(header => {
-                                if (row[header] !== undefined) {
+                                // Special mapping for Quantity/Qty
+                                if (header.toLowerCase().trim() === 'quantity' || header.toLowerCase().trim() === 'qty') {
+                                    const value = row['Quantity'] !== undefined ? row['Quantity'] :
+                                        (row['Qty'] !== undefined ? row['Qty'] :
+                                            (row['quantity'] !== undefined ? row['quantity'] :
+                                                (row['qty'] !== undefined ? row['qty'] : '')));
+                                    filteredRow[header] = value;
+                                } else if (row[header] !== undefined) {
                                     filteredRow[header] = row[header];
                                 } else {
                                     // Add empty value for missing columns
@@ -215,13 +239,20 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
             const headerLower = header.toLowerCase().trim();
 
-            // For Unit columns, check if value matches Invoice - if so, return blank
-            if (headerLower.includes('unit') && rowIndex < set.invoiceData.length) {
+            // For Unit, Quantity and Remark columns, check if value matches Invoice - if so, return blank
+            const isUnit = headerLower.includes('unit');
+            const isQty = headerLower === 'qty' || headerLower === 'quantity' || headerLower.includes('qty') || headerLower.includes('quantity');
+            const isRemark = headerLower.includes('remark');
+
+            if ((isUnit || isQty || isRemark) && rowIndex < set.invoiceData.length) {
                 // Find corresponding Invoice header
                 let invoiceHeader = header;
                 for (const invHeader of set.invoiceHeaders) {
                     const invHeaderLower = invHeader.toLowerCase().trim();
-                    if (invHeaderLower === headerLower || invHeaderLower.includes('unit')) {
+                    if (invHeaderLower === headerLower ||
+                        (isUnit && invHeaderLower.includes('unit')) ||
+                        (isQty && (invHeaderLower === 'qty' || invHeaderLower === 'quantity' || invHeaderLower.includes('qty') || invHeaderLower.includes('quantity'))) ||
+                        (isRemark && invHeaderLower.includes('remark'))) {
                         invoiceHeader = invHeader;
                         break;
                     }
@@ -267,7 +298,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
     isRightAlignedHeader(header: string): boolean {
         const headerLower = header.toLowerCase().trim();
-        return headerLower === 'qty' || headerLower === 'price' || headerLower === 'total' ||
+        return headerLower === 'qty' || headerLower === 'quantity' || headerLower === 'price' || headerLower === 'total' ||
             headerLower.includes('price') || headerLower.includes('total');
     }
 
@@ -282,30 +313,29 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
         }
 
         const headerLower = header.toLowerCase().trim();
-        const isDescriptionRemarkOrUnit = headerLower === 'description' || headerLower === 'remark' || headerLower === 'unit' ||
-            headerLower.includes('description') || headerLower.includes('remark') || headerLower.includes('unit');
+        const isDescriptionRemarkUnitOrQty = headerLower === 'description' || headerLower === 'remark' || headerLower === 'unit' ||
+            headerLower === 'qty' || headerLower === 'quantity' ||
+            headerLower.includes('description') || headerLower.includes('remark') || headerLower.includes('unit') ||
+            headerLower.includes('qty') || headerLower.includes('quantity');
 
-        if (!isDescriptionRemarkOrUnit) {
+        if (!isDescriptionRemarkUnitOrQty) {
             return false;
         }
 
         const supplierValue = this.getSupplierQuotationValue(set, fileIndex, rowIndex, header);
 
-        // For Unit columns, only highlight if there's an actual value (not blank)
-        if (headerLower.includes('unit')) {
-            // If the supplier value is blank/empty, don't highlight
-            if (supplierValue === '' || supplierValue === null || supplierValue === undefined) {
-                return false;
-            }
-            // If there's a value, it means it differs from Invoice, so highlight it
-            return true;
-        }
+        // For Unit, Quantity, and Remark columns, only highlight if there's an actual value (meaning it differs)
+        const isUnit = headerLower.includes('unit');
+        const isQty = headerLower === 'qty' || headerLower === 'quantity' || headerLower.includes('qty') || headerLower.includes('quantity');
+        const isRemark = headerLower.includes('remark');
 
-        // For Remark columns, only highlight if there's an actual value
-        if (headerLower.includes('remark')) {
+        if (isUnit || isQty || isRemark) {
+            // If the supplier value is blank/empty, it means it matches the invoice or is truly empty
+            // getSupplierQuotationValue already returns blank if it matches the invoice
             if (supplierValue === '' || supplierValue === null || supplierValue === undefined) {
                 return false;
             }
+            // If there's a value, it means it differs from Invoice (or Invoice was empty and this has a value), so highlight it
             return true;
         }
 
@@ -316,7 +346,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             const invHeaderLower = invHeader.toLowerCase().trim();
             if (invHeaderLower === headerLower ||
                 (headerLower.includes('description') && invHeaderLower.includes('description')) ||
-                (headerLower.includes('remark') && invHeaderLower.includes('remark'))) {
+                (headerLower.includes('remark') && invHeaderLower.includes('remark')) ||
+                ((headerLower === 'qty' || headerLower === 'quantity' || headerLower.includes('qty') || headerLower.includes('quantity')) &&
+                    (invHeaderLower === 'qty' || invHeaderLower === 'quantity' || invHeaderLower.includes('qty') || invHeaderLower.includes('quantity')))) {
                 invoiceHeader = invHeader;
                 break;
             }
@@ -413,14 +445,16 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
         });
     }
 
-    private isDescriptionRemarkOrUnitColumn(header: string): boolean {
+    private isDescriptionRemarkUnitOrQtyColumn(header: string): boolean {
         const headerLower = header.toLowerCase().trim();
         return headerLower === 'description' || headerLower === 'remark' || headerLower === 'unit' ||
-            headerLower.includes('description') || headerLower.includes('remark') || headerLower.includes('unit');
+            headerLower === 'qty' || headerLower === 'quantity' ||
+            headerLower.includes('description') || headerLower.includes('remark') || headerLower.includes('unit') ||
+            headerLower.includes('qty') || headerLower.includes('quantity');
     }
 
     private hasColumnDifferences(set: AnalysisSet, fileIndex: number, header: string): boolean {
-        if (!this.isDescriptionRemarkOrUnitColumn(header)) return true;
+        if (!this.isDescriptionRemarkUnitOrQtyColumn(header)) return true;
 
         let invoiceHeader = header;
         const headerLower = header.toLowerCase().trim();
@@ -429,7 +463,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             if (invHeaderLower === headerLower ||
                 (headerLower.includes('description') && invHeaderLower.includes('description')) ||
                 (headerLower.includes('remark') && invHeaderLower.includes('remark')) ||
-                (headerLower.includes('unit') && invHeaderLower.includes('unit'))) {
+                (headerLower.includes('unit') && invHeaderLower.includes('unit')) ||
+                ((headerLower === 'qty' || headerLower === 'quantity' || headerLower.includes('qty') || headerLower.includes('quantity')) &&
+                    (invHeaderLower === 'qty' || invHeaderLower === 'quantity' || invHeaderLower.includes('qty') || invHeaderLower.includes('quantity')))) {
                 invoiceHeader = invHeader;
                 break;
             }
@@ -447,12 +483,14 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
         return headers.filter(header => {
             const headerLower = header.toLowerCase().trim();
 
-            // Always include Remark and Unit columns (even if empty)
+            // Always include Remark, Unit and Quantity columns (even if empty)
             if (headerLower.includes('remark') || headerLower === 'remark') return true;
             if (headerLower.includes('unit') || headerLower === 'unit') return true;
+            if (headerLower.includes('qty') || headerLower === 'qty' ||
+                headerLower.includes('quantity') || headerLower === 'quantity') return true;
 
             // For other columns, use existing logic
-            if (!this.isDescriptionRemarkOrUnitColumn(header)) return true;
+            if (!this.isDescriptionRemarkUnitOrQtyColumn(header)) return true;
             return this.hasColumnDifferences(set, fileIndex, header);
         });
     }
@@ -560,12 +598,12 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             }
 
             const allSpacingColumns: number[] = [];
-            const supplierPriceAndTotalColumns: Set<number> = new Set(); // Track Price and Total columns in Supplier Quotation sections
+            const supplierQtyPriceAndTotalColumns: Set<number> = new Set(); // Track Qty, Price and Total columns in Supplier Quotation sections
             const allSupplierPriceColumns: Set<number> = new Set(); // Track all Price columns in Supplier Quotation sections
             const allSupplierTotalColumns: Set<number> = new Set(); // Track all Total columns in Supplier Quotation sections
 
             for (const set of exportSets) {
-                const invoiceHeadersLimited = set.invoiceHeaders.slice(0, 7);
+                const invoiceHeadersLimited = set.invoiceHeaders.slice(0, 8); // Increased to 8 to ensure we capture Qty/Quantity
                 const filteredSupplierQuotationHeaders: string[][] = [];
                 for (let fileIndex = 0; fileIndex < set.supplierQuotationHeaders.length; fileIndex++) {
                     filteredSupplierQuotationHeaders.push(
@@ -607,9 +645,10 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         cell.font = { name: 'Cambria', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } }; // Blue instead of Orange
 
-                        // Track Price and Total columns in first header row
-                        if (headerLower.includes('price') || headerLower.includes('total')) {
-                            supplierPriceAndTotalColumns.add(col + j);
+                        // Track Qty, Price and Total columns in first header row
+                        if (headerLower === 'qty' || headerLower === 'quantity' || headerLower.includes('qty') || headerLower.includes('quantity') ||
+                            headerLower.includes('price') || headerLower.includes('total')) {
+                            supplierQtyPriceAndTotalColumns.add(col + j);
                         }
 
                         if (set.supplierQuotationFiles[i].discount !== undefined &&
@@ -656,10 +695,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         cell.font = { name: 'Cambria', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } }; // Blue instead of Orange
                         const headerLower = header.toLowerCase().trim();
-                        if (headerLower.includes('price') || headerLower.includes('total')) {
+                        if (headerLower === 'qty' || headerLower === 'quantity' || headerLower.includes('qty') || headerLower.includes('quantity') ||
+                            headerLower.includes('price') || headerLower.includes('total')) {
                             cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                            // Track Price and Total columns in headers
-                            supplierPriceAndTotalColumns.add(col);
+                            // Track Qty, Price and Total columns in headers
+                            supplierQtyPriceAndTotalColumns.add(col);
                         }
                         col++;
                     }
@@ -740,7 +780,14 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             cell.numFmt = '$#,##0.00';
                         } else {
                             cell.value = value;
-                            if (headerLower.includes('price') || headerLower.includes('total')) {
+                            if (headerLower === 'qty' || headerLower === 'quantity' || headerLower.includes('qty') || headerLower.includes('quantity')) {
+                                if (value !== '' && value !== null) {
+                                    const numValue = Number(value);
+                                    if (!isNaN(numValue)) {
+                                        cell.value = numValue;
+                                    }
+                                }
+                            } else if (headerLower.includes('price') || headerLower.includes('total')) {
                                 if (value !== '' && value !== null) {
                                     const numValue = Number(value);
                                     if (!isNaN(numValue)) {
@@ -774,13 +821,20 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
                             const headerLower = header.toLowerCase().trim();
 
-                            // For Unit columns, check if value matches Invoice - if so, make it blank
-                            if (headerLower.includes('unit')) {
+                            // For Unit, Quantity and Remark columns, check if value matches Invoice - if so, make it blank
+                            const isUnit = headerLower.includes('unit');
+                            const isQty = headerLower === 'qty' || headerLower === 'quantity' || headerLower.includes('qty') || headerLower.includes('quantity');
+                            const isRemark = headerLower.includes('remark');
+
+                            if (isUnit || isQty || isRemark) {
                                 // Find corresponding Invoice header
                                 let invoiceHeader = header;
                                 for (const invHeader of set.invoiceHeaders) {
                                     const invHeaderLower = invHeader.toLowerCase().trim();
-                                    if (invHeaderLower === headerLower || invHeaderLower.includes('unit')) {
+                                    if (invHeaderLower === headerLower ||
+                                        (isUnit && invHeaderLower.includes('unit')) ||
+                                        (isQty && (invHeaderLower === 'qty' || invHeaderLower === 'quantity' || invHeaderLower.includes('qty') || invHeaderLower.includes('quantity'))) ||
+                                        (isRemark && invHeaderLower.includes('remark'))) {
                                         invoiceHeader = invHeader;
                                         break;
                                     }
@@ -804,14 +858,15 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 right: { style: 'thin', color: { argb: 'FF404040' } }
                             };
 
-                            // Orange background for Remark and Unit data only if cell contains data AND not a blank file
-                            if (!isBlankFile && (headerLower.includes('remark') || headerLower.includes('unit')) && value !== '' && value !== null && value !== undefined) {
+                            // Orange background for Remark, Unit and Quantity data only if cell contains data AND not a blank file
+                            if (!isBlankFile && (isUnit || isQty || isRemark) && value !== '' && value !== null && value !== undefined) {
                                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFA500' } };
                             }
 
-                            if (headerLower.includes('price') || headerLower.includes('total')) {
+                            if (headerLower === 'qty' || headerLower === 'quantity' || headerLower.includes('qty') || headerLower.includes('quantity') ||
+                                headerLower.includes('price') || headerLower.includes('total')) {
                                 // Track this column for auto-fitting
-                                supplierPriceAndTotalColumns.add(col);
+                                supplierQtyPriceAndTotalColumns.add(col);
 
                                 // For Total column, use formula: Invoice Qty * Supplier Price
                                 // Do not include formula for blank Supplier Quotation files
@@ -828,6 +883,13 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                         const numValue = Number(value);
                                         if (!isNaN(numValue)) {
                                             currentFilesTotals.set(fileIndex, numValue);
+                                        }
+                                    }
+                                } else if (headerLower === 'qty' || headerLower === 'quantity' || headerLower.includes('qty') || headerLower.includes('quantity')) {
+                                    if (value !== '' && value !== null) {
+                                        const numValue = Number(value);
+                                        if (!isNaN(numValue)) {
+                                            cell.value = numValue;
                                         }
                                     }
                                 } else if (headerLower.includes('price')) {
@@ -1324,10 +1386,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             const columnMaxWidths: Map<number, number> = new Map();
             const remarkColumns: Set<number> = new Set();
             const unitColumns: Set<number> = new Set();
+            const qtyColumns: Set<number> = new Set();
             const priceColumns: Set<number> = new Set();
             const totalColumns: Set<number> = new Set();
 
-            // First pass: identify remark, unit, price, and total columns, calculate widths
+            // First pass: identify remark, unit, quantity, price, and total columns, calculate widths
             worksheet.eachRow((row, rowNumber) => {
                 row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
                     if (colNumber >= 8 && !allSpacingColumns.includes(colNumber)) {
@@ -1339,6 +1402,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             }
                             if (headerName.includes('unit')) {
                                 unitColumns.add(colNumber);
+                            }
+                            if (headerName === 'qty' || headerName === 'quantity' || headerName.includes('qty') || headerName.includes('quantity')) {
+                                qtyColumns.add(colNumber);
                             }
                             if (headerName.includes('price')) {
                                 priceColumns.add(colNumber);
@@ -1407,6 +1473,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         } else if (unitColumns.has(colNumber)) {
                             // Unit columns: 25 pixels
                             worksheet.getColumn(colNumber).width = 25 / 7;
+                        } else if (qtyColumns.has(colNumber)) {
+                            // Quantity columns: 35 pixels
+                            worksheet.getColumn(colNumber).width = 35 / 7;
                         } else if (priceColumns.has(colNumber)) {
                             // Price columns: 90 pixels (fallback for any missed columns)
                             worksheet.getColumn(colNumber).width = 90 / 7;
