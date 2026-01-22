@@ -1177,23 +1177,22 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                 const rangeStart = `${priceColLetter}${dataStartRow}`;
                                 const rangeEnd = `${priceColLetter}${dataEndRow}`;
 
+                                const totalColLetter = worksheet.getColumn(priceCol + 1).letter;
+                                const sumRangeStart = `${totalColLetter}${dataStartRow}`;
+                                const sumRangeEnd = `${totalColLetter}${dataEndRow}`;
+
                                 // Apply formulas
                                 const countCellRef = `${worksheet.getColumn(priceCol).letter}${matrixRow.number}`;
                                 const sumCellRef = `${worksheet.getColumn(priceCol + 1).letter}${matrixRow.number}`;
 
                                 if (winFileIdx === targetFileIdx) {
-                                    // Use color-based formulas on diagonal summary cells; keep static values off-diagonal.
+                                    // Use color-based formulas on diagonal summary cells
                                     countCell.value = { formula: `CountByColor(${rangeStart}:${rangeEnd},${countCellRef})` };
-
-                                    const totalColLetter = worksheet.getColumn(priceCol + 1).letter;
-                                    const sumRangeStart = `${totalColLetter}${dataStartRow}`;
-                                    const sumRangeEnd = `${totalColLetter}${dataEndRow}`;
-
                                     sumCell.value = { formula: `SumByColor(${sumRangeStart}:${sumRangeEnd},${sumCellRef})` };
                                 } else {
-                                    // Keep static values for non-diagonal cells
-                                    countCell.value = targetStats.count;
-                                    sumCell.value = targetStats.sum;
+                                    // Use transparent-based formulas for non-diagonal cells
+                                    countCell.value = { formula: `CountByTransparent(${rangeStart}:${rangeEnd})` };
+                                    sumCell.value = { formula: `SumByTransparent(${sumRangeStart}:${sumRangeEnd})` };
                                 }
                             }
                         }
