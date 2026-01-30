@@ -102,7 +102,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             const headerLower = header.toLowerCase().trim();
                             return headerLower === 'description' || headerLower === 'remark' || headerLower === 'unit' ||
                                 headerLower === 'price' || headerLower === 'total' ||
-                                headerLower === 'qty' || headerLower === 'quantity' ||
+                                headerLower === 'qty' || headerLower === 'quantity' || headerLower === 'gross price' ||
                                 headerLower.includes('description') || headerLower.includes('remark') || headerLower.includes('unit') ||
                                 headerLower.includes('price') || headerLower.includes('total') ||
                                 headerLower.includes('qty') || headerLower.includes('quantity');
@@ -151,7 +151,13 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                         }
 
                         // Add Price and Total if they exist
-                        const priceHeader = filteredHeaders.find(h => h.toLowerCase().trim().includes('price'));
+                        const grossPriceHeader = filteredHeaders.find(h => h === 'Gross Price');
+                        if (grossPriceHeader) orderedHeaders.push(grossPriceHeader);
+
+                        const priceHeader = filteredHeaders.find(h => {
+                            const hLower = h.toLowerCase().trim();
+                            return (hLower === 'price' || hLower.includes('price')) && h !== 'Gross Price';
+                        });
                         if (priceHeader) orderedHeaders.push(priceHeader);
 
                         const totalHeader = filteredHeaders.find(h => h.toLowerCase().trim().includes('total'));
@@ -275,7 +281,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
     private isPriceOrTotalColumn(header: string): boolean {
         const headerLower = header.toLowerCase().trim();
-        return headerLower === 'price' || headerLower === 'total' ||
+        return headerLower === 'price' || headerLower === 'total' || headerLower === 'gross price' ||
             headerLower.includes('price') || headerLower.includes('total');
     }
 
@@ -298,7 +304,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
 
     isRightAlignedHeader(header: string): boolean {
         const headerLower = header.toLowerCase().trim();
-        return headerLower === 'qty' || headerLower === 'quantity' || headerLower === 'price' || headerLower === 'total' ||
+        return headerLower === 'qty' || headerLower === 'quantity' || headerLower === 'price' || headerLower === 'total' || headerLower === 'gross price' ||
             headerLower.includes('price') || headerLower.includes('total');
     }
 
@@ -603,7 +609,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
             const allSupplierTotalColumns: Set<number> = new Set(); // Track all Total columns in Supplier Quotation sections
 
             for (const set of exportSets) {
-                const invoiceHeadersLimited = set.invoiceHeaders.slice(0, 8); // Increased to 8 to ensure we capture Qty/Quantity
+                const invoiceHeadersLimited = set.invoiceHeaders.slice(0, 10); // Increased to 10 to ensure we capture Qty/Quantity and Gross Price
                 const filteredSupplierQuotationHeaders: string[][] = [];
                 for (let fileIndex = 0; fileIndex < set.supplierQuotationHeaders.length; fileIndex++) {
                     filteredSupplierQuotationHeaders.push(
@@ -745,7 +751,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 for (let fileIndex = 0; fileIndex < filteredSupplierQuotationHeaders.length; fileIndex++) {
                     for (const header of filteredSupplierQuotationHeaders[fileIndex]) {
                         const headerLower = header.toLowerCase().trim();
-                        if (headerLower === 'price' || headerLower.includes('price')) {
+                        if (headerLower === 'price' || headerLower.includes('price') || headerLower === 'gross price') {
                             supplierPriceCols.set(fileIndex, tempCol);
                             allSupplierPriceColumns.add(tempCol);
                         } else if (headerLower === 'total' || headerLower.includes('total')) {
@@ -898,10 +904,15 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                         if (!isNaN(numValue)) {
                                             cell.value = numValue;
                                             cell.numFmt = '$#,##0.00';
-                                            rowPriceValues.push({ col, value: numValue, fileIndex });
-                                            currentFilesPrices.set(fileIndex, numValue);
-                                            if (!filePriceColMap.has(fileIndex)) {
-                                                filePriceColMap.set(fileIndex, col);
+                                            
+                                            // Only use the discounted price for minimum price comparison
+                                            // 'Gross Price' is the original price, 'Price' is the discounted one
+                                            if (header !== 'Gross Price') {
+                                                rowPriceValues.push({ col, value: numValue, fileIndex });
+                                                currentFilesPrices.set(fileIndex, numValue);
+                                                if (!filePriceColMap.has(fileIndex)) {
+                                                    filePriceColMap.set(fileIndex, col);
+                                                }
                                             }
                                         }
                                     }
@@ -948,12 +959,21 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                     // Also highlight the 'Total' column next to this Price column if it exists
                                     const totalColIndex = entry.col + 1;
                                     const totalCell = dataRow.getCell(totalColIndex);
-                                    // Simple check if the next column is indeed a 'Total' column based on typical layout (Price then Total)
-                                    // A more robust check would involve inspecting headers, but given the fixed layout generation:
-                                    // We know Price and Total are adjacent in the filtered export logic.
                                     if (totalCell.value !== null && totalCell.value !== undefined) {
                                         totalCell.fill = highlightFill;
                                         totalCell.font = { name: 'Cambria', size: 11, bold: true };
+                                    }
+
+                                    // Also highlight the 'Gross Price' column to the left of this Price column if it exists
+                                    const grossPriceColIndex = entry.col - 1;
+                                    const grossPriceCell = dataRow.getCell(grossPriceColIndex);
+                                    // Check if the previous column header was indeed 'Gross Price'
+                                    const supplierHeaders = filteredSupplierQuotationHeaders[entry.fileIndex];
+                                    const headerIndex = supplierHeaders.findIndex(h => h === 'Gross Price');
+                                    // We can just check if the cell has a value and if it's not a spacer column
+                                    if (grossPriceCell.value !== null && grossPriceCell.value !== undefined) {
+                                        grossPriceCell.fill = highlightFill;
+                                        grossPriceCell.font = { name: 'Cambria', size: 11, bold: true };
                                     }
                                 } else {
                                     const stats = priceNonBestStats.get(entry.col) || { count: 0, sum: 0 };
@@ -1405,7 +1425,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             if (headerName === 'qty' || headerName === 'quantity' || headerName.includes('qty') || headerName.includes('quantity')) {
                                 qtyColumns.add(colNumber);
                             }
-                            if (headerName.includes('price')) {
+                            if (headerName.includes('price') || headerName === 'gross price') {
                                 priceColumns.add(colNumber);
                             }
                             if (headerName.includes('total')) {

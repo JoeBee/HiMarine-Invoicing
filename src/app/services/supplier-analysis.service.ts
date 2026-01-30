@@ -127,10 +127,21 @@ export class SupplierAnalysisService {
                             const headerName = headers[col - range.s.c];
                             let finalValue = value;
 
+                            const headerLower = headerName.toLowerCase().trim();
+                            const isPriceColumn = headerLower === 'price' || headerLower.includes('price');
+
+                            // Always capture Gross Price when it's a price column
+                            if (isPriceColumn) {
+                                let grossPrice = value;
+                                if (typeof value !== 'number' && !isNaN(Number(value)) && String(value).trim() !== '') {
+                                    grossPrice = Number(value);
+                                }
+                                rowData['Gross Price'] = grossPrice;
+                            }
+
                             // Apply discount to Price column
                             if (fileInfo.discount !== undefined && fileInfo.discount !== 0) {
-                                const headerLower = headerName.toLowerCase().trim();
-                                if (headerLower === 'price' || headerLower.includes('price')) {
+                                if (isPriceColumn) {
                                     if (typeof value === 'number') {
                                         finalValue = value * (1 - fileInfo.discount);
                                     } else if (!isNaN(Number(value)) && String(value).trim() !== '') {
@@ -143,6 +154,19 @@ export class SupplierAnalysisService {
                         }
 
                         if (hasData) {
+                            // Ensure 'Gross Price' is in the headers list if we added it to rowData
+                            if (rowData.hasOwnProperty('Gross Price') && !headers.includes('Gross Price')) {
+                                // Find the 'Price' header index to insert 'Gross Price' before it
+                                const priceIndex = headers.findIndex(h => {
+                                    const hLower = h.toLowerCase().trim();
+                                    return hLower === 'price' || hLower.includes('price');
+                                });
+                                if (priceIndex !== -1) {
+                                    headers.splice(priceIndex, 0, 'Gross Price');
+                                } else {
+                                    headers.push('Gross Price');
+                                }
+                            }
                             // Recalculate Total = Qty * Price
                             let qtyKey: string | undefined;
                             let priceKey: string | undefined;
