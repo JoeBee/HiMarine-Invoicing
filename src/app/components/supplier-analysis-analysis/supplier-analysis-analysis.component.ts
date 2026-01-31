@@ -627,7 +627,20 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 let col = 1;
                 for (let i = 0; i < invoiceHeadersLimited.length; i++) {
                     const cell = headerRow1.getCell(col + i);
+                    const headerName = invoiceHeadersLimited[i];
+                    const headerLower = headerName.toLowerCase().trim();
+
                     if (i === 0) cell.value = 'INVOICE';
+
+                    // Add discount percentage if it exists for the Invoice
+                    const invoiceFile = set.invoiceFiles[0];
+                    if (invoiceFile && invoiceFile.discount !== undefined && invoiceFile.discount !== 0 &&
+                        (headerLower === 'price' || headerLower.includes('price')) && headerName !== 'Gross Price') {
+                        const discountPercent = Math.round(invoiceFile.discount * 100);
+                        cell.value = `Discount: ${discountPercent}%`;
+                        cell.alignment = { horizontal: 'center' };
+                    }
+
                     cell.font = { name: 'Cambria', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
                     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF808080' } };
                 }
