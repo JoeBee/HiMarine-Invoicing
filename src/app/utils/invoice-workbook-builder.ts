@@ -414,7 +414,7 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
     });
 
     const tableStartRow = Math.max(bankRow, invoiceRow) + 2;
-    
+
     // Add centered category title 2 rows above the table
     const titleRow = tableStartRow - 2;
     worksheet.mergeCells(`A${titleRow}:G${titleRow}`);
@@ -552,10 +552,10 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
 
     const feeLines: { label: string; value?: number | { formula: string }; includeInSum?: boolean }[] = [];
     if (discountAmount > 0) {
-        feeLines.push({ 
-            label: 'Discount:', 
-            value: { formula: `G${subtotalRow}*${data.discountPercent}/100` }, 
-            includeInSum: false 
+        feeLines.push({
+            label: 'Discount:',
+            value: { formula: `G${subtotalRow}*${data.discountPercent}/100` },
+            includeInSum: false
         });
     }
     if (includeFees) {
@@ -711,6 +711,7 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
     worksheet.pageSetup.printArea = `A1:G${printAreaEndRow}`;
     worksheet.pageSetup.fitToPage = true;
     worksheet.pageSetup.fitToWidth = 1;
+    worksheet.pageSetup.fitToHeight = 0; // Fit all columns on one page; height can span multiple pages
     worksheet.pageSetup.orientation = 'portrait';
     worksheet.pageSetup.paperSize = 9;
     worksheet.pageSetup.margins = {
