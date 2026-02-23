@@ -205,7 +205,11 @@
                             <label>Bank Address:</label>
                             <input type="text" [(ngModel)]="invoiceData.bankAddress" class="editable-field">
                         </div>
-                        <div class="bank-field">
+                        <div class="bank-field" *ngIf="selectedBank === 'US'">
+                            <label>Account No.:</label>
+                            <input type="text" [(ngModel)]="invoiceData.accountNumber" class="editable-field">
+                        </div>
+                        <div class="bank-field" *ngIf="selectedBank !== 'US'">
                             <label>IBAN:</label>
                             <input type="text" [(ngModel)]="invoiceData.iban" class="editable-field">
                         </div>

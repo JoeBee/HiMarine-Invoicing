@@ -91,9 +91,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     if (invoiceFiles.length > 0) {
                         const invoiceResult = await this.supplierAnalysisService.extractDataFromFile(invoiceFiles[0]);
                         analysisSet.invoiceData = invoiceResult.rows;
-                        analysisSet.invoiceHeaders = invoiceResult.headers.map(header =>
-                            header === 'Provisions' ? 'Invoice' : header
-                        );
+                        analysisSet.invoiceHeaders = invoiceResult.headers
+                            .filter(header => header !== 'Gross Price')
+                            .map(header => header === 'Provisions' ? 'Invoice' : header);
                     }
 
                     for (const file of supplierQuotationFiles) {
@@ -150,10 +150,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             orderedHeaders.push('Quantity');
                         }
 
-                        // Add Price and Total if they exist
-                        const grossPriceHeader = filteredHeaders.find(h => h === 'Gross Price');
-                        if (grossPriceHeader) orderedHeaders.push(grossPriceHeader);
-
+                        // Add Price and Total if they exist (Gross Price is hidden from display)
                         const priceHeader = filteredHeaders.find(h => {
                             const hLower = h.toLowerCase().trim();
                             return (hLower === 'price' || hLower.includes('price')) && h !== 'Gross Price';
@@ -618,9 +615,15 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 }
 
                 const sectionRow = worksheet.getRow(currentRow);
+                sectionRow.height = 31.5; // 42 pixels (at 96 DPI: 1 pt ≈ 1.333 px)
                 const sectionCell = sectionRow.getCell(1);
                 sectionCell.value = set.invoiceLabel || '';
                 sectionCell.font = { name: 'Cambria', size: 18 };
+
+                const disclaimerCell = sectionRow.getCell(7); // Column G
+                disclaimerCell.value = 'All prices (Invoice and Suppliers) are net after discount';
+                disclaimerCell.font = { name: 'Calibri', size: 28, bold: true, color: { argb: 'FFFF0000' } };
+
                 currentRow++;
 
                 const headerRow1 = worksheet.getRow(currentRow);
@@ -977,17 +980,6 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                         totalCell.font = { name: 'Cambria', size: 11, bold: true };
                                     }
 
-                                    // Also highlight the 'Gross Price' column to the left of this Price column if it exists
-                                    const grossPriceColIndex = entry.col - 1;
-                                    const grossPriceCell = dataRow.getCell(grossPriceColIndex);
-                                    // Check if the previous column header was indeed 'Gross Price'
-                                    const supplierHeaders = filteredSupplierQuotationHeaders[entry.fileIndex];
-                                    const headerIndex = supplierHeaders.findIndex(h => h === 'Gross Price');
-                                    // We can just check if the cell has a value and if it's not a spacer column
-                                    if (grossPriceCell.value !== null && grossPriceCell.value !== undefined) {
-                                        grossPriceCell.fill = highlightFill;
-                                        grossPriceCell.font = { name: 'Cambria', size: 11, bold: true };
-                                    }
                                 } else {
                                     const stats = priceNonBestStats.get(entry.col) || { count: 0, sum: 0 };
                                     stats.count++;

@@ -126,7 +126,12 @@
                             <input type="text" [(ngModel)]="rfqData.bankAddress"
                                 (ngModelChange)="onProposalDetailChange()" class="editable-field">
                         </div>
-                        <div class="bank-field">
+                        <div class="bank-field" *ngIf="selectedCompany === 'HI US'">
+                            <label>Account No.:</label>
+                            <input type="text" [(ngModel)]="rfqData.accountNumber"
+                                (ngModelChange)="onProposalDetailChange()" class="editable-field">
+                        </div>
+                        <div class="bank-field" *ngIf="selectedCompany !== 'HI US'">
                             <label>IBAN:</label>
                             <input type="text" [(ngModel)]="rfqData.iban" (ngModelChange)="onProposalDetailChange()"
                                 class="editable-field">

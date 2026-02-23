@@ -334,7 +334,9 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
     const standardBankDetails = [
         { label: 'Bank Name', value: data.bankName },
         { label: 'Bank Address', value: data.bankAddress },
-        { label: 'IBAN', value: data.iban },
+        ...(selectedBank === 'US'
+            ? [{ label: 'Account No.', value: data.accountNumber }]
+            : [{ label: 'IBAN', value: data.iban }]),
         { label: 'Swift Code', value: data.swiftCode },
         { label: 'Title on Account', value: data.accountTitle }
     ];
