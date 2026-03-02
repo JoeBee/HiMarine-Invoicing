@@ -36,6 +36,7 @@
         "@angular/cli": "^18.0.0",
         "@angular/compiler-cli": "^18.0.0",
         "@types/file-saver": "^2.0.5",
+        "baseline-browser-mapping": "^2.10.0",
         "typescript": "~5.4.0"
     }
 }

@@ -415,16 +415,8 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
         invoiceRow++;
     });
 
-    const tableStartRow = Math.max(bankRow, invoiceRow) + 2;
+    const tableStartRow = Math.max(bankRow, invoiceRow) + 1;
 
-    // Add centered category title 2 rows above the table
-    const titleRow = tableStartRow - 2;
-    worksheet.mergeCells(`A${titleRow}:G${titleRow}`);
-    const titleCell = worksheet.getCell(`A${titleRow}`);
-    titleCell.value = toUpperCaseText(categoryToUse);
-    titleCell.font = { name: 'Cambria', size: 22, bold: true, italic: true };
-    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
-    worksheet.getRow(titleRow).height = 30; // 30 points = 40 pixels at 96 DPI
     const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
     headers.forEach((header, index) => {
         const cell = worksheet.getCell(tableStartRow, index + 1);
@@ -798,10 +790,17 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
             if (categoryOverride && fileName.includes('<Category>')) {
                 fileName = fileName.replace('<Category>', categoryOverride);
             }
+            if (appendAtoInvoiceNumber && data.invoiceNumber) {
+                const invNum = data.invoiceNumber.trim();
+                if (invNum) {
+                    fileName = fileName.replace(invNum, invNum + 'a');
+                }
+            }
         } else {
             const filePrefix = selectedBank === 'EOS' ? 'EOS_Invoice' : 'HIMarine_Invoice';
             const categorySuffix = categoryOverride ? `_${categoryOverride}` : '';
-            fileName = `${filePrefix}_${data.invoiceNumber}${categorySuffix}_${new Date().toISOString().split('T')[0]}`;
+            const invNum = appendAtoInvoiceNumber && data.invoiceNumber ? `${data.invoiceNumber}a` : data.invoiceNumber;
+            fileName = `${filePrefix}_${invNum}${categorySuffix}_${new Date().toISOString().split('T')[0]}`;
         }
     }
 
