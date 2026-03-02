@@ -415,7 +415,19 @@ export async function buildInvoiceStyleWorkbook(options: InvoiceWorkbookOptions)
         invoiceRow++;
     });
 
-    const tableStartRow = Math.max(bankRow, invoiceRow) + 1;
+    let tableStartRow = Math.max(bankRow, invoiceRow) + 1;
+
+    // Insert 2 rows above the datatable; format the first as a blank row (merged A-G, italic Cambria 22pt, height 30px)
+    const blankRowAboveTable = tableStartRow;
+    worksheet.insertRow(tableStartRow, []);
+    worksheet.insertRow(tableStartRow, []);
+    tableStartRow += 2;
+    worksheet.mergeCells(`A${blankRowAboveTable}:G${blankRowAboveTable}`);
+    const blankCell = worksheet.getCell(`A${blankRowAboveTable}`);
+    blankCell.value = '';
+    blankCell.font = { name: 'Cambria', size: 22, italic: true, bold: true };
+    blankCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    worksheet.getRow(blankRowAboveTable).height = 30;
 
     const headers = ['Pos', 'Description', 'Remark', 'Unit', 'Qty', 'Price', 'Total'];
     headers.forEach((header, index) => {
