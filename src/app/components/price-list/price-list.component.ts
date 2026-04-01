@@ -1244,6 +1244,8 @@ export class PriceListComponent implements OnInit, OnDestroy {
                 return '$#,##0.00';
             case 'CAD':
                 return '"C$"#,##0.00';
+            case 'SGD':
+                return '"S$"#,##0.00';
             default:
                 return '$#,##0.00'; // Default to USD
         }

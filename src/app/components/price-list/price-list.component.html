@@ -37,6 +37,8 @@
                     <label for="radioUSD">USD ($)</label>
                     <input type="radio" id="radioCAD" name="currency" value="CAD" [(ngModel)]="selectedCurrency">
                     <label for="radioCAD">CAD (C$)</label>
+                    <input type="radio" id="radioSGD" name="currency" value="SGD" [(ngModel)]="selectedCurrency">
+                    <label for="radioSGD">SGD (S$)</label>
                 </div>
             </div>
             <div class="export-filename-control" *ngIf="hasProcessedFiles">

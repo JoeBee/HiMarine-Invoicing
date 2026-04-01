@@ -20,7 +20,8 @@ export class OurQuoteComponent implements OnInit {
         { code: 'AUD', label: 'AUD (A$)' },
         { code: 'NZD', label: 'NZD (NZ$)' },
         { code: 'USD', label: 'USD ($)' },
-        { code: 'CAD', label: 'CAD (C$)' }
+        { code: 'CAD', label: 'CAD (C$)' },
+        { code: 'SGD', label: 'SGD (S$)' }
     ];
     private selectedCompanyInternal: ('HI US' | 'HI UK' | 'EOS') | null = null;
     private selectedCurrencyInternal: CurrencyCode | null = null;
@@ -211,12 +212,14 @@ export class OurQuoteComponent implements OnInit {
         let cleaned = trimmed.replace(/NZ\$/gi, '');
         cleaned = cleaned.replace(/A\$/gi, '');
         cleaned = cleaned.replace(/C\$/gi, '');
+        cleaned = cleaned.replace(/S\$/gi, '');
         cleaned = cleaned.replace(/[€£$,]/g, '');
         cleaned = cleaned.replace(/GBP/gi, '');
         cleaned = cleaned.replace(/USD/gi, '');
         cleaned = cleaned.replace(/NZD/gi, '');
         cleaned = cleaned.replace(/AUD/gi, '');
         cleaned = cleaned.replace(/CAD/gi, '');
+        cleaned = cleaned.replace(/SGD/gi, '');
         cleaned = cleaned.trim();
 
         if (!cleaned) {

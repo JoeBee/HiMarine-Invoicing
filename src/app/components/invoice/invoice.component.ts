@@ -111,7 +111,8 @@ export class InvoiceComponent implements OnInit {
         { code: 'AUD', label: 'AUD (A$)' },
         { code: 'NZD', label: 'NZD (NZ$)' },
         { code: 'USD', label: 'USD ($)' },
-        { code: 'CAD', label: 'CAD (C$)' }
+        { code: 'CAD', label: 'CAD (C$)' },
+        { code: 'SGD', label: 'SGD (S$)' }
     ];
 
     // Country dropdown options
@@ -629,6 +630,7 @@ export class InvoiceComponent implements OnInit {
             case 'NZ$': return 'NZD';
             case '$': return 'USD';
             case 'C$': return 'CAD';
+            case 'S$': return 'SGD';
             default: 
                 // Try to find by label content
                 const found = this.currencyOptions.find(opt => opt.label.includes(symbol));
@@ -666,6 +668,8 @@ export class InvoiceComponent implements OnInit {
                 return 'AUD';
             case 'C$':
                 return 'CAD';
+            case 'S$':
+                return 'SGD';
             case '€':
                 return 'EUR';
             case '$':
@@ -677,6 +681,7 @@ export class InvoiceComponent implements OnInit {
                 if (cleanCurrency.includes('NZD')) return 'NZD';
                 if (cleanCurrency.includes('AUD')) return 'AUD';
                 if (cleanCurrency.includes('CAD')) return 'CAD';
+                if (cleanCurrency.includes('SGD')) return 'SGD';
                 if (cleanCurrency.includes('EUR')) return 'EUR';
                 if (cleanCurrency.includes('USD')) return 'USD';
                 if (cleanCurrency.includes('GBP')) return 'GBP';
@@ -706,7 +711,8 @@ export class InvoiceComponent implements OnInit {
             '€': 1.08,   // EUR to USD
             'A$': 0.66,  // AUD to USD
             'NZ$': 0.61, // NZD to USD
-            'C$': 0.73   // CAD to USD
+            'C$': 0.73,  // CAD to USD
+            'S$': 0.74   // SGD to USD
         };
 
         this.exchangeRate = defaultRates[currency] || 1;
@@ -724,6 +730,8 @@ export class InvoiceComponent implements OnInit {
                 return '"A$"#,##0.00';
             case 'C$':
                 return '"C$"#,##0.00';
+            case 'S$':
+                return '"S$"#,##0.00';
             case '€':
                 return '€#,##0.00';
             case '$':

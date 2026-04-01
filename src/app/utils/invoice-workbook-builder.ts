@@ -76,6 +76,7 @@ const currencyLabelMap: Record<string, string> = {
     'NZ$': 'NZD',
     'A$': 'AUD',
     'C$': 'CAD',
+    'S$': 'SGD',
     '€': 'EUR',
     '$': 'USD',
     '£': 'GBP'
@@ -93,6 +94,8 @@ function getCurrencyExcelFormat(currency: string): string {
             return '"A$"#,##0.00';
         case 'C$':
             return '"C$"#,##0.00';
+        case 'S$':
+            return '"S$"#,##0.00';
         case '€':
             return '€#,##0.00';
         case '$':

@@ -58,7 +58,7 @@ export interface ProposalTable {
     category: string;
 }
 
-export type CurrencyCode = 'GBP' | 'USD' | 'EUR' | 'AUD' | 'NZD' | 'CAD';
+export type CurrencyCode = 'GBP' | 'USD' | 'EUR' | 'AUD' | 'NZD' | 'CAD' | 'SGD';
 
 export const CURRENCY_SYMBOL_MAP: Record<CurrencyCode, string> = {
     GBP: '£',
@@ -66,7 +66,8 @@ export const CURRENCY_SYMBOL_MAP: Record<CurrencyCode, string> = {
     EUR: '€',
     AUD: 'A$',
     NZD: 'NZ$',
-    CAD: 'C$'
+    CAD: 'C$',
+    SGD: 'S$'
 };
 
 export interface RfqData {
@@ -911,10 +912,11 @@ export class RfqStateService {
         if (upper.includes('NZ$') || upper.includes('NZD')) return 'NZ$';
         if (upper.includes('A$') || upper.includes('AUD')) return 'A$';
         if (upper.includes('C$') || upper.includes('CAD')) return 'C$';
+        if (upper.includes('S$') || upper.includes('SGD')) return 'S$';
         if (str.includes('€') || upper.includes('EUR')) return '€';
         if (str.includes('£') || upper.includes('GBP')) return '£';
         if (str.includes('$')) {
-            if (!upper.includes('NZ$') && !upper.includes('A$') && !upper.includes('C$')) {
+            if (!upper.includes('NZ$') && !upper.includes('A$') && !upper.includes('C$') && !upper.includes('S$')) {
                 return '$';
             }
         }
@@ -939,11 +941,13 @@ export class RfqStateService {
             cleaned = cleaned.replace(/NZ\$/gi, '');
             cleaned = cleaned.replace(/A\$/gi, '');
             cleaned = cleaned.replace(/C\$/gi, '');
+            cleaned = cleaned.replace(/S\$/gi, '');
             cleaned = cleaned.replace(/[€£$,]/g, '');
             cleaned = cleaned.replace(/USD/gi, '');
             cleaned = cleaned.replace(/NZD/gi, '');
             cleaned = cleaned.replace(/AUD/gi, '');
             cleaned = cleaned.replace(/CAD/gi, '');
+            cleaned = cleaned.replace(/SGD/gi, '');
             cleaned = cleaned.trim();
             if (!cleaned) {
                 return null;

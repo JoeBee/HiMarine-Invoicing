@@ -241,13 +241,14 @@ export class CaptainsOrderComponent {
         if (strUpper.includes('NZ$') || strUpper.includes('NZD')) return 'NZ$';
         if (strUpper.includes('A$') || strUpper.includes('AUD')) return 'A$';
         if (strUpper.includes('C$') || strUpper.includes('CAD')) return 'C$';
+        if (strUpper.includes('S$') || strUpper.includes('SGD')) return 'S$';
         if (str.includes('€') || strUpper.includes('EUR')) return '€';
         if (str.includes('£') || strUpper.includes('GBP')) return '£';
         // Check for generic $ last (only if not already matched by NZ$, A$, C$)
         // We need to check that $ is not part of NZ$, A$, or C$
         if (str.includes('$')) {
             // Make sure it's not NZ$, A$, or C$
-            if (!strUpper.includes('NZ$') && !strUpper.includes('A$') && !strUpper.includes('C$')) {
+            if (!strUpper.includes('NZ$') && !strUpper.includes('A$') && !strUpper.includes('C$') && !strUpper.includes('S$')) {
                 return '$';
             }
         }
@@ -411,7 +412,9 @@ export class CaptainsOrderComponent {
             cleaned = cleaned.replace(/NZ\$/gi, '');
             cleaned = cleaned.replace(/A\$/gi, '');
             cleaned = cleaned.replace(/C\$/gi, '');
+            cleaned = cleaned.replace(/S\$/gi, '');
             cleaned = cleaned.replace(/[€£$,]/g, '');
+            cleaned = cleaned.replace(/SGD/gi, '');
             const parsed = parseFloat(cleaned);
             return isNaN(parsed) ? 0 : parsed;
         }
