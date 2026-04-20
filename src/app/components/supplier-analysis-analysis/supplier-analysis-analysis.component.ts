@@ -741,8 +741,6 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     }
                     matrixStats.set(i, rowMap);
                 }
-                const filePriceColMap = new Map<number, number>(); // FileIndex -> Excel Column Index
-
                 // Identify column indices for Invoice section (Qty, Price, Total)
                 let invoiceQtyCol: number | null = null;
                 let invoicePriceCol: number | null = null;
@@ -920,15 +918,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                                         if (!isNaN(numValue)) {
                                             cell.value = numValue;
                                             cell.numFmt = '$#,##0.00';
-                                            
                                             // Only use the discounted price for minimum price comparison
                                             // 'Gross Price' is the original price, 'Price' is the discounted one
                                             if (header !== 'Gross Price') {
                                                 rowPriceValues.push({ col, value: numValue, fileIndex });
                                                 currentFilesPrices.set(fileIndex, numValue);
-                                                if (!filePriceColMap.has(fileIndex)) {
-                                                    filePriceColMap.set(fileIndex, col);
-                                                }
                                             }
                                         }
                                     }
@@ -1086,6 +1080,8 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 // Write Matrix Summary
                 let matrixStartRow = totalRow + 4; // Matrix starts before Delivery Fee/Other Fees rows
                 const matrixStartRowIndex = matrixStartRow;
+                const matrixDataEndRow = totalRow - 4;
+                const matrixDataStartRow = matrixDataEndRow - set.invoiceData.length + 1;
 
                 for (let winFileIdx = 0; winFileIdx < set.supplierQuotationFiles.length; winFileIdx++) {
                     if (set.supplierQuotationFiles[winFileIdx].isBlank) continue;
@@ -1098,38 +1094,19 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     labelCell.font = { name: 'Cambria', size: 11, bold: true };
                     labelCell.alignment = { horizontal: 'right' };
 
-                    // Column G: Total Sum - Use SumByColor formula to sum yellowed values
+                    // Column G: sum this row supplier's Total column where those cells are highlighted (yellow / tie)
                     const totalCell = matrixRow.getCell(7);
 
-                    // Get winnerStats for this supplier (needed for matrix calculations)
                     const winnerStats = matrixStats.get(winFileIdx);
-
-                    // Get this supplier's Total column from the main data table
                     const supplierTotalCol = supplierTotalCols.get(winFileIdx);
 
                     if (supplierTotalCol) {
-                        // Calculate data range for this supplier's Total column
-                        const dataEndRow = totalRow - 4;
-                        const dataStartRow = dataEndRow - set.invoiceData.length + 1;
-
-                        const totalColLetter = worksheet.getColumn(supplierTotalCol).letter;
-                        const rangeStart = `${totalColLetter}${dataStartRow}`;
-                        const rangeEnd = `${totalColLetter}${dataEndRow}`;
-                        const currentCellRef = `G${matrixStartRow}`;
-
-                        // console.log('dataEndRow:', dataEndRow);
-                        // console.log('dataStartRow:', dataStartRow);
-                        // console.log('totalColLetter:', totalColLetter);
-                        // console.log('rangeStart:', rangeStart);
-                        // console.log('rangeEnd:', rangeEnd);
-                        // console.log('currentCellRef:', currentCellRef);
-                        // console.log('*** TEST:', `${totalColLetter}${matrixStartRow}`);
-
-                        // Use SumByColor formula to sum yellowed cells in this supplier's Total column
-                        // totalCell.value = { formula: `SumByColor(${rangeStart}:${rangeEnd},${currentCellRef})` };
-                        totalCell.value = { formula: `${totalColLetter}${matrixStartRow}` };
+                        const winTotalLetter = worksheet.getColumn(supplierTotalCol).letter;
+                        const winTotalOnlyRange = `${winTotalLetter}${matrixDataStartRow}:${winTotalLetter}${matrixDataEndRow}`;
+                        totalCell.value = {
+                            formula: `SumByReadableColor(${winTotalOnlyRange},${winTotalOnlyRange},"yellow")`
+                        };
                     } else {
-                        // Fallback to static value if column not found
                         let rowTotal = 0;
                         if (winnerStats) {
                             const selfStats = winnerStats.get(winFileIdx);
@@ -1145,79 +1122,51 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     totalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
 
                     if (winnerStats) {
-                        for (let targetFileIdx = 0; targetFileIdx < set.supplierQuotationFiles.length; targetFileIdx++) {
-                            if (set.supplierQuotationFiles[targetFileIdx].isBlank) continue;
+                        const winTotalColForRow = supplierTotalCols.get(winFileIdx);
+                        if (winTotalColForRow) {
+                            const winTotalLetter = worksheet.getColumn(winTotalColForRow).letter;
+                            const winTotalRange = `${winTotalLetter}${matrixDataStartRow}:${winTotalLetter}${matrixDataEndRow}`;
 
-                            const targetStats = winnerStats.get(targetFileIdx);
-                            const priceCol = filePriceColMap.get(targetFileIdx);
+                            for (let targetFileIdx = 0; targetFileIdx < set.supplierQuotationFiles.length; targetFileIdx++) {
+                                if (set.supplierQuotationFiles[targetFileIdx].isBlank) continue;
 
-                            if (targetStats && priceCol) {
-                                const countCell = matrixRow.getCell(priceCol);
-                                countCell.numFmt = '0 "items"';
-                                countCell.font = { name: 'Cambria', size: 11, bold: true };
-                                countCell.alignment = { horizontal: 'right' };
+                                const targetStats = winnerStats.get(targetFileIdx);
+                                const targetPriceCol = supplierPriceCols.get(targetFileIdx);
+                                const targetTotalCol = supplierTotalCols.get(targetFileIdx);
 
-                                const sumCell = matrixRow.getCell(priceCol + 1);
-                                // sumCell.value = targetStats.sum; // Removing static value
-                                sumCell.numFmt = '$#,##0.00';
-                                sumCell.font = { name: 'Cambria', size: 11, bold: true };
+                                if (targetStats && targetPriceCol && targetTotalCol) {
+                                    const countCell = matrixRow.getCell(targetPriceCol);
+                                    countCell.numFmt = '0 "items"';
+                                    countCell.font = { name: 'Cambria', size: 11, bold: true };
+                                    countCell.alignment = { horizontal: 'right' };
 
-                                if (winFileIdx === targetFileIdx) {
-                                    const yellow: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
-                                    countCell.fill = yellow;
-                                    sumCell.fill = yellow;
-                                }
+                                    const sumCell = matrixRow.getCell(targetPriceCol + 1);
+                                    sumCell.numFmt = '$#,##0.00';
+                                    sumCell.font = { name: 'Cambria', size: 11, bold: true };
 
-                                // Calculate range for CountByColor/SumByColor
-                                // The range is the Price/Total columns in the main data table.
-                                // Data starts at row: initial header rows + 1 (dataRow loop)
-                                // Actually, we need the specific column in the main table.
-                                // filePriceColMap maps FileIndex -> Price Column Index in the main table?
-                                // Wait, filePriceColMap was built during data iteration. Yes.
+                                    if (winFileIdx === targetFileIdx) {
+                                        const yellow: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+                                        countCell.fill = yellow;
+                                        sumCell.fill = yellow;
+                                    }
 
-                                // Reconstruct the data range for this specific file's price column
-                                // Main data table starts at:
-                                // The variable 'currentRow' at the end of the data loop is essentially the end of the table.
-                                // But we need to know where the data started.
-                                // We can track it or calculate it.
-                                // Let's look at where data iteration started:
-                                // 'let currentRow = 1;' ... then headers ... then 'for (let rowIndex = 0...'
-                                // We need to capture the start row of the data table.
+                                    const tgtTotalLetter = worksheet.getColumn(targetTotalCol).letter;
+                                    const tgtTotalRange = `${tgtTotalLetter}${matrixDataStartRow}:${tgtTotalLetter}${matrixDataEndRow}`;
 
-                                // Assuming 'dataStartRow' is available or we can derive it.
-                                // Looking at code structure:
-                                // We don't have a 'dataStartRow' variable in scope here easily without tracking it.
-                                // However, we know 'set.invoiceData.length' is the number of rows.
-                                // The data table ends at 'totalRow - 3'.
-                                // So data start row = (totalRow - 3) - set.invoiceData.length + 1.
+                                    // Both UDF args use Total columns only (yellow is applied to Price and Total in the data rows)
+                                    sumCell.value = {
+                                        formula: `SumByReadableColor(${winTotalRange},${tgtTotalRange},"yellow")`
+                                    };
 
-                                // Corrected logic: totalRow is 3 rows after data.
-                                // But we need to adjust range up by 1 cell based on feedback.
-                                // Originally: const dataEndRow = totalRow - 3;
-                                // Adjusted: const dataEndRow = totalRow - 4;
-                                const dataEndRow = totalRow - 4;
-                                const dataStartRow = dataEndRow - set.invoiceData.length + 1;
-
-                                const priceColLetter = worksheet.getColumn(priceCol).letter;
-                                const rangeStart = `${priceColLetter}${dataStartRow}`;
-                                const rangeEnd = `${priceColLetter}${dataEndRow}`;
-
-                                const totalColLetter = worksheet.getColumn(priceCol + 1).letter;
-                                const sumRangeStart = `${totalColLetter}${dataStartRow}`;
-                                const sumRangeEnd = `${totalColLetter}${dataEndRow}`;
-
-                                // Apply formulas
-                                const countCellRef = `${worksheet.getColumn(priceCol).letter}${matrixRow.number}`;
-                                const sumCellRef = `${worksheet.getColumn(priceCol + 1).letter}${matrixRow.number}`;
-
-                                if (winFileIdx === targetFileIdx) {
-                                    // Use color-based formulas on diagonal summary cells
-                                    countCell.value = { formula: `CountByColor(${rangeStart}:${rangeEnd},${countCellRef})` };
-                                    sumCell.value = { formula: `SumByColor(${sumRangeStart}:${sumRangeEnd},${sumCellRef})` };
-                                } else {
-                                    // Use transparent-based formulas for non-diagonal cells
-                                    countCell.value = { formula: `CountByTransparent(${rangeStart}:${rangeEnd})` };
-                                    sumCell.value = { formula: `SumByTransparent(${sumRangeStart}:${sumRangeEnd})` };
+                                    if (winFileIdx === targetFileIdx) {
+                                        countCell.value = {
+                                            formula: `CountByReadableColor(${tgtTotalRange},${tgtTotalRange},"yellow")`
+                                        };
+                                    } else {
+                                        countCell.value = {
+                                            formula: `CountByReadableColor(${tgtTotalRange},${tgtTotalRange},"notyellow")`
+                                        };
+                                    }
                                 }
                             }
                         }
@@ -1256,15 +1205,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 // Calculate the dynamic range for the yellow sum cells (Column G in Matrix)
                 // Matrix starts at matrixStartRowIndex. It ends at endRow.
                 if (endRow >= matrixStartRowIndex) {
-                    // We need the address range for SumByColor.
-                    // Column 7 is 'G'.
                     const rangeStart = `G${matrixStartRowIndex}`;
                     const rangeEnd = `G${endRow}`;
-                    const currentCellRef = `G${matrixStartRow}`;
-
-                    // Formula: =SumByColor(Range, CellWithColor)
-                    // We use the current cell as the color reference since it's yellow.
-                    splitSumCell.value = { formula: `SumByColor(${rangeStart}:${rangeEnd},${currentCellRef})` };
+                    splitSumCell.value = { formula: `SumByReadableColor(${rangeStart}:${rangeEnd},${rangeStart}:${rangeEnd},"yellow")` };
                 } else {
                     splitSumCell.value = 0;
                 }
@@ -1272,6 +1215,11 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 splitSumCell.numFmt = '$#,##0.00';
                 splitSumCell.font = { name: 'Cambria', size: 11, bold: true };
                 splitSumCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+
+
+
+                // ------------------------------------------------------------
+                // * Bottom of the table (Ignore) * 
 
                 // Add Delivery Fee and Other Fees rows aligned with TOTAL SPLIT
                 const deliveryFeesRow = matrixStartRow; // Same row as TOTAL SPLIT
@@ -1315,6 +1263,7 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                 const totalRows = 3; // 3 rows total, all suppliers in the same rows
 
                 // Background colors for the summary rows (light green, light blue, light gold)
+
                 const summaryColors = [
                     { argb: 'FFE2EFDA' }, // Light green (top row)
                     { argb: 'FFDEEBF7' }, // Light blue (middle row)
@@ -1331,6 +1280,13 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     }
                 }
 
+                const invoiceTotalRangeForSummary = invoiceTotalCol !== null
+                    ? (() => {
+                        const invLetter = worksheet.getColumn(invoiceTotalCol).letter;
+                        return `${invLetter}$${dataStartRow}:${invLetter}$${dataEndRow}`;
+                    })()
+                    : null;
+
                 // Iterate through the 3 rows (all suppliers in the same rows)
                 for (let rowOffset = 0; rowOffset < totalRows; rowOffset++) {
                     const currentRowNum = summarySectionStartRow + rowOffset;
@@ -1345,24 +1301,19 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                     for (let supplierIdx = 0; supplierIdx < nonBlankSuppliers.length; supplierIdx++) {
                         const fileIndex = nonBlankSuppliers[supplierIdx];
                         const priceCol = supplierPriceCols.get(fileIndex)!;
-                        const priceColLetter = worksheet.getColumn(priceCol).letter;
-                        const priceRangeStart = `${priceColLetter}$${dataStartRow}`;
-                        const priceRangeEnd = `${priceColLetter}$${dataEndRow}`;
-                        const priceRangeStartNoDollar = `${priceColLetter}${dataStartRow}`;
-                        const priceRangeEndNoDollar = `${priceColLetter}${dataEndRow}`;
                         const countCol = priceCol - 1;
                         // Move blocks one column to the right
                         const summaryCountCol = countCol + 1;
                         const summaryPriceCol = priceCol + 1;
-                        const summaryCountColLetter = worksheet.getColumn(summaryCountCol).letter;
-                        const summaryPriceColLetter = worksheet.getColumn(summaryPriceCol).letter;
 
-                        // First column: CountByColor formula
-                        // Formula: =@CountByColor(M$30:M$38,L53) where L is summaryCountCol, and the row is currentRowNum
-                        // Note: Range still points to original priceCol, but cell is moved one column right
-                        const countCellRef = `${summaryCountColLetter}${currentRowNum}`;
                         const countCell = summaryRow.getCell(summaryCountCol);
-                        countCell.value = { formula: `@CountByColor(${priceRangeStart}:${priceRangeEnd},${countCellRef})` };
+                        if (invoiceTotalRangeForSummary) {
+                            countCell.value = {
+                                formula: `@CountByReadableColor(${invoiceTotalRangeForSummary},${invoiceTotalRangeForSummary},"yellow")`
+                            };
+                        } else {
+                            countCell.value = 0;
+                        }
                         countCell.font = { name: 'Cambria', size: 11 };
                         countCell.fill = { type: 'pattern', pattern: 'solid', fgColor: bgColor };
                         countCell.border = {
@@ -1370,12 +1321,14 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             bottom: { style: borderStyle, color: borderColor }
                         };
 
-                        // Second column: SumByColor formula
-                        // Formula: =@SumByColor(M30:M38,M53) where M is summaryPriceCol, and the row is currentRowNum
-                        // Note: Range still points to original priceCol, but cell is moved one column right
-                        const sumCellRef = `${summaryPriceColLetter}${currentRowNum}`;
                         const sumCell = summaryRow.getCell(summaryPriceCol);
-                        sumCell.value = { formula: `@SumByColor(${priceRangeStartNoDollar}:${priceRangeEndNoDollar},${sumCellRef})` };
+                        if (invoiceTotalRangeForSummary) {
+                            sumCell.value = {
+                                formula: `@SumByReadableColor(${invoiceTotalRangeForSummary},${invoiceTotalRangeForSummary},"yellow")`
+                            };
+                        } else {
+                            sumCell.value = 0;
+                        }
                         sumCell.numFmt = '$#,##0.00';
                         sumCell.font = { name: 'Cambria', size: 11 };
                         sumCell.fill = { type: 'pattern', pattern: 'solid', fgColor: bgColor };
@@ -1383,7 +1336,9 @@ export class SupplierAnalysisAnalysisComponent implements OnInit, OnDestroy {
                             top: { style: borderStyle, color: borderColor },
                             bottom: { style: borderStyle, color: borderColor }
                         };
+
                     }
+
                 }
 
 
